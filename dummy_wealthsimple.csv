@@ -1,0 +1,4 @@
+Date,Action,Symbol,Description,Quantity,Price,Currency,Exchange Rate,Value
+2023-10-01,Buy,AAPL,Apple Inc.,50,150.00,USD,1.35,7500.00
+2023-11-01,Buy,MSFT,Microsoft Corp.,20,300.00,USD,1.35,6000.00
+2023-12-01,Sell,AAPL,Apple Inc.,10,160.00,USD,1.35,1600.00
