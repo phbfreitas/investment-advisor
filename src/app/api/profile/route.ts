@@ -1,17 +1,39 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { db, TABLE_NAME } from "@/lib/db";
+import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+
+// For MVP, we assume a single user profile.
+const PROFILE_KEY = "PROFILE#DEFAULT";
 
 export async function GET() {
     try {
-        // For MVP, we assume a single user profile. 
-        // We fetch the first one we find. If none exists, we return null.
-        const profile = await prisma.financialProfile.findFirst({
-            include: { assets: true },
-        });
-        return NextResponse.json(profile || {});
+        // Fetch the profile
+        const { Item: profile } = await db.send(
+            new GetCommand({
+                TableName: TABLE_NAME,
+                Key: {
+                    PK: PROFILE_KEY,
+                    SK: PROFILE_KEY,
+                },
+            })
+        );
+
+        // Fetch associated assets
+        const { Items: assets } = await db.send(
+            new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                ExpressionAttributeValues: {
+                    ":pk": PROFILE_KEY,
+                    ":skPrefix": "ASSET#",
+                },
+            })
+        );
+
+        const responseData = profile ? { ...profile, assets: assets || [] } : {};
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error("Failed to fetch profile:", error);
         return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
@@ -22,36 +44,28 @@ export async function POST(request: Request) {
     try {
         const data = await request.json();
 
-        // For MVP, fetch the first profile to know if we are updating or creating
-        const existingProfile = await prisma.financialProfile.findFirst();
+        // Put operation naturally updates or creates
+        const profileData = {
+            PK: PROFILE_KEY,
+            SK: PROFILE_KEY,
+            type: "PROFILE",
+            strategy: data.strategy,
+            riskTolerance: data.riskTolerance,
+            goals: data.goals,
+            monthlyIncome: data.monthlyIncome,
+            monthlyExpenses: data.monthlyExpenses,
+            cashReserves: data.cashReserves,
+            updatedAt: new Date().toISOString(),
+        };
 
-        let profile;
-        if (existingProfile) {
-            profile = await prisma.financialProfile.update({
-                where: { id: existingProfile.id },
-                data: {
-                    strategy: data.strategy,
-                    riskTolerance: data.riskTolerance,
-                    goals: data.goals,
-                    monthlyIncome: data.monthlyIncome,
-                    monthlyExpenses: data.monthlyExpenses,
-                    cashReserves: data.cashReserves,
-                },
-            });
-        } else {
-            profile = await prisma.financialProfile.create({
-                data: {
-                    strategy: data.strategy,
-                    riskTolerance: data.riskTolerance,
-                    goals: data.goals,
-                    monthlyIncome: data.monthlyIncome,
-                    monthlyExpenses: data.monthlyExpenses,
-                    cashReserves: data.cashReserves,
-                },
-            });
-        }
+        await db.send(
+            new PutCommand({
+                TableName: TABLE_NAME,
+                Item: profileData,
+            })
+        );
 
-        return NextResponse.json(profile);
+        return NextResponse.json(profileData);
     } catch (error) {
         console.error("Failed to save profile:", error);
         return NextResponse.json({ error: "Failed to save profile" }, { status: 500 });

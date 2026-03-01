@@ -124,27 +124,29 @@ export default function DashboardPage() {
     : 0;
 
   return (
-    <div className="flex flex-col h-full bg-[#050505]">
-      <header className="flex-none h-16 border-b border-neutral-800 flex items-center justify-between px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
-        <h1 className="text-xl font-medium text-neutral-200">KPI Dashboard</h1>
+    <div className="flex flex-col min-h-screen md:h-full bg-[#050505]">
+      <header className="flex-none min-h-[4rem] h-auto py-3 md:py-0 border-b border-neutral-800 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 space-y-3 md:space-y-0">
+        <h1 className="text-lg md:text-xl font-medium text-neutral-200 w-full text-center md:text-left">KPI Dashboard</h1>
 
-        <div className="flex items-center space-x-4">
-          <label className="cursor-pointer flex items-center space-x-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 text-teal-500" />}
-            <span>{isUploading ? "Uploading..." : "Import Wealthsimple CSV"}</span>
+        <div className="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-between md:justify-end">
+          <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Upload className="h-4 w-4 text-teal-500 shrink-0" />}
+            <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Import Wealthsimple CSV"}</span>
+            <span className="sm:hidden">{isUploading ? "..." : "Import CSV"}</span>
             <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
           </label>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 bg-teal-600/20 text-teal-400 hover:bg-teal-600/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-teal-600/20 text-teal-400 hover:bg-teal-600/30 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center"
           >
-            <Plus className="h-4 w-4" />
-            <span>Add Manual Asset</span>
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Add Manual Asset</span>
+            <span className="sm:hidden">Add Asset</span>
           </button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+      <div className="w-full p-4 md:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
 
           {message.text && (

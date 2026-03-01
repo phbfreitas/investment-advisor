@@ -23,14 +23,16 @@ export default function ProfilePage() {
                 const res = await fetch("/api/profile");
                 const data = await res.json();
 
-                if (data && data.id) {
+                const payload = data.Item || data; // Handle both raw DynamoDB and flattened objects
+
+                if (payload && (payload.PK || payload.id)) {
                     setFormData({
-                        strategy: data.strategy || "",
-                        riskTolerance: data.riskTolerance || "",
-                        goals: data.goals || "",
-                        monthlyIncome: data.monthlyIncome?.toString() || "",
-                        monthlyExpenses: data.monthlyExpenses?.toString() || "",
-                        cashReserves: data.cashReserves?.toString() || "",
+                        strategy: payload.strategy || "",
+                        riskTolerance: payload.riskTolerance || "",
+                        goals: payload.goals || "",
+                        monthlyIncome: payload.monthlyIncome?.toString() || "",
+                        monthlyExpenses: payload.monthlyExpenses?.toString() || "",
+                        cashReserves: payload.cashReserves?.toString() || "",
                     });
                 }
             } catch (error) {
@@ -85,12 +87,12 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#050505]">
-            <header className="flex-none h-16 border-b border-neutral-800 flex items-center px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
-                <h1 className="text-xl font-medium text-neutral-200">My Financial Brain</h1>
+        <div className="flex flex-col min-h-screen md:h-full bg-[#050505]">
+            <header className="flex-none h-16 border-b border-neutral-800 flex items-center px-4 md:px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
+                <h1 className="text-lg md:text-xl font-medium text-neutral-200">My Financial Brain</h1>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="w-full p-4 md:p-8">
                 <div className="max-w-3xl mx-auto pb-20">
                     <div className="flex items-center space-x-4 mb-8">
                         <div className="p-3 glass-panel-accent rounded-xl">
@@ -104,7 +106,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8 glass-panel p-8">
+                    <form onSubmit={handleSubmit} className="space-y-8 glass-panel p-4 md:p-8">
 
                         {message.text && (
                             <div className={`p-4 rounded-lg flex items-center space-x-3 ${message.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>

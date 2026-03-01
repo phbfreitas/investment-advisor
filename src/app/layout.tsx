@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Your personalized Warren Buffett advisor powered by his actual writings",
 };
 
+import { Providers } from "@/components/Providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -17,11 +19,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-50 selection:bg-teal-500 selection:text-white flex flex-col md:flex-row overflow-hidden`}>
-        <Sidebar />
-        <main className="flex-1 w-full h-[calc(100vh-64px)] md:h-screen overflow-y-auto">
-          {children}
-        </main>
+      <body className={`${inter.className} bg-neutral-950 text-neutral-50 selection:bg-teal-500 selection:text-white flex flex-col md:flex-row md:overflow-hidden min-h-screen`}>
+        <Providers>
+          <Sidebar />
+          <main className="flex-1 w-full pb-24 md:pb-0 md:h-dvh md:overflow-y-auto">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );

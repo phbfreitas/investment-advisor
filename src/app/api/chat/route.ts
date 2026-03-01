@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI, SchemaType, FunctionDeclaration } from "@google/generative-ai";
-import { prisma } from "@/lib/db";
+import { db, TABLE_NAME } from "@/lib/db";
+import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { personas, generateSystemPrompt, PersonaId } from "@/lib/personas";
 import { getRagContext } from "@/lib/rag";
 import { fetchStockData, fetchStockDataToolDefinition } from "@/lib/finance-tools";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+const PROFILE_KEY = "PROFILE#DEFAULT";
 
 // Initialize Gemini
 const apiKey = process.env.GEMINI_API_KEY || "";
@@ -32,14 +35,30 @@ export async function POST(request: Request) {
     }
 
     // 1. Fetch User Context
-    const profile = await prisma.financialProfile.findFirst({
-      include: { assets: true },
-    });
-
     let contextString = "User has not provided a financial profile yet. Give generalized advice.";
+
+    const { Item: profile } = await db.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: PROFILE_KEY, SK: PROFILE_KEY },
+      })
+    );
+
     if (profile) {
-      const assetSummary = profile.assets.length > 0
-        ? profile.assets.map(a => `- ${a.quantity} shares of ${a.ticker} (Avg Cost: $${a.averageCost})`).join("\n")
+      const { Items: assets } = await db.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+          ExpressionAttributeValues: {
+            ":pk": PROFILE_KEY,
+            ":skPrefix": "ASSET#",
+          },
+        })
+      );
+
+      const assetsList = assets || [];
+      const assetSummary = assetsList.length > 0
+        ? assetsList.map(a => `- ${a.quantity} shares of ${a.ticker} (Avg Cost: $${a.averageCost})`).join("\n")
         : "No assets documented.";
 
       contextString = `
@@ -48,8 +67,8 @@ RISK TOLERANCE: ${profile.riskTolerance || "Not specified"}
 GOALS: ${profile.goals || "Not specified"}
 CASH RESERVES: $${profile.cashReserves || 0}
 PORTFOLIO HOLDINGS:
-          ${assetSummary}
-          `;
+${assetSummary}
+`;
     }
 
     // 2. Prepare the Tool definition for Gemini

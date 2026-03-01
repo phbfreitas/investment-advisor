@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { db, TABLE_NAME } from "@/lib/db";
+import { QueryCommand, BatchWriteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import Papa from "papaparse";
+import { v4 as uuidv4 } from "uuid";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-import Papa from "papaparse";
+
+const PROFILE_KEY = "PROFILE#DEFAULT";
 
 export async function POST(request: Request) {
     try {
@@ -26,8 +29,6 @@ export async function POST(request: Request) {
         const data = result.data as any[];
 
         // Very basic aggregation for MVP: 
-        // Just find "Buy" actions to create an average cost position pipeline.
-        // Real-world would need a full ledger calculation (Buy - Sell)
         const holdings = new Map<string, { quantity: number; totalCost: number; currency: string }>();
 
         data.forEach(row => {
@@ -44,10 +45,8 @@ export async function POST(request: Request) {
                 current.totalCost += (qty * price);
                 holdings.set(symbol, current);
             } else if (action.includes("sell")) {
-                // Simple subtraction for MVP
                 const current = holdings.get(symbol) || { quantity: 0, totalCost: 0, currency: row.Currency || "CAD" };
                 current.quantity -= qty;
-                // Adjusting cost basis simply for MVP
                 const avgPrice = current.quantity > 0 ? current.totalCost / (current.quantity + qty) : 0;
                 current.totalCost -= (qty * avgPrice);
 
@@ -59,39 +58,85 @@ export async function POST(request: Request) {
             }
         });
 
-        // Save to Database
-        const profile = await prisma.financialProfile.findFirst();
+        // Ensure profile exists
+        const { Item: profile } = await db.send(
+            new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { PK: PROFILE_KEY, SK: PROFILE_KEY },
+            })
+        );
+
         if (!profile) {
             return NextResponse.json({ error: "Please setup your Financial Brain profile first" }, { status: 400 });
         }
 
-        // Delete old Wealthsimple assets to replace with new sync
-        await prisma.asset.deleteMany({
-            where: {
-                profileId: profile.id,
-                institution: "Wealthsimple"
-            }
-        });
+        // 1. Find all existing Wealthsimple assets to delete
+        const { Items: existingAssets } = await db.send(
+            new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                FilterExpression: "institution = :inst",
+                ExpressionAttributeValues: {
+                    ":pk": PROFILE_KEY,
+                    ":skPrefix": "ASSET#",
+                    ":inst": "Wealthsimple"
+                }
+            })
+        );
 
-        const assetsToInsert = Array.from(holdings.entries()).map(([ticker, data]) => ({
-            profileId: profile.id,
-            ticker: ticker,
-            name: ticker, // Can augment with API later
-            assetType: "STOCK",
-            quantity: data.quantity,
-            averageCost: data.totalCost / data.quantity,
-            currency: data.currency,
-            institution: "Wealthsimple",
-            isManuallyAdded: false
-        }));
+        const writeRequests: any[] = [];
 
-        if (assetsToInsert.length > 0) {
-            await prisma.asset.createMany({
-                data: assetsToInsert
+        // Add Delete requests for old assets
+        if (existingAssets) {
+            existingAssets.forEach(asset => {
+                writeRequests.push({
+                    DeleteRequest: {
+                        Key: { PK: asset.PK, SK: asset.SK }
+                    }
+                });
             });
         }
 
-        return NextResponse.json({ message: "Portfolio synced successfully", count: assetsToInsert.length });
+        // Add Put requests for new aggregated assets
+        Array.from(holdings.entries()).forEach(([ticker, data]) => {
+            const assetId = uuidv4();
+            writeRequests.push({
+                PutRequest: {
+                    Item: {
+                        PK: PROFILE_KEY,
+                        SK: `ASSET#${assetId}`,
+                        id: assetId,
+                        profileId: PROFILE_KEY,
+                        type: "ASSET",
+                        ticker: ticker,
+                        name: ticker,
+                        assetType: "STOCK",
+                        quantity: data.quantity,
+                        averageCost: data.totalCost / data.quantity,
+                        currentPrice: data.totalCost / data.quantity, // fallback
+                        currency: data.currency,
+                        institution: "Wealthsimple",
+                        isManuallyAdded: false,
+                        updatedAt: new Date().toISOString()
+                    }
+                }
+            });
+        });
+
+        // DynamoDB BatchWriteItem has a limit of 25 operations per request
+        const chunkSize = 25;
+        for (let i = 0; i < writeRequests.length; i += chunkSize) {
+            const chunk = writeRequests.slice(i, i + chunkSize);
+            await db.send(
+                new BatchWriteCommand({
+                    RequestItems: {
+                        [TABLE_NAME]: chunk
+                    }
+                })
+            );
+        }
+
+        return NextResponse.json({ message: "Portfolio synced successfully", count: holdings.size });
     } catch (error) {
         console.error("Failed to process portfolio CSV:", error);
         return NextResponse.json({ error: "Failed to process file" }, { status: 500 });

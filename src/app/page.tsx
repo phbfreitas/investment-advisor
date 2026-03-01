@@ -78,7 +78,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#050505]">
+    <div className="flex flex-col min-h-screen md:h-full bg-[#050505]">
       {/* Header */}
       <header className="flex-none h-14 md:h-16 border-b border-neutral-800 flex items-center px-4 md:px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
         <h1 className="text-lg md:text-xl font-medium text-neutral-200">Value Investing Advisor</h1>
@@ -152,7 +152,7 @@ export default function Home() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 max-h-48 min-h-[56px] w-full resize-none bg-transparent px-3 py-3 md:px-4 md:py-4 text-sm md:text-base text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 custom-scrollbar mb-1"
+              className="flex-1 max-h-48 min-h-[56px] w-full resize-none bg-transparent px-3 py-3 md:px-4 md:py-4 pr-14 md:pr-16 text-sm md:text-base text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 custom-scrollbar mb-1"
               placeholder="Ask Warren..."
               rows={1}
               disabled={isLoading}
