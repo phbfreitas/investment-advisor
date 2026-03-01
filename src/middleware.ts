@@ -7,6 +7,6 @@ export default withAuth({
 });
 
 export const config = {
-    // Math all request paths except for the ones starting with:
-    matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|login).*)"],
+    // Explicitly protect these specific application routes
+    matcher: ["/", "/dashboard/:path*", "/profile/:path*"],
 };
