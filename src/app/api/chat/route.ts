@@ -5,11 +5,11 @@ import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { personas, generateSystemPrompt, PersonaId } from "@/lib/personas";
 import { getRagContext } from "@/lib/rag";
 import { fetchStockData, fetchStockDataToolDefinition } from "@/lib/finance-tools";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-const PROFILE_KEY = "PROFILE#DEFAULT";
 
 // Initialize Gemini
 const apiKey = process.env.GEMINI_API_KEY || "";
@@ -24,6 +24,13 @@ export async function POST(request: Request) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const PROFILE_KEY = `PROFILE#${session.user.email}`;
+
     const { message, selectedPersonas } = await request.json();
 
     if (!message) {

@@ -2,14 +2,20 @@ import { NextResponse } from "next/server";
 import { db, TABLE_NAME } from "@/lib/db";
 import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
-
-const PROFILE_KEY = "PROFILE#DEFAULT";
 
 // POST /api/assets - Adds a manual asset
 export async function POST(request: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const PROFILE_KEY = `PROFILE#${session.user.email}`;
         const data = await request.json();
 
         // For MVP, look up the single profile

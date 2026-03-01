@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { db, TABLE_NAME } from "@/lib/db";
 import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// For MVP, we assume a single user profile.
-const PROFILE_KEY = "PROFILE#DEFAULT";
-
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+
         // Fetch the profile
         const { Item: profile } = await db.send(
             new GetCommand({
@@ -42,6 +48,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const PROFILE_KEY = `PROFILE#${session.user.email}`;
         const data = await request.json();
 
         // Put operation naturally updates or creates
