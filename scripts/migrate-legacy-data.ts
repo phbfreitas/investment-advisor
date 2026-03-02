@@ -39,8 +39,8 @@ async function run() {
         };
 
         // If the item had a profileId reference pointing to the old key, update it
-        if (migratedItem.profileId === OLD_PK) {
-            migratedItem.profileId = NEW_PK;
+        if ((migratedItem as any).profileId === OLD_PK) {
+            (migratedItem as any).profileId = NEW_PK;
         }
 
         // Insert the new record
