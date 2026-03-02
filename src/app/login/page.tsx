@@ -10,14 +10,14 @@ function LoginContent() {
     const error = searchParams.get("error");
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
-            <div className="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 space-y-8">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-gray-950 p-4 transition-colors duration-300">
+            <div className="max-w-md w-full bg-white dark:bg-gray-900 border border-neutral-200 dark:border-gray-800 rounded-2xl shadow-2xl p-8 space-y-8 transition-colors duration-300">
                 <div className="text-center space-y-2">
-                    <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
-                        <ShieldCheckIcon className="w-8 h-8 text-blue-400" />
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-200 dark:border-blue-500/20 transition-colors duration-300">
+                        <ShieldCheckIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Investment Advisor</h1>
-                    <p className="text-sm text-gray-400">Secure access restricted to authorized family members.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Investment Advisor</h1>
+                    <p className="text-sm text-neutral-500 dark:text-gray-400">Secure access restricted to authorized family members.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -29,7 +29,7 @@ function LoginContent() {
 
                     <button
                         onClick={() => signIn("google", { callbackUrl: "/" })}
-                        className="w-full flex justify-center items-center space-x-3 py-3 px-4 border border-gray-700 rounded-xl shadow-sm text-sm font-medium text-white bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 focus:ring-offset-gray-900 transition-all"
+                        className="w-full flex justify-center items-center space-x-3 py-3 px-4 border border-neutral-200 dark:border-gray-700 rounded-xl shadow-sm text-sm font-medium text-neutral-900 dark:text-white bg-neutral-50 dark:bg-white/5 hover:bg-neutral-100 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-300 dark:focus:ring-gray-500 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-all"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -51,7 +51,7 @@ function LoginContent() {
                         </svg>
                         <span>Sign in with Google</span>
                     </button>
-                    <p className="text-xs text-center text-gray-500 mt-4">Protected by NextAuth and Google OAuth</p>
+                    <p className="text-xs text-center text-neutral-500 dark:text-gray-500 mt-4">Protected by NextAuth and Google OAuth</p>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@ function LoginContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="animate-spin h-8 w-8 text-blue-500 rounded-full border-4 border-solid border-current border-r-transparent"></div></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-neutral-50 dark:bg-gray-950 flex items-center justify-center"><div className="animate-spin h-8 w-8 text-teal-600 dark:text-blue-500 rounded-full border-4 border-solid border-current border-r-transparent"></div></div>}>
             <LoginContent />
         </Suspense>
     );

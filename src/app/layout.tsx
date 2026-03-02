@@ -11,20 +11,32 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/Providers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-neutral-950 text-neutral-50 selection:bg-teal-500 selection:text-white flex flex-col md:flex-row md:overflow-hidden min-h-screen`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 selection:bg-teal-500 selection:text-white flex flex-col md:flex-row md:overflow-hidden min-h-screen transition-colors duration-300`}>
         <Providers>
-          <Sidebar />
-          <main className="flex-1 w-full pb-24 md:pb-0 md:h-dvh md:overflow-y-auto">
-            {children}
-          </main>
+          {session ? (
+            <>
+              <Sidebar />
+              <main className="flex-1 w-full pb-24 md:pb-0 md:h-dvh md:overflow-y-auto">
+                {children}
+              </main>
+            </>
+          ) : (
+            <main className="flex-1 w-full flex flex-col items-center justify-center min-h-screen relative p-4 bg-gradient-to-br from-neutral-100 via-white to-neutral-50 dark:from-neutral-900 dark:via-neutral-950 dark:to-black transition-colors duration-300">
+              {children}
+            </main>
+          )}
         </Providers>
       </body>
     </html>

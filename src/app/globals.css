@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
+/* Enable class-based dark mode for next-themes in Tailwind v4 */
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-brand-50: #f0fdfa;
   --color-brand-100: #ccfbf1;
@@ -24,20 +29,20 @@
 
 @layer base {
   html, body {
-    @apply bg-[var(--color-bg-base)] text-[var(--color-text-base)] antialiased min-h-screen selection:bg-[var(--color-brand-500)] selection:text-white;
+    @apply antialiased min-h-screen selection:bg-[var(--color-brand-500)] selection:text-white;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-[var(--color-bg-surface)] border border-[var(--color-bg-elevated)] shadow-lg shadow-black/50 backdrop-blur-md rounded-2xl;
+    @apply bg-white dark:bg-[var(--color-bg-surface)] border border-neutral-200 dark:border-[var(--color-bg-elevated)] shadow-sm dark:shadow-sm shadow-neutral-200 dark:shadow-black/50 backdrop-blur-md rounded-2xl transition-colors duration-300;
   }
   
   .glass-panel-accent {
-    @apply bg-gradient-to-br from-[var(--color-bg-elevated)] to-[var(--color-bg-surface)] border border-[var(--color-brand-800)]/30 backdrop-blur-md rounded-2xl;
+    @apply bg-gradient-to-br from-neutral-50 to-white dark:from-[var(--color-bg-elevated)] dark:to-[var(--color-bg-surface)] border border-teal-500/20 dark:border-[var(--color-brand-800)]/30 backdrop-blur-md rounded-2xl transition-colors duration-300;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-brand-300)] to-[var(--color-brand-600)];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-teal-800 dark:from-[var(--color-brand-300)] dark:to-[var(--color-brand-600)];
   }
 }

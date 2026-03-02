@@ -124,20 +124,20 @@ export default function DashboardPage() {
     : 0;
 
   return (
-    <div className="flex flex-col min-h-screen md:h-full bg-[#050505]">
-      <header className="flex-none min-h-[4rem] h-auto py-3 md:py-0 border-b border-neutral-800 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 space-y-3 md:space-y-0">
-        <h1 className="text-lg md:text-xl font-medium text-neutral-200 w-full text-center md:text-left">KPI Dashboard</h1>
+    <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
+      <header className="flex-none min-h-[4rem] h-auto py-3 md:py-0 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 space-y-3 md:space-y-0 transition-colors duration-300">
+        <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200 w-full text-center md:text-left">KPI Dashboard</h1>
 
         <div className="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-between md:justify-end">
-          <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Upload className="h-4 w-4 text-teal-500 shrink-0" />}
+          <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">
+            {isUploading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Upload className="h-4 w-4 text-teal-600 dark:text-teal-500 shrink-0" />}
             <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Import Wealthsimple CSV"}</span>
             <span className="sm:hidden">{isUploading ? "..." : "Import CSV"}</span>
             <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
           </label>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-teal-600/20 text-teal-400 hover:bg-teal-600/30 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center"
+            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-teal-50 dark:bg-teal-600/20 text-teal-700 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-600/30 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center"
           >
             <Plus className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Add Manual Asset</span>
@@ -159,21 +159,21 @@ export default function DashboardPage() {
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-panel p-6 flex flex-col justify-center">
-              <span className="text-sm font-medium text-neutral-400 mb-2">Total Estimated Value</span>
-              <h3 className="text-3xl font-semibold text-neutral-100 flex items-center">
+              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Estimated Value</span>
+              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
                 \${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
             </div>
             <div className="glass-panel p-6 flex flex-col justify-center">
-              <span className="text-sm font-medium text-neutral-400 mb-2">Total Return</span>
-              <h3 className={`text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Return</span>
+              <h3 className={`text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
                 {totalReturn > 0 ? "+" : ""}{totalReturn.toFixed(2)}%
               </h3>
             </div>
             <div className="glass-panel p-6 flex flex-col justify-center">
-              <span className="text-sm font-medium text-neutral-400 mb-2">Avg Dividend Yield</span>
-              <h3 className="text-3xl font-semibold text-neutral-100">
+              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Avg Dividend Yield</span>
+              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
                 {portfolioDividendYield.toFixed(2)}%
               </h3>
             </div>
@@ -181,14 +181,14 @@ export default function DashboardPage() {
 
           {/* Investment Table */}
           <div className="glass-panel overflow-hidden">
-            <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-neutral-200 flex items-center">
-                <BarChart3 className="h-5 w-5 text-teal-500 mr-2" />
+            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between transition-colors duration-300">
+              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 flex items-center">
+                <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-500 mr-2" />
                 Holdings
               </h3>
               <button
                 onClick={fetchAssets}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
                 title="Refresh"
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -197,7 +197,7 @@ export default function DashboardPage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-neutral-900/50 text-neutral-400 font-medium">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300">
                   <tr>
                     <th className="px-6 py-4">Ticker</th>
                     <th className="px-6 py-4">Quantity</th>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                     <th className="px-6 py-4"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-800">
+                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 transition-colors duration-300">
                   {assets.length === 0 && !isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-neutral-500">
@@ -223,33 +223,33 @@ export default function DashboardPage() {
                       const returnPct = ((livePrice - asset.averageCost) / asset.averageCost) * 100;
 
                       return (
-                        <tr key={asset.id} className="hover:bg-neutral-900/30 transition-colors">
-                          <td className="px-6 py-4 font-medium text-neutral-200">{asset.ticker}</td>
-                          <td className="px-6 py-4 text-neutral-300">{asset.quantity.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-neutral-300">\${asset.averageCost.toFixed(2)}</td>
+                        <tr key={asset.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors">
+                          <td className="px-6 py-4 font-medium text-neutral-900 dark:text-neutral-200">{asset.ticker}</td>
+                          <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">{asset.quantity.toLocaleString()}</td>
+                          <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">\${asset.averageCost.toFixed(2)}</td>
 
-                          <td className="px-6 py-4 text-neutral-100">
-                            {mData ? `\$${livePrice.toFixed(2)}` : <span className="text-neutral-500">Wait...</span>}
+                          <td className="px-6 py-4 text-neutral-900 dark:text-neutral-100">
+                            {mData ? `\$${livePrice.toFixed(2)}` : <span className="text-neutral-400 dark:text-neutral-500">Wait...</span>}
                           </td>
 
-                          <td className="px-6 py-4 text-neutral-200">
+                          <td className="px-6 py-4 text-neutral-800 dark:text-neutral-200">
                             \${(asset.quantity * livePrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
 
-                          <td className={`px-6 py-4 font-medium ${returnPct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          <td className={`px-6 py-4 font-medium ${returnPct >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
                             {returnPct > 0 ? "+" : ""}{returnPct.toFixed(2)}%
                           </td>
 
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${asset.institution === 'Wealthsimple'
-                              ? 'bg-amber-500/10 text-amber-500'
-                              : 'bg-indigo-500/10 text-indigo-400'
+                              ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-500'
+                              : 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
                               }`}>
                               {asset.institution || 'Manual'}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-500 hover:text-red-400 transition-colors">
+                            <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </td>

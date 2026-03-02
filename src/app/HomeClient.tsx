@@ -78,10 +78,10 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen md:h-full bg-[#050505]">
+    <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
       {/* Header */}
-      <header className="flex-none h-14 md:h-16 border-b border-neutral-800 flex items-center px-4 md:px-8 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
-        <h1 className="text-lg md:text-xl font-medium text-neutral-200">Value Investing Advisor</h1>
+      <header className="flex-none h-14 md:h-16 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
+        <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Value Investing Advisor</h1>
       </header>
 
       {/* Main Content Area */}
@@ -93,25 +93,25 @@ export default function Home() {
               <div className="h-16 w-16 md:h-20 md:w-20 rounded-full glass-panel-accent flex items-center justify-center mb-2 md:mb-4 text-3xl md:text-4xl shadow-inner">
                 👴
               </div>
-              <h2 className="text-2xl md:text-3xl font-semibold text-neutral-100">Welcome to your Buffett Advisor</h2>
-              <p className="text-neutral-400 max-w-lg text-base md:text-lg">
+              <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome to your Buffett Advisor</h2>
+              <p className="text-neutral-600 dark:text-neutral-400 max-w-lg text-base md:text-lg">
                 Ask the Oracle of Omaha for guidance, market analysis, or strategy reviews tailored to your context, grounded in his original letters.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 md:mt-8 w-full max-w-xl">
                 <button
                   onClick={() => setInputValue("Analyze my current portfolio and tell me if I am diversified enough.")}
-                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-800 transition-colors text-left group"
+                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
                 >
-                  <BarChart2 className="h-5 w-5 text-teal-500 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="text-sm font-medium text-neutral-300">Analyze my current portfolio</span>
+                  <BarChart2 className="h-5 w-5 text-teal-600 dark:text-teal-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Analyze my current portfolio</span>
                 </button>
                 <button
                   onClick={() => setInputValue("Given my risk tolerance and goals, critique my investment strategy.")}
-                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-800 transition-colors text-left group"
+                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
                 >
-                  <BrainCircuit className="h-5 w-5 text-indigo-400 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="text-sm font-medium text-neutral-300">Critique my investment strategy</span>
+                  <BrainCircuit className="h-5 w-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Critique my investment strategy</span>
                 </button>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function Home() {
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   {msg.role === 'user' ? (
-                    <div className="bg-neutral-800 text-neutral-100 px-4 py-3 md:px-6 md:py-4 rounded-2xl rounded-tr-sm max-w-[85%] md:max-w-2xl text-base md:text-lg shadow-md break-words">
+                    <div className="bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-4 py-3 md:px-6 md:py-4 rounded-2xl rounded-tr-sm max-w-[85%] md:max-w-2xl text-base md:text-lg border border-neutral-200 dark:border-transparent shadow-sm dark:shadow-md break-words transition-colors duration-300">
                       {msg.content}
                     </div>
                   ) : (
@@ -132,7 +132,7 @@ export default function Home() {
               ))}
 
               {isLoading && (
-                <div className="flex items-center space-x-3 md:space-x-4 text-teal-500 bg-teal-500/5 px-4 py-3 md:px-6 md:py-4 rounded-2xl w-[90%] md:w-fit border border-teal-500/10 animate-pulse">
+                <div className="flex items-center space-x-3 md:space-x-4 text-teal-700 dark:text-teal-500 bg-teal-50 dark:bg-teal-500/5 px-4 py-3 md:px-6 md:py-4 rounded-2xl w-[90%] md:w-fit border border-teal-200 dark:border-teal-500/10 animate-pulse transition-colors duration-300">
                   <RefreshCw className="h-4 w-4 md:h-5 md:w-5 animate-spin flex-shrink-0" />
                   <span className="font-medium tracking-wide text-sm md:text-base">Warren is reviewing his letters and analyzing your portfolio...</span>
                 </div>
@@ -145,14 +145,14 @@ export default function Home() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-none p-4 md:p-6 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent">
+      <div className="flex-none p-4 md:p-6 bg-gradient-to-t from-neutral-50 via-neutral-50 dark:from-[#050505] dark:via-[#050505] to-transparent transition-colors duration-300">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="glass-panel p-2 flex items-end relative shadow-2xl shadow-teal-900/10 focus-within:ring-1 focus-within:ring-teal-500/50 transition-all">
+          <div className="glass-panel p-2 flex items-end relative shadow-xl dark:shadow-2xl shadow-teal-900/5 dark:shadow-teal-900/10 focus-within:ring-1 focus-within:ring-teal-500/50 transition-all">
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 max-h-48 min-h-[56px] w-full resize-none bg-transparent px-3 py-3 md:px-4 md:py-4 pr-14 md:pr-16 text-sm md:text-base text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 custom-scrollbar mb-1"
+              className="flex-1 max-h-48 min-h-[56px] w-full resize-none bg-transparent px-3 py-3 md:px-4 md:py-4 pr-14 md:pr-16 text-sm md:text-base text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 custom-scrollbar mb-1"
               placeholder="Ask Warren..."
               rows={1}
               disabled={isLoading}
@@ -161,13 +161,13 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={!inputValue.trim() || isLoading}
-                className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center hover:bg-teal-500 hover:text-white transition-all disabled:opacity-50 disabled:hover:bg-teal-500/10 disabled:hover:text-teal-400"
+                className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center hover:bg-teal-100 dark:hover:bg-teal-500 hover:text-teal-800 dark:hover:text-white transition-all disabled:opacity-50 disabled:bg-transparent dark:disabled:bg-transparent disabled:text-neutral-400 dark:disabled:text-neutral-600 border border-transparent disabled:border-transparent"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </button>
             </div>
           </div>
-          <p className="text-center text-[10px] md:text-xs text-neutral-600 mt-2 md:mt-4">
+          <p className="text-center text-[10px] md:text-xs text-neutral-500 dark:text-neutral-600 mt-2 md:mt-4">
             AI can make mistakes. Verify important financial data.
           </p>
         </form>
