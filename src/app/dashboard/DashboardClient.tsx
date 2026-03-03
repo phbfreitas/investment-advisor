@@ -126,7 +126,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
       <header className="flex-none min-h-[4rem] h-auto py-3 md:py-0 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 space-y-3 md:space-y-0 transition-colors duration-300">
-        <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200 w-full text-center md:text-left">KPI Dashboard</h1>
+        <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200 w-full text-center md:text-left">My Investment Portfolio</h1>
 
         <div className="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-between md:justify-end">
           <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">

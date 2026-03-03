@@ -8,9 +8,9 @@ import { signOut } from "next-auth/react";
 
 const navigation = [
     { name: "Warren Buffett", href: "/", icon: Users },
-    { name: "KPI Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "My Investment Portfolio", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
-    { name: "My Financial Brain", href: "/profile", icon: BrainCircuit },
+    { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },
     { name: "Settings", href: "/settings", icon: Settings },
 ];
 

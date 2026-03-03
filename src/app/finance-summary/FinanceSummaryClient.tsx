@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Wallet, Save, Loader2, AlertCircle, Plus, Trash2 } from "lucide-react";
+import { Wallet, Save, Loader2, AlertCircle, Plus, Trash2, LineChart, Home, Landmark } from "lucide-react";
 
 type CashFlowRow = {
-    id: string; // for React key
+    id: string;
     year: string;
     month: string;
     income: string | number;
@@ -12,15 +12,138 @@ type CashFlowRow = {
     cashReserves: string | number;
 }
 
+const InputField = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: any }) => (
+    <div>
+        <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">{label}</label>
+        <div className="relative">
+            <span className="absolute left-3 top-2.5 text-neutral-400 dark:text-neutral-500 text-sm">$</span>
+            <input
+                type="number"
+                name={name}
+                value={value}
+                onChange={onChange}
+                placeholder="0.00"
+                className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
+            />
+        </div>
+    </div>
+);
+
 export default function FinanceSummaryClient() {
     const [isLoading, setIsLoading] = useState(true);
+    const [lastSavedDates, setLastSavedDates] = useState({ budget: "", rental: "", wealth: "" });
+
+    // Budget State
+    const [isSavingBudget, setIsSavingBudget] = useState(false);
+    const [budgetMessage, setBudgetMessage] = useState({ text: "", type: "" });
+    const [budgetData, setBudgetData] = useState({
+        budgetPaycheck: "",
+        budgetDividends: "",
+        budgetBonus: "",
+        budgetOtherIncome: "",
+        budgetFixedHome: "",
+        budgetFixedUtilities: "",
+        budgetFixedCar: "",
+        budgetFixedFood: "",
+        budgetDiscretionary: "",
+    });
+
+    // Rental State
+    const [isSavingRental, setIsSavingRental] = useState(false);
+    const [rentalMessage, setRentalMessage] = useState({ text: "", type: "" });
+    const [rentalData, setRentalData] = useState({
+        budgetRentalIncome: "",
+        budgetRentalExpenses: "",
+    });
+
+    // Actuals State
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState({ text: "", type: "" });
     const [rows, setRows] = useState<CashFlowRow[]>([]);
 
+    // Wealth State
+    const [isSavingWealth, setIsSavingWealth] = useState(false);
+    const [wealthMessage, setWealthMessage] = useState({ text: "", type: "" });
+    const [wealthData, setWealthData] = useState({
+        wealthAssetCash: "",
+        wealthAssetCar: "",
+        wealthAssetPrimaryResidence: "",
+        wealthAssetRentalProperties: "",
+        wealthLiabilityMortgage: "",
+        wealthLiabilityHeloc: "",
+        wealthLiabilityRentalMortgage: "",
+        wealthLiabilityRentalHeloc: "",
+        wealthLiabilityCreditCards: "",
+        wealthLiabilityCarLease: "",
+    });
+    const [totalInvestmentValue, setTotalInvestmentValue] = useState(0);
+    const [isInvestmentLoading, setIsInvestmentLoading] = useState(true);
+
     useEffect(() => {
-        async function loadCashFlows() {
+        async function loadData() {
             try {
+                // Load Profile Budget Data
+                const profileRes = await fetch("/api/profile");
+                const profileData = await profileRes.json();
+                const payload = profileData.Item || profileData;
+                if (payload && (payload.PK || payload.id)) {
+                    setBudgetData({
+                        budgetPaycheck: payload.budgetPaycheck?.toString() || "",
+                        budgetDividends: payload.budgetDividends?.toString() || "",
+                        budgetBonus: payload.budgetBonus?.toString() || "",
+                        budgetOtherIncome: payload.budgetOtherIncome?.toString() || "",
+                        budgetFixedHome: payload.budgetFixedHome?.toString() || "",
+                        budgetFixedUtilities: payload.budgetFixedUtilities?.toString() || "",
+                        budgetFixedCar: payload.budgetFixedCar?.toString() || "",
+                        budgetFixedFood: payload.budgetFixedFood?.toString() || "",
+                        budgetDiscretionary: payload.budgetDiscretionary?.toString() || "",
+                    });
+                    setRentalData({
+                        budgetRentalIncome: payload.budgetRentalIncome?.toString() || "",
+                        budgetRentalExpenses: payload.budgetRentalExpenses?.toString() || "",
+                    });
+                    setWealthData({
+                        wealthAssetCash: payload.wealthAssetCash?.toString() || "",
+                        wealthAssetCar: payload.wealthAssetCar?.toString() || "",
+                        wealthAssetPrimaryResidence: payload.wealthAssetPrimaryResidence?.toString() || "",
+                        wealthAssetRentalProperties: payload.wealthAssetRentalProperties?.toString() || "",
+                        wealthLiabilityMortgage: payload.wealthLiabilityMortgage?.toString() || "",
+                        wealthLiabilityHeloc: payload.wealthLiabilityHeloc?.toString() || "",
+                        wealthLiabilityRentalMortgage: payload.wealthLiabilityRentalMortgage?.toString() || "",
+                        wealthLiabilityRentalHeloc: payload.wealthLiabilityRentalHeloc?.toString() || "",
+                        wealthLiabilityCreditCards: payload.wealthLiabilityCreditCards?.toString() || "",
+                        wealthLiabilityCarLease: payload.wealthLiabilityCarLease?.toString() || "",
+                    });
+
+                    if (payload.updatedAt) {
+                        const formattedDate = new Date(payload.updatedAt).toLocaleString();
+                        setLastSavedDates({ budget: formattedDate, rental: formattedDate, wealth: formattedDate });
+                    }
+                }
+
+                // Fetch Investment Values
+                if (profileData.assets && profileData.assets.length > 0) {
+                    const uniqueTickers = Array.from(new Set(profileData.assets.map((a: any) => a.ticker)));
+                    const promises = uniqueTickers.map((ticker: any) =>
+                        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json())
+                    );
+                    const marketResults = await Promise.all(promises);
+                    const marketDataMap: Record<string, any> = {};
+                    marketResults.forEach(data => {
+                        if (data && data.ticker && !data.error) marketDataMap[data.ticker] = data;
+                    });
+
+                    const totalVal = profileData.assets.reduce((acc: number, curr: any) => {
+                        const livePrice = marketDataMap[curr.ticker as string]?.currentPrice || curr.averageCost;
+                        return acc + (curr.quantity * livePrice);
+                    }, 0);
+                    setTotalInvestmentValue(totalVal);
+                    setIsInvestmentLoading(false);
+                } else {
+                    setIsInvestmentLoading(false);
+                }
+
+                // Load Historical Cash Flows
                 const res = await fetch("/api/cashflow");
                 const data = await res.json();
 
@@ -33,11 +156,9 @@ export default function FinanceSummaryClient() {
                         expenses: item.expenses || "",
                         cashReserves: item.cashReserves || ""
                     }));
-                    // Sort by year-month descending
                     formattedRows.sort((a, b) => `${b.year}-${b.month}`.localeCompare(`${a.year}-${a.month}`));
                     setRows(formattedRows);
                 } else {
-                    // Default empty row
                     const now = new Date();
                     setRows([{
                         id: crypto.randomUUID(),
@@ -49,19 +170,95 @@ export default function FinanceSummaryClient() {
                     }]);
                 }
             } catch (error) {
-                console.error("Failed to load cash flows", error);
+                console.error("Failed to load data", error);
             } finally {
                 setIsLoading(false);
             }
         }
-        loadCashFlows();
+        loadData();
     }, []);
 
+    // Handlers
+    const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setBudgetData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleRentalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setRentalData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const saveProfilePartial = async (payload: any, setStatusMessage: any, setSavingState: any, section: 'budget' | 'rental' | 'wealth') => {
+        setSavingState(true);
+        setStatusMessage({ text: "", type: "" });
+        try {
+            const res = await fetch("/api/profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("Failed to save");
+            const savedData = await res.json();
+
+            setStatusMessage({ text: "Saved successfully.", type: "success" });
+            if (savedData.updatedAt) {
+                const newDate = new Date(savedData.updatedAt).toLocaleString();
+                setLastSavedDates(prev => ({ ...prev, [section]: newDate }));
+            }
+        } catch (error) {
+            setStatusMessage({ text: "Error saving.", type: "error" });
+        } finally {
+            setSavingState(false);
+        }
+    };
+
+    const handleBudgetSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const payload = {
+            budgetPaycheck: budgetData.budgetPaycheck ? parseFloat(budgetData.budgetPaycheck) : null,
+            budgetDividends: budgetData.budgetDividends ? parseFloat(budgetData.budgetDividends) : null,
+            budgetBonus: budgetData.budgetBonus ? parseFloat(budgetData.budgetBonus) : null,
+            budgetOtherIncome: budgetData.budgetOtherIncome ? parseFloat(budgetData.budgetOtherIncome) : null,
+            budgetFixedHome: budgetData.budgetFixedHome ? parseFloat(budgetData.budgetFixedHome) : null,
+            budgetFixedUtilities: budgetData.budgetFixedUtilities ? parseFloat(budgetData.budgetFixedUtilities) : null,
+            budgetFixedCar: budgetData.budgetFixedCar ? parseFloat(budgetData.budgetFixedCar) : null,
+            budgetFixedFood: budgetData.budgetFixedFood ? parseFloat(budgetData.budgetFixedFood) : null,
+            budgetDiscretionary: budgetData.budgetDiscretionary ? parseFloat(budgetData.budgetDiscretionary) : null,
+        };
+        saveProfilePartial(payload, setBudgetMessage, setIsSavingBudget, 'budget');
+    };
+
+    const handleRentalSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const payload = {
+            budgetRentalIncome: rentalData.budgetRentalIncome ? parseFloat(rentalData.budgetRentalIncome) : null,
+            budgetRentalExpenses: rentalData.budgetRentalExpenses ? parseFloat(rentalData.budgetRentalExpenses) : null,
+        };
+        saveProfilePartial(payload, setRentalMessage, setIsSavingRental, 'rental');
+    };
+
+    const handleWealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setWealthData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleWealthSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const payload = {
+            wealthAssetCash: wealthData.wealthAssetCash ? parseFloat(wealthData.wealthAssetCash) : null,
+            wealthAssetCar: wealthData.wealthAssetCar ? parseFloat(wealthData.wealthAssetCar) : null,
+            wealthAssetPrimaryResidence: wealthData.wealthAssetPrimaryResidence ? parseFloat(wealthData.wealthAssetPrimaryResidence) : null,
+            wealthAssetRentalProperties: wealthData.wealthAssetRentalProperties ? parseFloat(wealthData.wealthAssetRentalProperties) : null,
+            wealthLiabilityMortgage: wealthData.wealthLiabilityMortgage ? parseFloat(wealthData.wealthLiabilityMortgage) : null,
+            wealthLiabilityHeloc: wealthData.wealthLiabilityHeloc ? parseFloat(wealthData.wealthLiabilityHeloc) : null,
+            wealthLiabilityRentalMortgage: wealthData.wealthLiabilityRentalMortgage ? parseFloat(wealthData.wealthLiabilityRentalMortgage) : null,
+            wealthLiabilityRentalHeloc: wealthData.wealthLiabilityRentalHeloc ? parseFloat(wealthData.wealthLiabilityRentalHeloc) : null,
+            wealthLiabilityCreditCards: wealthData.wealthLiabilityCreditCards ? parseFloat(wealthData.wealthLiabilityCreditCards) : null,
+            wealthLiabilityCarLease: wealthData.wealthLiabilityCarLease ? parseFloat(wealthData.wealthLiabilityCarLease) : null,
+        };
+        saveProfilePartial(payload, setWealthMessage, setIsSavingWealth, 'wealth');
+    };
+
     const handleAddRow = () => {
-        setRows([
-            ...rows,
-            { id: crypto.randomUUID(), year: "", month: "", income: "", expenses: "", cashReserves: "" }
-        ]);
+        setRows([...rows, { id: crypto.randomUUID(), year: "", month: "", income: "", expenses: "", cashReserves: "" }]);
     };
 
     const handleRemoveRow = (id: string) => {
@@ -77,7 +274,6 @@ export default function FinanceSummaryClient() {
         setIsSaving(true);
         setMessage({ text: "", type: "" });
 
-        // Basic validation
         for (const row of rows) {
             if (!row.year || !row.month) {
                 setMessage({ text: "Year and Month are required for all rows.", type: "error" });
@@ -103,7 +299,6 @@ export default function FinanceSummaryClient() {
 
             if (!res.ok) throw new Error("Failed to save");
 
-            // Sort state logically so if users added old dates at the top it auto corrects
             const savedRows = [...rows];
             savedRows.sort((a, b) => `${b.year}-${b.month}`.localeCompare(`${a.year}-${a.month}`));
             setRows(savedRows);
@@ -115,6 +310,44 @@ export default function FinanceSummaryClient() {
             setIsSaving(false);
         }
     };
+
+    // Dynamic Logic
+    const totalIncome = (parseFloat(budgetData.budgetPaycheck) || 0) +
+        (parseFloat(budgetData.budgetDividends) || 0) +
+        (parseFloat(budgetData.budgetBonus) || 0) +
+        (parseFloat(budgetData.budgetOtherIncome) || 0);
+
+    const totalExpenses = (parseFloat(budgetData.budgetFixedHome) || 0) +
+        (parseFloat(budgetData.budgetFixedUtilities) || 0) +
+        (parseFloat(budgetData.budgetFixedCar) || 0) +
+        (parseFloat(budgetData.budgetFixedFood) || 0) +
+        (parseFloat(budgetData.budgetDiscretionary) || 0);
+
+    const totalBudgetSavings = totalIncome - totalExpenses;
+
+    const rentalIncome = parseFloat(rentalData.budgetRentalIncome) || 0;
+    const rentalExpenses = parseFloat(rentalData.budgetRentalExpenses) || 0;
+    const rentalNetProfit = rentalIncome - rentalExpenses;
+
+    // Wealth Calculations
+    const totalAssets = (
+        (parseFloat(wealthData.wealthAssetCash) || 0) +
+        totalInvestmentValue +
+        (parseFloat(wealthData.wealthAssetCar) || 0) +
+        (parseFloat(wealthData.wealthAssetPrimaryResidence) || 0) +
+        (parseFloat(wealthData.wealthAssetRentalProperties) || 0)
+    );
+
+    const totalLiabilities = (
+        (parseFloat(wealthData.wealthLiabilityMortgage) || 0) +
+        (parseFloat(wealthData.wealthLiabilityHeloc) || 0) +
+        (parseFloat(wealthData.wealthLiabilityRentalMortgage) || 0) +
+        (parseFloat(wealthData.wealthLiabilityRentalHeloc) || 0) +
+        (parseFloat(wealthData.wealthLiabilityCreditCards) || 0) +
+        (parseFloat(wealthData.wealthLiabilityCarLease) || 0)
+    );
+
+    const netWorth = totalAssets - totalLiabilities;
 
     if (isLoading) {
         return (
@@ -132,19 +365,103 @@ export default function FinanceSummaryClient() {
 
             <div className="w-full p-4 md:p-8">
                 <div className="max-w-5xl mx-auto pb-20">
+
+                    {/* BUDGET SECTION */}
                     <div className="flex items-center space-x-4 mb-8">
                         <div className="p-3 glass-panel-accent rounded-xl">
                             <Wallet className="h-8 w-8 text-teal-600 dark:text-teal-400" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Actual Monthly Cash Flow</h2>
+                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Budget Monthly Cashflow</h2>
                             <p className="text-neutral-600 dark:text-neutral-400">
-                                Track your income, expenses, and total available cash reserves over time.
+                                Set your baseline income and expense goals to automatically calculate your target savings.
                             </p>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleBudgetSubmit} className="space-y-6 mb-16">
+                        {budgetMessage.text && (
+                            <div className={`p-4 rounded-lg flex items-center space-x-3 ${budgetMessage.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                <AlertCircle className="h-5 w-5" />
+                                <span>{budgetMessage.text}</span>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Income Group */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Income</h3>
+                                    <span className="text-teal-600 dark:text-teal-500 font-semibold text-lg">${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Paycheck" name="budgetPaycheck" value={budgetData.budgetPaycheck} onChange={handleBudgetChange} />
+                                    <InputField label="Dividends" name="budgetDividends" value={budgetData.budgetDividends} onChange={handleBudgetChange} />
+                                    <InputField label="Bonus" name="budgetBonus" value={budgetData.budgetBonus} onChange={handleBudgetChange} />
+                                    <InputField label="Other" name="budgetOtherIncome" value={budgetData.budgetOtherIncome} onChange={handleBudgetChange} />
+                                </div>
+                            </div>
+
+                            {/* Expenses Group */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Expenses</h3>
+                                    <span className="text-red-500 dark:text-red-400 font-semibold text-lg">${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Fixed: Home" name="budgetFixedHome" value={budgetData.budgetFixedHome} onChange={handleBudgetChange} />
+                                    <InputField label="Fixed: Utilities" name="budgetFixedUtilities" value={budgetData.budgetFixedUtilities} onChange={handleBudgetChange} />
+                                    <InputField label="Fixed: Car" name="budgetFixedCar" value={budgetData.budgetFixedCar} onChange={handleBudgetChange} />
+                                    <InputField label="Fixed: Food" name="budgetFixedFood" value={budgetData.budgetFixedFood} onChange={handleBudgetChange} />
+                                    <InputField label="Discretionary" name="budgetDiscretionary" value={budgetData.budgetDiscretionary} onChange={handleBudgetChange} />
+                                </div>
+                            </div>
+
+                            {/* Savings Group */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
+                                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Savings</h3>
+                                <div className="text-4xl font-bold text-teal-600 dark:text-teal-400 mt-4 tracking-tight">
+                                    ${totalBudgetSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                                    Total Income - Total Expenses
+                                </p>
+                                {lastSavedDates.budget && (
+                                    <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-auto pt-2">
+                                        Last saved: {lastSavedDates.budget}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={isSavingBudget}
+                                className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
+                            >
+                                {isSavingBudget ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                                <span>{isSavingBudget ? "Saving Budget..." : "Save Budget"}</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr className="border-t border-neutral-200 dark:border-neutral-800 mb-12" />
+
+                    {/* ACTUALS SECTION */}
+                    <div className="flex items-center space-x-4 mb-8">
+                        <div className="p-3 glass-panel-accent rounded-xl">
+                            <LineChart className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Actual Monthly Cash Flow</h2>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                Track your observed income, expenses, and total available cash reserves over time.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6 mb-16">
                         {message.text && (
                             <div className={`p-4 rounded-lg flex items-center space-x-3 ${message.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                                 <AlertCircle className="h-5 w-5" />
@@ -254,7 +571,185 @@ export default function FinanceSummaryClient() {
                                 ) : (
                                     <Save className="h-5 w-5" />
                                 )}
-                                <span>{isSaving ? "Saving..." : "Save Finance Summary"}</span>
+                                <span>{isSaving ? "Saving..." : "Save Actuals"}</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr className="border-t border-neutral-200 dark:border-neutral-800 mb-12" />
+
+                    {/* RENTAL CASHFLOW SECTION */}
+                    <div className="flex items-center space-x-4 mb-8">
+                        <div className="p-3 glass-panel-accent rounded-xl">
+                            <Home className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Rental Cashflow</h2>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                Monitor the dedicated income and expenses specifically related to your rental properties.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleRentalSubmit} className="space-y-6">
+                        {rentalMessage.text && (
+                            <div className={`p-4 rounded-lg flex items-center space-x-3 ${rentalMessage.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                <AlertCircle className="h-5 w-5" />
+                                <span>{rentalMessage.text}</span>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Rental Income */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Income</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Rental Income" name="budgetRentalIncome" value={rentalData.budgetRentalIncome} onChange={handleRentalChange} />
+                                </div>
+                            </div>
+
+                            {/* Rental Expenses */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Expenses</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Rental Expenses" name="budgetRentalExpenses" value={rentalData.budgetRentalExpenses} onChange={handleRentalChange} />
+                                </div>
+                            </div>
+
+                            {/* Rental Net Profit/Loss */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
+                                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Net Profit / Loss</h3>
+                                <div className={`text-4xl font-bold mt-4 tracking-tight ${rentalNetProfit >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-500 dark:text-red-400'}`}>
+                                    ${rentalNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                                    Rental Income - Rental Expenses
+                                </p>
+                                {lastSavedDates.rental && (
+                                    <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-auto pt-2">
+                                        Last saved: {lastSavedDates.rental}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={isSavingRental}
+                                className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
+                            >
+                                {isSavingRental ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                                <span>{isSavingRental ? "Saving Rental Cashflow..." : "Save Rental Cashflow"}</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr className="border-t border-neutral-200 dark:border-neutral-800 mb-12 mt-12" />
+
+                    {/* PERSONAL WEALTH SECTION */}
+                    <div className="flex items-center space-x-4 mb-8">
+                        <div className="p-3 glass-panel-accent rounded-xl">
+                            <Landmark className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Personal Wealth</h2>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                Track your overall Net Worth by keeping your assets and liabilities up to date over time.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleWealthSubmit} className="space-y-6">
+                        {wealthMessage.text && (
+                            <div className={`p-4 rounded-lg flex items-center space-x-3 ${wealthMessage.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                <AlertCircle className="h-5 w-5" />
+                                <span>{wealthMessage.text}</span>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Assets */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Assets</h3>
+                                    <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">
+                                        Total: ${totalAssets.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Cash" name="wealthAssetCash" value={wealthData.wealthAssetCash} onChange={handleWealthChange} />
+
+                                    {/* Auto-synced Investment Field */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1 flex items-center justify-between">
+                                            Investment (Synced from Portfolio)
+                                            {isInvestmentLoading && <Loader2 className="h-3 w-3 animate-spin text-teal-500 ml-2" />}
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-neutral-500 dark:text-neutral-400 text-sm">$</span>
+                                            <input
+                                                type="text"
+                                                disabled
+                                                value={totalInvestmentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                className="w-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <InputField label="Car" name="wealthAssetCar" value={wealthData.wealthAssetCar} onChange={handleWealthChange} />
+                                    <InputField label="Primary Residence" name="wealthAssetPrimaryResidence" value={wealthData.wealthAssetPrimaryResidence} onChange={handleWealthChange} />
+                                    <InputField label="Rental Properties" name="wealthAssetRentalProperties" value={wealthData.wealthAssetRentalProperties} onChange={handleWealthChange} />
+                                </div>
+                            </div>
+
+                            {/* Liabilities */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4">
+                                <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                                    <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Liabilities</h3>
+                                    <span className="text-sm font-semibold text-red-500 dark:text-red-400">
+                                        Total: ${totalLiabilities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    <InputField label="Primary Residence Mortgage" name="wealthLiabilityMortgage" value={wealthData.wealthLiabilityMortgage} onChange={handleWealthChange} />
+                                    <InputField label="Personal HELOCs" name="wealthLiabilityHeloc" value={wealthData.wealthLiabilityHeloc} onChange={handleWealthChange} />
+                                    <InputField label="Rental Property Mortgages" name="wealthLiabilityRentalMortgage" value={wealthData.wealthLiabilityRentalMortgage} onChange={handleWealthChange} />
+                                    <InputField label="Rental Property HELOCs" name="wealthLiabilityRentalHeloc" value={wealthData.wealthLiabilityRentalHeloc} onChange={handleWealthChange} />
+                                    <InputField label="Credit Cards" name="wealthLiabilityCreditCards" value={wealthData.wealthLiabilityCreditCards} onChange={handleWealthChange} />
+                                    <InputField label="Car Lease" name="wealthLiabilityCarLease" value={wealthData.wealthLiabilityCarLease} onChange={handleWealthChange} />
+                                </div>
+                            </div>
+
+                            {/* Net Worth Calculation */}
+                            <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
+                                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Net Worth</h3>
+                                <div className={`text-4xl font-bold mt-4 tracking-tight ${netWorth >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-500 dark:text-red-400'}`}>
+                                    ${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                                    Total Assets - Total Liabilities
+                                </p>
+                                {lastSavedDates.wealth && (
+                                    <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-auto pt-2">
+                                        Last saved: {lastSavedDates.wealth}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={isSavingWealth}
+                                className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
+                            >
+                                {isSavingWealth ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                                <span>{isSavingWealth ? "Saving Personal Wealth..." : "Save Personal Wealth"}</span>
                             </button>
                         </div>
                     </form>
