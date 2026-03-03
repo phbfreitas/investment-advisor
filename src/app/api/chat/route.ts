@@ -63,6 +63,21 @@ export async function POST(request: Request) {
         })
       );
 
+      const { Items: cashflows } = await db.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+          ExpressionAttributeValues: {
+            ":pk": PROFILE_KEY,
+            ":skPrefix": "CASHFLOW#",
+          },
+          ScanIndexForward: false, // Descending sort (newest YYYY-MM string first)
+        })
+      );
+
+      const latestCashflow = cashflows && cashflows.length > 0 ? cashflows[0] : null;
+      const currentCashReserves = latestCashflow?.cashReserves || 0;
+
       const assetsList = assets || [];
       const assetSummary = assetsList.length > 0
         ? assetsList.map(a => `- ${a.quantity} shares of ${a.ticker} (Avg Cost: $${a.averageCost})`).join("\n")
@@ -72,7 +87,7 @@ export async function POST(request: Request) {
 STRATEGY: ${profile.strategy || "Not specified"}
 RISK TOLERANCE: ${profile.riskTolerance || "Not specified"}
 GOALS: ${profile.goals || "Not specified"}
-CASH RESERVES: $${profile.cashReserves || 0}
+CASH RESERVES: $${currentCashReserves}
 PORTFOLIO HOLDINGS:
 ${assetSummary}
 `;

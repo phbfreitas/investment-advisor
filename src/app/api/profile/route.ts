@@ -64,9 +64,6 @@ export async function POST(request: Request) {
             strategy: data.strategy,
             riskTolerance: data.riskTolerance,
             goals: data.goals,
-            monthlyIncome: data.monthlyIncome,
-            monthlyExpenses: data.monthlyExpenses,
-            cashReserves: data.cashReserves,
             updatedAt: new Date().toISOString(),
         };
 

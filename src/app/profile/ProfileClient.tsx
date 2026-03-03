@@ -12,9 +12,6 @@ export default function ProfilePage() {
         strategy: "",
         riskTolerance: "",
         goals: "",
-        monthlyIncome: "",
-        monthlyExpenses: "",
-        cashReserves: "",
     });
 
     useEffect(() => {
@@ -30,9 +27,6 @@ export default function ProfilePage() {
                         strategy: payload.strategy || "",
                         riskTolerance: payload.riskTolerance || "",
                         goals: payload.goals || "",
-                        monthlyIncome: payload.monthlyIncome?.toString() || "",
-                        monthlyExpenses: payload.monthlyExpenses?.toString() || "",
-                        cashReserves: payload.cashReserves?.toString() || "",
                     });
                 }
             } catch (error) {
@@ -53,12 +47,8 @@ export default function ProfilePage() {
         setIsSaving(true);
         setMessage({ text: "", type: "" });
 
-        // Convert strings to floats for numeric fields
         const payload = {
             ...formData,
-            monthlyIncome: formData.monthlyIncome ? parseFloat(formData.monthlyIncome) : null,
-            monthlyExpenses: formData.monthlyExpenses ? parseFloat(formData.monthlyExpenses) : null,
-            cashReserves: formData.cashReserves ? parseFloat(formData.cashReserves) : null,
         };
 
         try {
@@ -152,54 +142,6 @@ export default function ProfilePage() {
                                     <option value="Aggressive">Aggressive (Maximum growth, high volatility tolerance)</option>
                                     <option value="Speculative">Speculative (Willing to risk principal for huge rewards)</option>
                                 </select>
-                            </div>
-                        </div>
-
-                        <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800">
-                            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 mb-4">Cash Flow (Optional)</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Monthly Income</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3 text-neutral-400 dark:text-neutral-500">$</span>
-                                        <input
-                                            type="number"
-                                            name="monthlyIncome"
-                                            value={formData.monthlyIncome}
-                                            onChange={handleChange}
-                                            placeholder="0.00"
-                                            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl pl-8 pr-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Monthly Expenses</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3 text-neutral-400 dark:text-neutral-500">$</span>
-                                        <input
-                                            type="number"
-                                            name="monthlyExpenses"
-                                            value={formData.monthlyExpenses}
-                                            onChange={handleChange}
-                                            placeholder="0.00"
-                                            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl pl-8 pr-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Cash Reserves</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-3 text-neutral-400 dark:text-neutral-500">$</span>
-                                        <input
-                                            type="number"
-                                            name="cashReserves"
-                                            value={formData.cashReserves}
-                                            onChange={handleChange}
-                                            placeholder="0.00"
-                                            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl pl-8 pr-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
-                                        />
-                                    </div>
-                                </div>
                             </div>
                         </div>
 

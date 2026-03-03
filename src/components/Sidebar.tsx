@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut } from "lucide-react";
+import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
 const navigation = [
     { name: "Warren Buffett", href: "/", icon: Users },
     { name: "KPI Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
     { name: "My Financial Brain", href: "/profile", icon: BrainCircuit },
     { name: "Settings", href: "/settings", icon: Settings },
 ];
