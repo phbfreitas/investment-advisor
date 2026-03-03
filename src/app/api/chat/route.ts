@@ -83,11 +83,19 @@ export async function POST(request: Request) {
         ? assetsList.map(a => `- ${a.quantity} shares of ${a.ticker} (Avg Cost: $${a.averageCost})`).join("\n")
         : "No assets documented.";
 
+      const tIncome = (parseFloat(profile.budgetPaycheck) || 0) + (parseFloat(profile.budgetRentalIncome) || 0) + (parseFloat(profile.budgetDividends) || 0) + (parseFloat(profile.budgetBonus) || 0) + (parseFloat(profile.budgetOtherIncome) || 0);
+      const tExpenses = (parseFloat(profile.budgetFixedHome) || 0) + (parseFloat(profile.budgetFixedUtilities) || 0) + (parseFloat(profile.budgetFixedCar) || 0) + (parseFloat(profile.budgetFixedFood) || 0) + (parseFloat(profile.budgetDiscretionary) || 0) + (parseFloat(profile.budgetRentalExpenses) || 0);
+
+      const budgetSummary = tIncome > 0 || tExpenses > 0
+        ? `BUDGETED DECLARED INCOME: $${tIncome}\nBUDGETED DECLARED EXPENSES: $${tExpenses}\nTARGET MONTHLY SAVINGS: $${tIncome - tExpenses}`
+        : "No monthly budget defined.";
+
       contextString = `
 STRATEGY: ${profile.strategy || "Not specified"}
 RISK TOLERANCE: ${profile.riskTolerance || "Not specified"}
 GOALS: ${profile.goals || "Not specified"}
 CASH RESERVES: $${currentCashReserves}
+${budgetSummary}
 PORTFOLIO HOLDINGS:
 ${assetSummary}
 `;
