@@ -1,28 +1,48 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Upload, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2 } from "lucide-react";
-import { AddAssetModal } from "@/components/AddAssetModal";
+import { useState, useEffect, useMemo } from "react";
+import { Upload, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Market data is now optional/helper since the table uses DB values, but we still fetch it for live updates
   const [marketData, setMarketData] = useState<Record<string, any>>({});
   const [isMarketLoading, setIsMarketLoading] = useState(false);
 
+  // Editing state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sorting and Filtering state
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+
+  // Option lists derived from existing data
+  const accounts = useMemo(() => Array.from(new Set(assets.map(a => a.account).filter(Boolean))), [assets]);
+  const securityTypes = useMemo(() => Array.from(new Set(assets.map(a => a.securityType).filter(Boolean))), [assets]);
+  const strategyTypes = useMemo(() => Array.from(new Set(assets.map(a => a.strategyType).filter(Boolean))), [assets]);
+  const calls = useMemo(() => Array.from(new Set(assets.map(a => a.call).filter(Boolean))), [assets]);
+  const sectors = useMemo(() => Array.from(new Set(assets.map(a => a.sector).filter(Boolean))), [assets]);
+  const markets = useMemo(() => Array.from(new Set(assets.map(a => a.market).filter(Boolean))), [assets]);
+  const currencies = useMemo(() => Array.from(new Set(assets.map(a => a.currency).filter(Boolean))), [assets]);
+  const managementStyles = useMemo(() => Array.from(new Set(assets.map(a => a.managementStyle).filter(Boolean))), [assets]);
+  const risks = useMemo(() => Array.from(new Set(assets.map(a => a.risk).filter(Boolean))), [assets]);
+
   const fetchMarketData = async (symbols: string[]) => {
-    if (symbols.length === 0) return;
+    const validSymbols = symbols.filter(Boolean);
+    if (validSymbols.length === 0) return;
     setIsMarketLoading(true);
 
-    // Create unique set of tickers
-    const uniqueTickers = Array.from(new Set(symbols));
+    const uniqueTickers = Array.from(new Set(validSymbols));
 
     try {
       const promises = uniqueTickers.map(ticker =>
-        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json())
+        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json().catch(() => null))
       );
 
       const results = await Promise.all(promises);
@@ -34,7 +54,7 @@ export default function DashboardPage() {
         }
       });
 
-      setMarketData(newMarketData);
+      setMarketData(prev => ({ ...prev, ...newMarketData }));
     } catch (error) {
       console.error("Failed to load market data", error);
     } finally {
@@ -62,63 +82,204 @@ export default function DashboardPage() {
     fetchAssets();
   }, []);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    setIsUploading(true);
-    setMessage({ text: "", type: "" });
-
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await fetch("/api/portfolio", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to upload");
-
-      setMessage({ text: `Successfully imported ${data.count} assets from Wealthsimple.`, type: "success" });
-      fetchAssets();
-    } catch (error: any) {
-      setMessage({ text: error.message || "Error importing CSV.", type: "error" });
-    } finally {
-      setIsUploading(false);
-      // Reset input
-      e.target.value = "";
+  // Debounced live ticker fetch when editing ticker
+  useEffect(() => {
+    if (editingId && editForm.ticker) {
+      const timer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/market-data?ticker=${editForm.ticker}`);
+          const data = await res.json();
+          if (data && !data.error && data.currentPrice) {
+            setEditForm((prev: any) => ({
+              ...prev,
+              liveTickerPrice: data.currentPrice
+            }));
+          }
+        } catch (e) {
+          // ignore 
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [editForm.ticker, editingId]);
 
   const handleDeleteAsset = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this asset?")) return;
+    if (!confirm("Are you sure you want to delete this asset row?")) return;
 
     try {
       const res = await fetch(`/api/assets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete asset");
       fetchAssets();
-      setMessage({ text: "Asset deleted successfully.", type: "success" });
+      setMessage({ text: "Asset row deleted.", type: "success" });
     } catch (error: any) {
       setMessage({ text: error.message || "Failed to delete asset.", type: "error" });
     }
   };
 
-  const totalCostBasis = assets.reduce((acc, curr) => acc + (curr.quantity * curr.averageCost), 0);
-  const totalValue = assets.reduce((acc, curr) => {
-    const livePrice = marketData[curr.ticker]?.currentPrice || curr.averageCost;
-    return acc + (curr.quantity * livePrice);
-  }, 0);
+  const startEdit = (asset: any) => {
+    setEditingId(asset.id);
+    setEditForm({ ...asset });
+  };
 
-  const totalReturn = totalCostBasis > 0 ? ((totalValue - totalCostBasis) / totalCostBasis) * 100 : 0;
+  const handleEditChange = (field: string, value: any) => {
+    setEditForm((prev: any) => ({ ...prev, [field]: value }));
+  };
 
-  const portfolioDividendYield = totalValue > 0
+  const saveEdit = async () => {
+    setIsSaving(true);
+    try {
+      const method = editingId === "NEW" ? "POST" : "PUT";
+      const url = editingId === "NEW" ? "/api/assets" : `/api/assets/${editingId}`;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!res.ok) throw new Error("Failed to save asset");
+
+      setEditingId(null);
+      setEditForm({});
+      fetchAssets();
+    } catch (error: any) {
+      setMessage({ text: error.message || "Failed to save asset.", type: "error" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const addNewRow = () => {
+    setEditingId("NEW");
+    setEditForm({
+      id: "NEW",
+      account: "",
+      ticker: "",
+      securityType: "",
+      strategyType: "",
+      call: "",
+      sector: "",
+      market: "",
+      currency: "",
+      managementStyle: "",
+      externalRating: "",
+      managementFee: 0,
+      quantity: 0,
+      liveTickerPrice: 0,
+      bookCost: 0,
+      marketValue: 0,
+      profitLoss: 0,
+      yield: 0,
+      oneYearReturn: 0,
+      fiveYearReturn: 0,
+      risk: "",
+      volatility: 0,
+      expectedAnnualDividends: 0
+    });
+  };
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedAssets = useMemo(() => {
+    // 1. Filter
+    let filteredAssets = assets.filter(asset => {
+      return Object.entries(filters).every(([key, filterValue]) => {
+        if (!filterValue) return true;
+
+        let assetValue = asset[key];
+        if (key === 'liveTickerPrice') {
+          assetValue = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
+        }
+
+        if (assetValue == null) return false;
+        return assetValue.toString().toLowerCase().includes(filterValue.toLowerCase());
+      });
+    });
+
+    // 2. Sort
+    let sortableItems = [...filteredAssets];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Ensure live ticker price uses the actively fetched market data when sorting
+        if (sortConfig.key === 'liveTickerPrice') {
+          aValue = marketData[a.ticker]?.currentPrice ?? a.liveTickerPrice;
+          bValue = marketData[b.ticker]?.currentPrice ?? b.liveTickerPrice;
+        }
+
+        if (aValue == null) aValue = '';
+        if (bValue == null) bValue = '';
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+
+        const aStr = aValue.toString().toLowerCase();
+        const bStr = bValue.toString().toLowerCase();
+        if (aStr < bStr) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aStr > bStr) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [assets, sortConfig, filters, marketData]);
+
+  const renderSortableHeader = (label: string, sortKey: string) => (
+    <th
+      key={sortKey}
+      className="px-3 py-3 font-semibold text-neutral-900 dark:text-neutral-100 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group select-none whitespace-nowrap"
+      onClick={() => handleSort(sortKey)}
+    >
+      <div className="flex items-center space-x-1">
+        <span>{label}</span>
+        <span className="text-neutral-400 dark:text-neutral-500 flex-shrink-0">
+          {sortConfig?.key === sortKey ? (
+            sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+          ) : (
+            <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+        </span>
+      </div>
+    </th>
+  );
+
+  const renderFilterInput = (filterKey: string, widthClass = "w-20") => (
+    <td key={filterKey} className="px-2 py-2">
+      <input
+        type="text"
+        placeholder="Filter..."
+        className={`${widthClass} p-1 text-xs rounded border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-400/50 focus:outline-none focus:border-teal-500/50`}
+        value={filters[filterKey] || ""}
+        onChange={(e) => setFilters(prev => ({ ...prev, [filterKey]: e.target.value }))}
+      />
+    </td>
+  );
+
+  const clearFilters = () => setFilters({});
+
+  const totalMarketValue = assets.reduce((acc, curr) => acc + (Number(curr.marketValue) || 0), 0);
+  const totalExpectedDividends = assets.reduce((acc, curr) => acc + (Number(curr.expectedAnnualDividends) || 0), 0);
+
+  // Keep legacy KPIs for top display mostly intact, adapting to new schema
+  const totalCostBasis = assets.reduce((acc, curr) => acc + (Number(curr.bookCost) || 0), 0);
+  const totalReturn = totalCostBasis > 0 ? ((totalMarketValue - totalCostBasis) / totalCostBasis) * 100 : 0;
+
+  const portfolioDividendYield = totalMarketValue > 0
     ? assets.reduce((acc, curr) => {
-      const livePrice = marketData[curr.ticker]?.currentPrice || curr.averageCost;
-      const yieldPercent = marketData[curr.ticker]?.dividendYield || 0;
-      const weight = (curr.quantity * livePrice) / totalValue;
+      const yieldPercent = Number(curr.yield) || 0;
+      const weight = (Number(curr.marketValue) || 0) / totalMarketValue;
       return acc + (weight * yieldPercent);
     }, 0)
     : 0;
@@ -129,25 +290,17 @@ export default function DashboardPage() {
         <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200 w-full text-center md:text-left">My Investment Portfolio</h1>
 
         <div className="flex items-center space-x-2 md:space-x-4 w-full md:w-auto justify-between md:justify-end">
-          <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Upload className="h-4 w-4 text-teal-600 dark:text-teal-500 shrink-0" />}
-            <span className="hidden sm:inline">{isUploading ? "Uploading..." : "Import Wealthsimple CSV"}</span>
-            <span className="sm:hidden">{isUploading ? "..." : "Import CSV"}</span>
-            <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+          <label className="cursor-not-allowed flex-1 md:flex-none justify-center items-center space-x-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center opacity-60">
+            <Upload className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Import Wealthsimple CSV</span>
+            <span className="sm:hidden">Import CSV</span>
+            <input type="file" accept=".csv" className="hidden" disabled={true} />
           </label>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-teal-50 dark:bg-teal-600/20 text-teal-700 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-600/30 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center"
-          >
-            <Plus className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Add Manual Asset</span>
-            <span className="sm:hidden">Add Asset</span>
-          </button>
         </div>
       </header>
 
       <div className="w-full p-4 md:p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="max-w-[1400px] mx-auto space-y-8">
 
           {message.text && (
             <div className={`p-4 rounded-lg flex items-center space-x-3 ${message.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
@@ -159,9 +312,9 @@ export default function DashboardPage() {
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-panel p-6 flex flex-col justify-center">
-              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Estimated Value</span>
+              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Market Value</span>
               <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
-                \${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                \${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
             </div>
@@ -174,7 +327,7 @@ export default function DashboardPage() {
             <div className="glass-panel p-6 flex flex-col justify-center">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Avg Dividend Yield</span>
               <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-                {portfolioDividendYield.toFixed(2)}%
+                {(portfolioDividendYield * 100).toFixed(2)}%
               </h3>
             </div>
           </div>
@@ -184,7 +337,7 @@ export default function DashboardPage() {
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between transition-colors duration-300">
               <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 flex items-center">
                 <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-500 mr-2" />
-                Holdings
+                Holdings Breakdown
               </h3>
               <button
                 onClick={fetchAssets}
@@ -199,77 +352,211 @@ export default function DashboardPage() {
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300">
                   <tr>
-                    <th className="px-6 py-4">Ticker</th>
-                    <th className="px-6 py-4">Quantity</th>
-                    <th className="px-6 py-4">Avg Cost</th>
-                    <th className="px-6 py-4">Live Price</th>
-                    <th className="px-6 py-4">Total Value</th>
-                    <th className="px-6 py-4">Change</th>
-                    <th className="px-6 py-4">Source</th>
-                    <th className="px-6 py-4"></th>
+                    {renderSortableHeader("Account", "account")}
+                    {renderSortableHeader("Ticker", "ticker")}
+                    {renderSortableHeader("Security type", "securityType")}
+                    {renderSortableHeader("Strategy Type", "strategyType")}
+                    {renderSortableHeader("Call", "call")}
+                    {renderSortableHeader("Sector", "sector")}
+                    {renderSortableHeader("Market", "market")}
+                    {renderSortableHeader("Currency", "currency")}
+                    {renderSortableHeader("Mgt Style", "managementStyle")}
+                    {renderSortableHeader("Mgt Fee", "managementFee")}
+                    {renderSortableHeader("# Tickers", "quantity")}
+                    {renderSortableHeader("Live $ ticker", "liveTickerPrice")}
+                    {renderSortableHeader("Book cost", "bookCost")}
+                    {renderSortableHeader("Market Value", "marketValue")}
+                    {renderSortableHeader("Profit/loss", "profitLoss")}
+                    {renderSortableHeader("Yield", "yield")}
+                    {renderSortableHeader("1 YR Return", "oneYearReturn")}
+                    {renderSortableHeader("5 YR Return", "fiveYearReturn")}
+                    {renderSortableHeader("Risk", "risk")}
+                    {renderSortableHeader("Volatility", "volatility")}
+                    {renderSortableHeader("Expected Div", "expectedAnnualDividends")}
+                    {renderSortableHeader("Ext. Rating", "externalRating")}
+                    <th className="px-3 py-3 text-right">Actions</th>
+                  </tr>
+                  <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+                    {renderFilterInput("account")}
+                    {renderFilterInput("ticker")}
+                    {renderFilterInput("securityType", "w-24")}
+                    {renderFilterInput("strategyType", "w-28")}
+                    {renderFilterInput("call", "w-16")}
+                    {renderFilterInput("sector")}
+                    {renderFilterInput("market")}
+                    {renderFilterInput("currency", "w-16")}
+                    {renderFilterInput("managementStyle", "w-24")}
+                    {renderFilterInput("managementFee", "w-16")}
+                    {renderFilterInput("quantity", "w-20")}
+                    {renderFilterInput("liveTickerPrice", "w-24")}
+                    {renderFilterInput("bookCost")}
+                    {renderFilterInput("marketValue")}
+                    {renderFilterInput("profitLoss")}
+                    {renderFilterInput("yield", "w-16")}
+                    {renderFilterInput("oneYearReturn")}
+                    {renderFilterInput("fiveYearReturn")}
+                    {renderFilterInput("risk", "w-16")}
+                    {renderFilterInput("volatility")}
+                    {renderFilterInput("expectedAnnualDividends")}
+                    {renderFilterInput("externalRating")}
+                    <td className="px-3 py-2 text-right">
+                      {Object.keys(filters).length > 0 && (
+                        <button onClick={clearFilters} className="text-neutral-400 hover:text-red-500 transition-colors" title="Clear Filters">
+                          <FilterX className="h-4 w-4 inline" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 transition-colors duration-300">
-                  {assets.length === 0 && !isLoading ? (
+                  {[...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].length === 0 && !isLoading ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-neutral-500">
-                        No assets found. Import a CSV or add manually to see your portfolio.
+                      <td colSpan={23} className="px-6 py-8 text-center text-neutral-500">
+                        No assets found. Click Add Row below.
                       </td>
                     </tr>
                   ) : (
-                    assets.map((asset) => {
-                      const mData = marketData[asset.ticker];
-                      const livePrice = mData?.currentPrice || asset.averageCost;
-                      const returnPct = ((livePrice - asset.averageCost) / asset.averageCost) * 100;
+                    [...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].map((asset) => {
+                      const isEditing = editingId === asset.id;
+
+                      const renderField = (field: string, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
+                        if (isEditing) {
+                          if (isSelect) {
+                            return (
+                              <select
+                                className={`w-28 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 ${bgClass}`}
+                                value={editForm[field] || ""}
+                                onChange={(e) => handleEditChange(field, e.target.value)}
+                              >
+                                <option value=""></option>
+                                {options.map(o => (
+                                  <option key={o} value={o}>{o}</option>
+                                ))}
+                              </select>
+                            );
+                          }
+                          return (
+                            <input
+                              type={type}
+                              className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
+                              value={editForm[field] ?? ""}
+                              onChange={(e) => handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+                            />
+                          );
+                        }
+
+                        // Display mode
+                        if (type === 'number') {
+                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{Number(asset[field] || 0)?.toLocaleString()}</span>;
+                        }
+                        return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{asset[field]}</span>;
+                      };
 
                       return (
                         <tr key={asset.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors">
-                          <td className="px-6 py-4 font-medium text-neutral-900 dark:text-neutral-200">{asset.ticker}</td>
-                          <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">{asset.quantity.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">\${asset.averageCost.toFixed(2)}</td>
-
-                          <td className="px-6 py-4 text-neutral-900 dark:text-neutral-100">
-                            {mData ? `\$${livePrice.toFixed(2)}` : <span className="text-neutral-400 dark:text-neutral-500">Wait...</span>}
+                          <td className="px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200">
+                            {renderField("account", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
-
-                          <td className="px-6 py-4 text-neutral-800 dark:text-neutral-200">
-                            \${(asset.quantity * livePrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <td className="px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100">
+                            {renderField("ticker", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
-
-                          <td className={`px-6 py-4 font-medium ${returnPct >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                            {returnPct > 0 ? "+" : ""}{returnPct.toFixed(2)}%
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
-
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${asset.institution === 'Wealthsimple'
-                              ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-500'
-                              : 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400'
-                              }`}>
-                              {asset.institution || 'Manual'}
-                            </span>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("sector", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("managementFee", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
+                          {/* Live Ticker: Readonly when not editing, automatically updated based on ticker input */}
+                          <td className="px-3 py-3 text-emerald-600 dark:text-emerald-400 font-medium">
+                            {isEditing ? (
+                              <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={editForm.liveTickerPrice ?? 0} onChange={e => handleEditChange('liveTickerPrice', parseFloat(e.target.value) || 0)} />
+                            ) : (
+                              (() => {
+                                const price = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
+                                const numPrice = Number(price);
+                                return isNaN(numPrice) ? "N/A" : `\$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                              })()
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("bookCost", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("marketValue", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("yield", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("oneYearReturn", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("fiveYearReturn", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("volatility", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("externalRating", false, [], "text")}</td>
+
+                          <td className="px-3 py-3 text-right">
+                            <div className="flex items-center justify-end space-x-2">
+                              {isEditing ? (
+                                <button onClick={saveEdit} disabled={isSaving} className="text-teal-600 hover:text-teal-700 dark:text-teal-500 p-1">
+                                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                </button>
+                              ) : (
+                                <>
+                                  <button onClick={() => startEdit(asset)} className="text-blue-500 hover:text-blue-700 p-1">
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                  <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1">
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
                     })
                   )}
+                  {/* Totals Row */}
+                  {(assets.length > 0 || editingId === "NEW") && (
+                    <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
+                      <td colSpan={13} className="px-3 py-4 text-right">TOTAL:</td>
+                      <td className="px-3 py-4">\${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td colSpan={6}></td>
+                      <td className="px-3 py-4">\${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td colSpan={2}></td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
+              <div className="p-4 flex items-center justify-center border-t border-neutral-200 dark:border-neutral-800">
+                <button
+                  onClick={addNewRow}
+                  disabled={editingId === "NEW"}
+                  className="flex items-center space-x-2 text-teal-600 dark:text-teal-500 hover:text-teal-700 font-medium text-sm disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Row</span>
+                </button>
+              </div>
             </div>
           </div>
 
         </div>
       </div>
-
-      <AddAssetModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={() => { setIsModalOpen(false); fetchAssets(); }}
-      />
     </div>
   );
 }

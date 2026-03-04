@@ -26,12 +26,14 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "yahoo-finance2": "^3.13.0"
   },
   "devDependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.999.0",
     "@aws-sdk/client-lambda": "^3.999.0",
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.0-alpha.3",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",

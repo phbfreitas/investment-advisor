@@ -123,19 +123,8 @@ export default function FinanceSummaryClient() {
 
                 // Fetch Investment Values
                 if (profileData.assets && profileData.assets.length > 0) {
-                    const uniqueTickers = Array.from(new Set(profileData.assets.map((a: any) => a.ticker)));
-                    const promises = uniqueTickers.map((ticker: any) =>
-                        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json())
-                    );
-                    const marketResults = await Promise.all(promises);
-                    const marketDataMap: Record<string, any> = {};
-                    marketResults.forEach(data => {
-                        if (data && data.ticker && !data.error) marketDataMap[data.ticker] = data;
-                    });
-
                     const totalVal = profileData.assets.reduce((acc: number, curr: any) => {
-                        const livePrice = marketDataMap[curr.ticker as string]?.currentPrice || curr.averageCost;
-                        return acc + (curr.quantity * livePrice);
+                        return acc + (Number(curr.marketValue) || 0);
                     }, 0);
                     setTotalInvestmentValue(totalVal);
                     setIsInvestmentLoading(false);

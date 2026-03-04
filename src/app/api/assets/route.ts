@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// POST /api/assets - Adds a manual asset
+// POST /api/assets - Adds a new manual asset row
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -18,7 +18,6 @@ export async function POST(request: Request) {
         const PROFILE_KEY = `PROFILE#${session.user.email}`;
         const data = await request.json();
 
-        // For MVP, look up the single profile
         const { Item: profile } = await db.send(
             new GetCommand({
                 TableName: TABLE_NAME,
@@ -27,7 +26,7 @@ export async function POST(request: Request) {
         );
 
         if (!profile) {
-            return NextResponse.json({ error: "Please setup your Financial Brain profile first" }, { status: 400 });
+            return NextResponse.json({ error: "Please setup your profile first" }, { status: 400 });
         }
 
         const assetId = uuidv4();
@@ -39,15 +38,31 @@ export async function POST(request: Request) {
             id: assetId,
             profileId: PROFILE_KEY,
             type: "ASSET",
+
+            account: data.account || "",
             ticker: data.ticker || "",
-            name: data.name || "",
-            assetType: data.assetType || "OTHER",
+            securityType: data.securityType || "",
+            strategyType: data.strategyType || "",
+            call: data.call || "",
+            sector: data.sector || "",
+            market: data.market || "",
+            currency: data.currency || "",
+            managementStyle: data.managementStyle || "",
+            externalRating: data.externalRating || "",
+
+            managementFee: parseFloat(data.managementFee) || 0,
             quantity: parseFloat(data.quantity) || 0,
-            averageCost: parseFloat(data.averageCost) || 0,
-            currentPrice: parseFloat(data.averageCost) || 0, // Fallback until updated
-            currency: data.currency || "USD",
-            institution: data.institution || "Manual",
-            isManuallyAdded: true,
+            liveTickerPrice: parseFloat(data.liveTickerPrice) || 0,
+            bookCost: parseFloat(data.bookCost) || 0,
+            marketValue: parseFloat(data.marketValue) || 0,
+            profitLoss: parseFloat(data.profitLoss) || 0,
+            yield: parseFloat(data.yield) || 0,
+            oneYearReturn: parseFloat(data.oneYearReturn) || 0,
+            fiveYearReturn: parseFloat(data.fiveYearReturn) || 0,
+            risk: data.risk || "",
+            volatility: parseFloat(data.volatility) || 0,
+            expectedAnnualDividends: parseFloat(data.expectedAnnualDividends) || 0,
+
             updatedAt: new Date().toISOString(),
         };
 

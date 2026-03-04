@@ -17,7 +17,7 @@
   --color-brand-800: #115e59;
   --color-brand-900: #134e4a;
   --color-brand-950: #042f2e;
-  
+
   --color-bg-base: #0a0a0a;
   --color-bg-surface: #171717;
   --color-bg-elevated: #262626;
@@ -28,7 +28,9 @@
 }
 
 @layer base {
-  html, body {
+
+  html,
+  body {
     @apply antialiased min-h-screen selection:bg-[var(--color-brand-500)] selection:text-white;
   }
 }
@@ -37,12 +39,77 @@
   .glass-panel {
     @apply bg-white dark:bg-[var(--color-bg-surface)] border border-neutral-200 dark:border-[var(--color-bg-elevated)] shadow-sm dark:shadow-sm shadow-neutral-200 dark:shadow-black/50 backdrop-blur-md rounded-2xl transition-colors duration-300;
   }
-  
+
   .glass-panel-accent {
     @apply bg-gradient-to-br from-neutral-50 to-white dark:from-[var(--color-bg-elevated)] dark:to-[var(--color-bg-surface)] border border-teal-500/20 dark:border-[var(--color-brand-800)]/30 backdrop-blur-md rounded-2xl transition-colors duration-300;
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-teal-800 dark:from-[var(--color-brand-300)] dark:to-[var(--color-brand-600)];
+  }
+
+  /* Manual Markdown Formatting for ReactMarkdown since Typography plugin fails in Next15/v4 */
+  .prose {
+    @apply text-neutral-800 dark:text-neutral-200 leading-relaxed;
+  }
+
+  .prose p {
+    @apply mb-4 mt-2;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    @apply font-bold text-neutral-900 dark:text-neutral-100 mt-6 mb-3;
+  }
+
+  .prose h1 {
+    @apply text-2xl border-b border-neutral-200 dark:border-neutral-800 pb-2;
+  }
+
+  .prose h2 {
+    @apply text-xl;
+  }
+
+  .prose h3 {
+    @apply text-lg;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply my-4 pl-6;
+  }
+
+  .prose ul {
+    @apply list-disc;
+  }
+
+  .prose ol {
+    @apply list-decimal;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  .prose strong {
+    @apply font-extrabold text-neutral-900 dark:text-neutral-50;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-teal-500 pl-4 py-1 my-4 italic text-neutral-600 dark:text-neutral-400 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-r-lg;
+  }
+
+  .prose table {
+    @apply w-full my-6 text-sm text-left;
+  }
+
+  .prose th {
+    @apply bg-neutral-100 dark:bg-neutral-800 font-semibold px-4 py-3 border-b border-neutral-200 dark:border-neutral-700;
+  }
+
+  .prose td {
+    @apply px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/50;
   }
 }
