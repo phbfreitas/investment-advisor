@@ -128,7 +128,7 @@ USER INFO & PORTFOLIO:\n${contextString}`;
         }
 
         // Call Gemini with streaming
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Use regular flash for smarter long-form text reporting
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use regular flash for smarter long-form text reporting
         const resultStream = await model.generateContentStream({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             systemInstruction: {
