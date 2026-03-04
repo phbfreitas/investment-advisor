@@ -128,14 +128,11 @@ USER INFO & PORTFOLIO:\n${contextString}`;
         }
 
         // Call Gemini with streaming
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use regular flash for smarter long-form text reporting
-        const resultStream = await model.generateContentStream({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            systemInstruction: {
-                role: "user",
-                parts: [{ text: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable." }]
-            }
-        });
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable."
+        }); // Use regular flash for smarter long-form text reporting
+        const resultStream = await model.generateContentStream(prompt);
 
         const stream = new ReadableStream({
             async start(controller) {
