@@ -158,6 +158,16 @@ USER INFO & PORTFOLIO:\n${contextString}`;
 
     } catch (error: any) {
         console.error("Guidance API Error:", error);
+
+        // Handle Gemini Rate Limits gracefully
+        const isRateLimit = error?.status === 429 || error?.message?.includes("429");
+        if (isRateLimit) {
+            return NextResponse.json(
+                { error: "The AI Advisor is currently experiencing high traffic and is rate-limited. Please wait 60 seconds and try again." },
+                { status: 429 }
+            );
+        }
+
         return NextResponse.json(
             { error: "An error occurred while analyzing the portfolio." },
             { status: 500 }
