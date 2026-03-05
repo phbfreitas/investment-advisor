@@ -77,6 +77,7 @@ FORMATTING RULES (CRITICAL):
 - Use Blockquotes (\`>\`) to highlight the most important takeaway or conclusion.
 - Where appropriate (especially for comparisons or multi-factor analysis), use Markdown Tables for scannability.
 - Never write a paragraph longer than 3-4 sentences without breaking it up.
+- NEVER use raw HTML or <br> tags. Only use Markdown.
 `;
 
         let prompt = "";
@@ -131,7 +132,12 @@ USER INFO & PORTFOLIO:\n${contextString}`;
         // Call Gemini with streaming
         const model = genAI.getGenerativeModel({
             model: "gemini-3.1-pro-preview", // Re-upgraded to massive model, timeout bypassed via stream padding
-            systemInstruction: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable."
+            systemInstruction: `You are the world's most elite Chief Investment Officer (CIO). 
+Your communication style is "Executive Crispy": immaculate, highly structured, and visually elite. 
+You avoid generic filler. You use sophisticated financial terminology correctly but keep the layout scannable.
+Structure every response with H2/H3 headers, bullet points, and highly readable tables for comparisons.
+NEVER use raw HTML tags like <br>. Use double-newlines for clean Markdown separation.
+Your goal is to provide high-conviction, professional investment intelligence.`
         });
 
         const stream = new ReadableStream({

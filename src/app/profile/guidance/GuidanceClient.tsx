@@ -70,7 +70,10 @@ export default function GuidanceClient() {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                setGuidanceResponse((prev) => prev + decoder.decode(value, { stream: true }));
+                const chunk = decoder.decode(value, { stream: true });
+                // Filter out the zero-width space heartbeats used for AWS timeout bypass
+                const cleanChunk = chunk.replace(/\u200B/g, "");
+                setGuidanceResponse((prev) => prev + cleanChunk);
             }
         } catch (error: any) {
             console.error("Guidance Error:", error);
