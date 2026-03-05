@@ -21,11 +21,11 @@ export async function POST(request: Request) {
 
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
         const { directiveId, ticker } = await request.json();
 
         if (!directiveId) {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         const { Item: profile } = await db.send(
             new GetCommand({
                 TableName: TABLE_NAME,
-                Key: { PK: PROFILE_KEY, SK: PROFILE_KEY },
+                Key: { PK: PROFILE_KEY, SK: "META" },
             })
         );
 
@@ -129,9 +129,9 @@ USER INFO & PORTFOLIO:\n${contextString}`;
 
         // Call Gemini with streaming
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-3.1-pro-preview", // Upgraded to the deepest 3.1 preview model based on user request
             systemInstruction: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable."
-        }); // Use regular flash for smarter long-form text reporting
+        }); // Use Pro models for long-form text reporting and complex directives
         const resultStream = await model.generateContentStream(prompt);
 
         const stream = new ReadableStream({

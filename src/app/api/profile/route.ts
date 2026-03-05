@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
 
         // Fetch the profile
         const { Item: profile } = await db.send(
@@ -21,7 +21,7 @@ export async function GET() {
                 TableName: TABLE_NAME,
                 Key: {
                     PK: PROFILE_KEY,
-                    SK: PROFILE_KEY,
+                    SK: "META",
                 },
             })
         );
@@ -49,25 +49,25 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
         const data = await request.json();
 
         // Fetch existing to avoid nuking fields not included in the current payload
         const { Item: existingProfile } = await db.send(
             new GetCommand({
                 TableName: TABLE_NAME,
-                Key: { PK: PROFILE_KEY, SK: PROFILE_KEY },
+                Key: { PK: PROFILE_KEY, SK: "META" },
             })
         );
 
         // Put operation naturally updates or creates
         const profileData = {
             PK: PROFILE_KEY,
-            SK: PROFILE_KEY,
+            SK: "META",
             type: "PROFILE",
             strategy: data.strategy !== undefined ? data.strategy : existingProfile?.strategy,
             riskTolerance: data.riskTolerance !== undefined ? data.riskTolerance : existingProfile?.riskTolerance,

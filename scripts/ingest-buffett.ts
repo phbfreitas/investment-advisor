@@ -145,9 +145,9 @@ async function main() {
 
     console.log(`\nGenerating embeddings for ${allChunks.length} total chunks...`);
 
-    // 2. Embed with Safe Rate Limiting
-    // Free tier usually limits embeddings to 1500 RPM, but occasionally flags 15 RPM for standard generated content APIs. 
-    // We execute them sequentially to be extremely safe, falling back to exponential backoff dynamically if flagged.
+    // 2. Embed with Paid Tier Limits
+    // The user is on a paid tier which typically permits a much higher RPM limit.
+    // We execute them sequentially with dynamic exponential backoff safely without artificial delays.
     const finalChunks: DocumentChunk[] = [];
     let processedCount = 0;
 
@@ -159,8 +159,6 @@ async function main() {
         processedCount++;
         process.stdout.write(`\rProcessed ${processedCount}/${allChunks.length} embeddings.`);
 
-        // Small standard delay between successful requests
-        await sleep(250);
     }
 
     console.log("\n\nSaving generated vector store...");

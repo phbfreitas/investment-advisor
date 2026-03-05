@@ -1,0 +1,74 @@
+--- Items only in phbfreitas2@gmail.com ---
+
+--- Items only in sialvesamaral@gmail.com ---
+PROFILE#sialvesamaral@gmail.com: {
+  "strategy": "​1. Executive Summary: Management Context\n​I have managed our family wealth through two distinct strategic phases over the last 16 years. My management has evolved from tangible assets to a liquid, high-performance equity portfolio. I have navigated our finances through two distinct strategic phases. From 2010 to 2020, I focused on building our foundation through real estate. However, once our debt levels reached a point where I no longer felt comfortable, I executed a pivot into liquid shares and ETFs. My approach is rooted in a \"Buy and Hold\" philosophy, focusing on buying quality assets when they are low.\n​Current Asset Base: $1,000,000+ in total liquid investments as of 2025.\n​Over the past 16 years, I have navigated our finances through two distinct strategic phases. From 2010 to 2020, I focused on building our foundation through real estate. However, once our debt levels reached a point where I no longer felt comfortable, I executed a pivot into liquid shares and ETFs.\n​Infrastructure: 100% of capital is deployed in tax-sheltered environments (TFSA and RRSP). I have successfully executed a five-year plan to max out all available contribution room.\n​2. Investment Philosophy: Market Leadership & Tactical Income\n​My strategy rejects low-yield traditional banking products in favor of \"High-Performance Engines.\" I self-direct all accounts to eliminate 2%+ management fees and maintain an average annual return of 10%+.\n​A. Growth Directive: Information Technology (IT) Focus\n​I center our growth on global innovation leaders.\n​Core Benchmark: S&P 500 (ZSP) and Nasdaq-100 (XQQ).\n​Risk Profile: High-Risk/Aggressive. I am a \"Tactical Opportunist\" who utilizes small market crashes and temporary dips to build or expand positions.\n​Sector Bias: Intentional heavy weighting in Technology (AI, Software, Semiconductors) as the primary driver of capital appreciation.\n​B. The \"Income Engine\" Directive\n​I manage a \"Dividend Snowball\" designed to provide a secondary monthly salary.\n​Strategy: A balanced allocation of 50% Stock Growth and 50% High-Yield Income.\n​Current Milestone: $3,000/month in passive dividends (achieved 2025).\n​2-Year Target: $4,000/month by 2028.\n​3. Strategic Wins & Portfolio Multipliers:\nStrategy Strategic Impact\nThe Debt Pivot Shifted from Real Estate to Equities when debt peaked. De-risked lifestyle while accelerating liquid wealth.\nThe \"Team\" Model High-income earner + High-discipline multiplier. Created a cycle of constant capital infusion and growth.\nTax Maximization 100% TFSA/RRSP utilization. Portfolio is shielded from tax drag, allowing full compounding.\nLiability Reduction Personal Mortgage Paydown. Using excess capital to eliminate high-interest personal debt.\n\nObjective: Maintain a minimum 10% annual total return on the $1.1M+ base while achieving a $4,000/month dividend floor in 2026, with a mandate for continuous dividend growth thereafter.\n1. The Three-Bucket Asset Classification\nAll assets must be categorized and monitored according to these three functional \"Buckets\" under \"Strwtegy type\" in the holdings:\nBucket A: Pure Growth (40% Target Allocation)\nDefinition: High-quality assets with near-zero yield focused 100% on capital appreciation.\nCore Tickers: XQQ, ZSP, VGT, VTI, COST (Costco), DOL (Dollarama).\nStrategic Role: The \"Wealth Engine.\" To ensure the principal grows without the \"cap\" of covered call options, providing 100% participation in market rallies.\nBucket B: The Mix - Hybrids (40% Target Allocation)\nDefinition: Modern income vehicles that combine high-yield (via Covered Calls) with equity participation.\nCore Tickers: JEPQ, HYLD.TO, QMAX.TO, ZWG, ZWK.\nStrategic Role: The \"Income Driver.\" This bucket generates the bulk of the monthly cash flow while allowing for moderate capital growth.\nBucket C: Pure Dividend (20% Target Allocation)\nDefinition: Mature, low-growth assets with high, stable, and growing dividend yields (Dividend Aristocrats).\nCore Tickers: Canadian Banks (RY, CM, BNS), ZLB (Low Volatility), HMAX, MFC, GWO.\nStrategic Role: The \"Anchor.\" Provides stability during high-volatility tech corrections and ensures the dividend floor is never compromised.\nRisk Profile & Tactical Instructions\n​Risk Tolerance: Aggressive/Tactical Opportunist.\n​Tax Optimization: All holdings must remain within TFSA and RRSP wrappers to ensure 100% tax-free compounding.\n​Buy-the-Dip Protocol: During tech-sector \"dips\" or market corrections, the AI Agent should flag opportunities to use accumulated dividends to increase positions in Bucket A (Pure Growth) assets at a discount.\n\n",
+  "updatedAt": "2026-03-04T16:32:51.130Z",
+  "riskTolerance": "Aggressive",
+  "goals": "2026 Objective: Reach $1,000,000 within the Wealthsimple platform alone.\n2027 Objective: Target of $4,000/month in dividends.\n\nAlways max out RSP and TFSA and than pay out the primary home mortgage.\n\nLong term goal: mortgage free for primary home ",
+  "PK": "PROFILE#sialvesamaral@gmail.com",
+  "type": "PROFILE",
+  "SK": "PROFILE#sialvesamaral@gmail.com"
+}
+
+--- Items with different content ---
+
+Difference in SK: PROFILE#phbfreitas2@gmail.com
+phbfreitas2@gmail.com:
+{
+  "strategy": "​1. Executive Summary: Management Context\n​I have managed our family wealth through two distinct strategic phases over the last 16 years. My management has evolved from tangible assets to a liquid, high-performance equity portfolio. I have navigated our finances through two distinct strategic phases. From 2010 to 2020, I focused on building our foundation through real estate. However, once our debt levels reached a point where I no longer felt comfortable, I executed a pivot into liquid shares and ETFs. My approach is rooted in a \"Buy and Hold\" philosophy, focusing on buying quality assets when they are low.\n​Current Asset Base: $1,000,000+ in total liquid investments as of 2025.\n​Over the past 16 years, I have navigated our finances through two distinct strategic phases. From 2010 to 2020, I focused on building our foundation through real estate. However, once our debt levels reached a point where I no longer felt comfortable, I executed a pivot into liquid shares and ETFs.\n​Infrastructure: 100% of capital is deployed in tax-sheltered environments (TFSA and RRSP). I have successfully executed a five-year plan to max out all available contribution room.\n​2. Investment Philosophy: Market Leadership & Tactical Income\n​My strategy rejects low-yield traditional banking products in favor of \"High-Performance Engines.\" I self-direct all accounts to eliminate 2%+ management fees and maintain an average annual return of 10%+.\n​A. Growth Directive: Information Technology (IT) Focus\n​I center our growth on global innovation leaders.\n​Core Benchmark: S&P 500 (ZSP) and Nasdaq-100 (XQQ).\n​Risk Profile: High-Risk/Aggressive. I am a \"Tactical Opportunist\" who utilizes small market crashes and temporary dips to build or expand positions.\n​Sector Bias: Intentional heavy weighting in Technology (AI, Software, Semiconductors) as the primary driver of capital appreciation.\n​B. The \"Income Engine\" Directive\n​I manage a \"Dividend Snowball\" designed to provide a secondary monthly salary.\n​Strategy: A balanced allocation of 50% Stock Growth and 50% High-Yield Income.\n​Current Milestone: $3,000/month in passive dividends (achieved 2025).\n​2-Year Target: $4,000/month by 2028.\n​3. Strategic Wins & Portfolio Multipliers:\nStrategy Strategic Impact\nThe Debt Pivot Shifted from Real Estate to Equities when debt peaked. De-risked lifestyle while accelerating liquid wealth.\nThe \"Team\" Model High-income earner + High-discipline multiplier. Created a cycle of constant capital infusion and growth.\nTax Maximization 100% TFSA/RRSP utilization. Portfolio is shielded from tax drag, allowing full compounding.\nLiability Reduction Personal Mortgage Paydown. Using excess capital to eliminate high-interest personal debt.\n\nObjective: Maintain a minimum 10% annual total return on the $1.1M+ base while achieving a $4,000/month dividend floor in 2026, with a mandate for continuous dividend growth thereafter.\n1. The Three-Bucket Asset Classification\nAll assets must be categorized and monitored according to these three functional \"Buckets\" under \"Strwtegy type\" in the holdings:\nBucket A: Pure Growth (40% Target Allocation)\nDefinition: High-quality assets with near-zero yield focused 100% on capital appreciation.\nCore Tickers: XQQ, ZSP, VGT, VTI, COST (Costco), DOL (Dollarama).\nStrategic Role: The \"Wealth Engine.\" To ensure the principal grows without the \"cap\" of covered call options, providing 100% participation in market rallies.\nBucket B: The Mix - Hybrids (40% Target Allocation)\nDefinition: Modern income vehicles that combine high-yield (via Covered Calls) with equity participation.\nCore Tickers: JEPQ, HYLD.TO, QMAX.TO, ZWG, ZWK.\nStrategic Role: The \"Income Driver.\" This bucket generates the bulk of the monthly cash flow while allowing for moderate capital growth.\nBucket C: Pure Dividend (20% Target Allocation)\nDefinition: Mature, low-growth assets with high, stable, and growing dividend yields (Dividend Aristocrats).\nCore Tickers: Canadian Banks (RY, CM, BNS), ZLB (Low Volatility), HMAX, MFC, GWO.\nStrategic Role: The \"Anchor.\" Provides stability during high-volatility tech corrections and ensures the dividend floor is never compromised.\nRisk Profile & Tactical Instructions\n​Risk Tolerance: Aggressive/Tactical Opportunist.\n​Tax Optimization: All holdings must remain within TFSA and RRSP wrappers to ensure 100% tax-free compounding.\n​Buy-the-Dip Protocol: During tech-sector \"dips\" or market corrections, the AI Agent should flag opportunities to use accumulated dividends to increase positions in Bucket A (Pure Growth) assets at a discount.\n\n",
+  "riskTolerance": "Aggressive",
+  "goals": "2026 Objective: Reach $1,000,000 within the Wealthsimple platform alone.\n2027 Objective: Target of $4,000/month in dividends.\n\nAlways max out RSP and TFSA and than pay out the primary home mortgage.\n\nLong term goal: mortgage free for primary home ",
+  "type": "PROFILE",
+  "wealthAssetRentalProperties": null,
+  "wealthLiabilityCarLease": null,
+  "budgetPaycheck": 1000,
+  "budgetOtherIncome": 125,
+  "wealthLiabilityRentalHeloc": null,
+  "wealthLiabilityHeloc": null,
+  "budgetFixedUtilities": 300,
+  "budgetRentalExpenses": 100,
+  "wealthLiabilityRentalMortgage": null,
+  "wealthAssetCash": 200000,
+  "budgetFixedFood": 100,
+  "budgetFixedHome": 200,
+  "wealthLiabilityMortgage": null,
+  "budgetDividends": 3000,
+  "budgetRentalIncome": 3000,
+  "budgetDiscretionary": 500,
+  "budgetFixedCar": 600,
+  "wealthAssetCar": null,
+  "wealthAssetPrimaryResidence": null,
+  "budgetBonus": 500,
+  "wealthLiabilityCreditCards": null,
+  "SK": "PROFILE#phbfreitas2@gmail.com"
+}
+sialvesamaral@gmail.com:
+{
+  "wealthAssetRentalProperties": null,
+  "wealthLiabilityCarLease": null,
+  "budgetPaycheck": 1000,
+  "goals": "",
+  "budgetOtherIncome": 125,
+  "wealthLiabilityRentalHeloc": null,
+  "wealthLiabilityHeloc": null,
+  "budgetFixedUtilities": 300,
+  "budgetRentalExpenses": 100,
+  "riskTolerance": "",
+  "wealthLiabilityRentalMortgage": null,
+  "wealthAssetCash": 200000,
+  "budgetFixedFood": 100,
+  "budgetFixedHome": 200,
+  "strategy": "Test Strategy String",
+  "wealthLiabilityMortgage": null,
+  "budgetDividends": 3000,
+  "budgetRentalIncome": 3000,
+  "budgetDiscretionary": 500,
+  "budgetFixedCar": 600,
+  "wealthAssetCar": null,
+  "wealthAssetPrimaryResidence": null,
+  "budgetBonus": 500,
+  "wealthLiabilityCreditCards": null,
+  "type": "PROFILE",
+  "SK": "PROFILE#phbfreitas2@gmail.com"
+}

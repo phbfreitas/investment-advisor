@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
+import HouseholdSettings from "../profile/household/HouseholdSettings";
 
 export function SettingsClient({ user }: { user?: any }) {
     const { theme, setTheme, systemTheme } = useTheme();
@@ -100,10 +101,15 @@ export function SettingsClient({ user }: { user?: any }) {
                                 </div>
                             </div>
                             <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-4 leading-relaxed">
-                                All Profile parameters and Asset models created during this active session are completely invisible and inherently inaccessible to other authorized users. Multi-tenant cryptographic isolation is enforced directly on the AWS DynamoDB Partition Keys.
+                                All Profile parameters and Asset models are cryptographically isolated to your specific Household ID partition in DynamoDB. Your data is only visible to you and the family members you explicitly invite below.
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Household Settings Card */}
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm transition-colors duration-300">
+                    <HouseholdSettings />
                 </div>
 
             </div>

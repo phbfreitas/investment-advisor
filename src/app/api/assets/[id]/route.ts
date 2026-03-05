@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
         const resolvedParams = await params;
         const id = resolvedParams.id;
         const assetSK = `ASSET#${id}`;
@@ -40,11 +40,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
         const resolvedParams = await params;
         const id = resolvedParams.id;
         const assetSK = `ASSET#${id}`;

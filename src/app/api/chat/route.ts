@@ -25,11 +25,11 @@ export async function POST(request: Request) {
 
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    if (!session || !(session.user as any)?.householdId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const PROFILE_KEY = `PROFILE#${session.user.email}`;
+    const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
 
     const { message, selectedPersonas } = await request.json();
 
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const { Item: profile } = await db.send(
       new GetCommand({
         TableName: TABLE_NAME,
-        Key: { PK: PROFILE_KEY, SK: PROFILE_KEY },
+        Key: { PK: PROFILE_KEY, SK: "META" },
       })
     );
 
@@ -108,24 +108,21 @@ ${assetSummary}
       },
     ];
 
-    // 3. Orchestrate Sequential LLM Calls
-    // To avoid free-tier strict concurrent rate limits, we will process the personas individually with a delay.
-    const allResponses = [];
-
-    for (const personaId of selectedPersonas) {
+    // 3. Orchestrate Parallel LLM Calls
+    // With a paid tier, we can process all selected personas concurrently.
+    const fetchPersonaResponse = async (personaId: string) => {
       try {
         const personaConfig = personas[personaId as keyof typeof personas];
         const ragContext = personaConfig?.hasRag ? await getRagContext(personaId, message) : "";
 
         // Initialize model with specific system instruction
         const model = genAI.getGenerativeModel({
-          model: "gemini-2.0-flash", // Reverted to stable 2.0-flash
+          model: "gemini-2.5-flash", // Reverted to the latest capable Flash model for fast multi-persona chat
           systemInstruction: generateSystemPrompt(personaId as any, contextString, ragContext),
           tools: tools,
         });
 
         const chat = model.startChat({});
-
         let result = await chat.sendMessage(message);
         let responseText = result.response.text();
 
@@ -133,7 +130,6 @@ ${assetSummary}
         const calls = result.response.functionCalls();
         if (calls && Array.isArray(calls) && calls.length > 0) {
           const toolResponses = [];
-          // Even function calling needs to be sequential if querying live APIs heavily
           for (const call of calls) {
             if (call.name === 'fetchStockData') {
               const data = await fetchStockData((call.args as any).ticker);
@@ -149,30 +145,25 @@ ${assetSummary}
           }
         }
 
-        allResponses.push({
+        return {
           personaId,
           status: "success",
           content: responseText,
-        });
-
-        // Sleep for 2.5 seconds before querying the next persona to respect free-tier RPM/RPD limits
-        await new Promise(resolve => setTimeout(resolve, 2500));
-
+        };
       } catch (err: any) {
         console.error(`Error generating response for ${personaId}: `, err);
         const isRateLimit = err.status === 429 || (err.message && err.message.includes('429'));
-        allResponses.push({
+        return {
           personaId,
           status: "error",
           content: isRateLimit
             ? "I am currently rate-limited by the API. Please try asking again in a moment."
             : "Sorry, I am currently unavailable to provide advice.",
-        });
-
-        // If we hit a rate limit, sleep longer before attempting the next persona
-        if (isRateLimit) await new Promise(resolve => setTimeout(resolve, 5000));
+        };
       }
-    }
+    };
+
+    const allResponses = await Promise.all(selectedPersonas.map(fetchPersonaResponse));
 
     return NextResponse.json({ responses: allResponses });
   } catch (error: any) {

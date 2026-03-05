@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
 
         const { Items } = await db.send(
             new QueryCommand({
@@ -36,11 +36,11 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !session.user?.email) {
+        if (!session || !(session.user as any)?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `PROFILE#${session.user.email}`;
+        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
         const cashflows = await request.json();
 
         if (!Array.isArray(cashflows)) {

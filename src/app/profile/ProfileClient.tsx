@@ -161,7 +161,7 @@ export default function ProfilePage() {
                         </div>
                     </form>
                 </div>
-            </div >
+            </div>
         </div >
     );
 }
