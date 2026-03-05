@@ -130,9 +130,9 @@ USER INFO & PORTFOLIO:\n${contextString}`;
 
         // Call Gemini with streaming
         const model = genAI.getGenerativeModel({
-            model: "gemini-3.1-pro-preview", // Upgraded to the deepest 3.1 preview model based on user request
+            model: "gemini-2.5-flash", // Reverting to flash model to avoid AWS CloudFront 30s strict timeout limits
             systemInstruction: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable."
-        }); // Use Pro models for long-form text reporting and complex directives
+        });
         const resultStream = await model.generateContentStream(prompt);
 
         const stream = new ReadableStream({

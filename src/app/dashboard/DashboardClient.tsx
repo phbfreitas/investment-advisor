@@ -65,7 +65,10 @@ export default function DashboardPage() {
   const fetchAssets = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/profile");
+      const [res] = await Promise.all([
+        fetch("/api/profile"),
+        new Promise(resolve => setTimeout(resolve, 800)) // Artificial delay for a better refresh spin animation
+      ]);
       const data = await res.json();
       if (data && data.assets) {
         setAssets(data.assets);

@@ -13,6 +13,11 @@ export default function ProfilePage() {
         riskTolerance: "",
         goals: "",
     });
+    const [initialData, setInitialData] = useState({
+        strategy: "",
+        riskTolerance: "",
+        goals: "",
+    });
 
     useEffect(() => {
         async function loadProfile() {
@@ -23,11 +28,13 @@ export default function ProfilePage() {
                 const payload = data.Item || data; // Handle both raw DynamoDB and flattened objects
 
                 if (payload && (payload.PK || payload.id)) {
-                    setFormData({
+                    const loadedData = {
                         strategy: payload.strategy || "",
                         riskTolerance: payload.riskTolerance || "",
                         goals: payload.goals || "",
-                    });
+                    };
+                    setFormData(loadedData);
+                    setInitialData(loadedData);
                 }
             } catch (error) {
                 console.error("Failed to load profile", error);
@@ -61,11 +68,20 @@ export default function ProfilePage() {
             if (!res.ok) throw new Error("Failed to save");
 
             setMessage({ text: "Profile saved successfully.", type: "success" });
+            setInitialData(formData);
         } catch (error) {
             setMessage({ text: "Error saving profile. Please try again.", type: "error" });
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+
+    const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        e.target.style.height = 'inherit';
+        e.target.style.height = `${e.target.scrollHeight}px`;
+        handleChange(e);
     };
 
     if (isLoading) {
@@ -111,9 +127,10 @@ export default function ProfilePage() {
                                 <textarea
                                     name="strategy"
                                     value={formData.strategy}
-                                    onChange={handleChange}
+                                    onChange={handleTextareaInput}
+                                    ref={(e) => { if (e) { e.style.height = 'inherit'; e.style.height = `${e.scrollHeight}px`; } }}
                                     placeholder="e.g., I focus on dividend growth for passive income, while keeping 20% in speculative tech..."
-                                    className="w-full h-32 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-colors custom-scrollbar"
+                                    className="w-full min-h-[128px] overflow-hidden resize-none bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-colors"
                                 />
                             </div>
 
@@ -122,9 +139,10 @@ export default function ProfilePage() {
                                 <textarea
                                     name="goals"
                                     value={formData.goals}
-                                    onChange={handleChange}
+                                    onChange={handleTextareaInput}
+                                    ref={(e) => { if (e) { e.style.height = 'inherit'; e.style.height = `${e.scrollHeight}px`; } }}
                                     placeholder="e.g., Retire by 55 with absolute financial independence. Save $50k for a house downpayment in 3 years."
-                                    className="w-full h-24 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-colors custom-scrollbar"
+                                    className="w-full min-h-[96px] overflow-hidden resize-none bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-colors"
                                 />
                             </div>
 
@@ -148,7 +166,7 @@ export default function ProfilePage() {
                         <div className="pt-6 flex justify-end">
                             <button
                                 type="submit"
-                                disabled={isSaving}
+                                disabled={isSaving || !isDirty}
                                 className="flex items-center space-x-2 bg-teal-600 hover:bg-teal-500 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
                             >
                                 {isSaving ? (

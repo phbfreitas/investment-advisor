@@ -12,22 +12,47 @@ type CashFlowRow = {
     cashReserves: string | number;
 }
 
-const InputField = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: any }) => (
-    <div>
-        <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">{label}</label>
-        <div className="relative">
-            <span className="absolute left-3 top-2.5 text-neutral-400 dark:text-neutral-500 text-sm">$</span>
-            <input
-                type="number"
-                name={name}
-                value={value}
-                onChange={onChange}
-                placeholder="0.00"
-                className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
-            />
+const formatCurrencyInput = (value: string | number) => {
+    if (value === null || value === undefined) return '';
+    const stringValue = value.toString();
+    const cleanValue = stringValue.replace(/[^\d.-]/g, '');
+    if (cleanValue === '' || cleanValue === '-' || cleanValue === '.') return cleanValue;
+
+    const parts = cleanValue.split('.');
+    let wholePart = parts[0];
+    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+    const isNegative = wholePart.startsWith('-');
+    if (isNegative) wholePart = wholePart.substring(1);
+
+    wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (isNegative ? '-' : '') + wholePart + decimalPart;
+};
+
+const InputField = ({ label, name, value, onChange }: { label: string, name: string, value: string | number, onChange: any }) => {
+    const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const unformatted = e.target.value.replace(/,/g, '');
+        onChange({ target: { name, value: unformatted } });
+    };
+
+    return (
+        <div>
+            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1">{label}</label>
+            <div className="relative">
+                <span className="absolute left-3 top-2.5 text-neutral-400 dark:text-neutral-500 text-sm">$</span>
+                <input
+                    type="text"
+                    inputMode="decimal"
+                    name={name}
+                    value={formatCurrencyInput(value)}
+                    onChange={handleLocalChange}
+                    placeholder="0.00"
+                    className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50 transition-colors"
+                />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default function FinanceSummaryClient() {
     const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +86,12 @@ export default function FinanceSummaryClient() {
     const [message, setMessage] = useState({ text: "", type: "" });
     const [rows, setRows] = useState<CashFlowRow[]>([]);
 
+    // Initial States for Dirty Checking
+    const [initialBudgetData, setInitialBudgetData] = useState<any>(null);
+    const [initialRentalData, setInitialRentalData] = useState<any>(null);
+    const [initialWealthData, setInitialWealthData] = useState<any>(null);
+    const [initialRows, setInitialRows] = useState<CashFlowRow[]>([]);
+
     // Wealth State
     const [isSavingWealth, setIsSavingWealth] = useState(false);
     const [wealthMessage, setWealthMessage] = useState({ text: "", type: "" });
@@ -87,7 +118,7 @@ export default function FinanceSummaryClient() {
                 const profileData = await profileRes.json();
                 const payload = profileData.Item || profileData;
                 if (payload && (payload.PK || payload.id)) {
-                    setBudgetData({
+                    const newBudgetData = {
                         budgetPaycheck: payload.budgetPaycheck?.toString() || "",
                         budgetDividends: payload.budgetDividends?.toString() || "",
                         budgetBonus: payload.budgetBonus?.toString() || "",
@@ -97,12 +128,12 @@ export default function FinanceSummaryClient() {
                         budgetFixedCar: payload.budgetFixedCar?.toString() || "",
                         budgetFixedFood: payload.budgetFixedFood?.toString() || "",
                         budgetDiscretionary: payload.budgetDiscretionary?.toString() || "",
-                    });
-                    setRentalData({
+                    };
+                    const newRentalData = {
                         budgetRentalIncome: payload.budgetRentalIncome?.toString() || "",
                         budgetRentalExpenses: payload.budgetRentalExpenses?.toString() || "",
-                    });
-                    setWealthData({
+                    };
+                    const newWealthData = {
                         wealthAssetCash: payload.wealthAssetCash?.toString() || "",
                         wealthAssetCar: payload.wealthAssetCar?.toString() || "",
                         wealthAssetPrimaryResidence: payload.wealthAssetPrimaryResidence?.toString() || "",
@@ -113,7 +144,14 @@ export default function FinanceSummaryClient() {
                         wealthLiabilityRentalHeloc: payload.wealthLiabilityRentalHeloc?.toString() || "",
                         wealthLiabilityCreditCards: payload.wealthLiabilityCreditCards?.toString() || "",
                         wealthLiabilityCarLease: payload.wealthLiabilityCarLease?.toString() || "",
-                    });
+                    };
+
+                    setBudgetData(newBudgetData);
+                    setInitialBudgetData(newBudgetData);
+                    setRentalData(newRentalData);
+                    setInitialRentalData(newRentalData);
+                    setWealthData(newWealthData);
+                    setInitialWealthData(newWealthData);
 
                     if (payload.updatedAt) {
                         const formattedDate = new Date(payload.updatedAt).toLocaleString();
@@ -147,16 +185,19 @@ export default function FinanceSummaryClient() {
                     }));
                     formattedRows.sort((a, b) => `${b.year}-${b.month}`.localeCompare(`${a.year}-${a.month}`));
                     setRows(formattedRows);
+                    setInitialRows(formattedRows);
                 } else {
                     const now = new Date();
-                    setRows([{
+                    const emptyRow = [{
                         id: crypto.randomUUID(),
                         year: now.getFullYear().toString(),
                         month: String(now.getMonth() + 1).padStart(2, '0'),
                         income: "",
                         expenses: "",
                         cashReserves: ""
-                    }]);
+                    }];
+                    setRows(emptyRow);
+                    setInitialRows(emptyRow);
                 }
             } catch (error) {
                 console.error("Failed to load data", error);
@@ -210,19 +251,21 @@ export default function FinanceSummaryClient() {
             budgetFixedHome: budgetData.budgetFixedHome ? parseFloat(budgetData.budgetFixedHome) : null,
             budgetFixedUtilities: budgetData.budgetFixedUtilities ? parseFloat(budgetData.budgetFixedUtilities) : null,
             budgetFixedCar: budgetData.budgetFixedCar ? parseFloat(budgetData.budgetFixedCar) : null,
-            budgetFixedFood: budgetData.budgetFixedFood ? parseFloat(budgetData.budgetFixedFood) : null,
-            budgetDiscretionary: budgetData.budgetDiscretionary ? parseFloat(budgetData.budgetDiscretionary) : null,
+            budgetFixedFood: budgetData.budgetFixedFood ? parseFloat(budgetData.budgetFixedFood.replace(/,/g, '')) : null,
+            budgetDiscretionary: budgetData.budgetDiscretionary ? parseFloat(budgetData.budgetDiscretionary.replace(/,/g, '')) : null,
         };
         saveProfilePartial(payload, setBudgetMessage, setIsSavingBudget, 'budget');
+        setInitialBudgetData(budgetData);
     };
 
     const handleRentalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload = {
-            budgetRentalIncome: rentalData.budgetRentalIncome ? parseFloat(rentalData.budgetRentalIncome) : null,
-            budgetRentalExpenses: rentalData.budgetRentalExpenses ? parseFloat(rentalData.budgetRentalExpenses) : null,
+            budgetRentalIncome: rentalData.budgetRentalIncome ? parseFloat(rentalData.budgetRentalIncome.replace(/,/g, '')) : null,
+            budgetRentalExpenses: rentalData.budgetRentalExpenses ? parseFloat(rentalData.budgetRentalExpenses.replace(/,/g, '')) : null,
         };
         saveProfilePartial(payload, setRentalMessage, setIsSavingRental, 'rental');
+        setInitialRentalData(rentalData);
     };
 
     const handleWealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,12 +281,13 @@ export default function FinanceSummaryClient() {
             wealthAssetRentalProperties: wealthData.wealthAssetRentalProperties ? parseFloat(wealthData.wealthAssetRentalProperties) : null,
             wealthLiabilityMortgage: wealthData.wealthLiabilityMortgage ? parseFloat(wealthData.wealthLiabilityMortgage) : null,
             wealthLiabilityHeloc: wealthData.wealthLiabilityHeloc ? parseFloat(wealthData.wealthLiabilityHeloc) : null,
-            wealthLiabilityRentalMortgage: wealthData.wealthLiabilityRentalMortgage ? parseFloat(wealthData.wealthLiabilityRentalMortgage) : null,
-            wealthLiabilityRentalHeloc: wealthData.wealthLiabilityRentalHeloc ? parseFloat(wealthData.wealthLiabilityRentalHeloc) : null,
-            wealthLiabilityCreditCards: wealthData.wealthLiabilityCreditCards ? parseFloat(wealthData.wealthLiabilityCreditCards) : null,
-            wealthLiabilityCarLease: wealthData.wealthLiabilityCarLease ? parseFloat(wealthData.wealthLiabilityCarLease) : null,
+            wealthLiabilityRentalMortgage: wealthData.wealthLiabilityRentalMortgage ? parseFloat(wealthData.wealthLiabilityRentalMortgage.replace(/,/g, '')) : null,
+            wealthLiabilityRentalHeloc: wealthData.wealthLiabilityRentalHeloc ? parseFloat(wealthData.wealthLiabilityRentalHeloc.replace(/,/g, '')) : null,
+            wealthLiabilityCreditCards: wealthData.wealthLiabilityCreditCards ? parseFloat(wealthData.wealthLiabilityCreditCards.replace(/,/g, '')) : null,
+            wealthLiabilityCarLease: wealthData.wealthLiabilityCarLease ? parseFloat(wealthData.wealthLiabilityCarLease.replace(/,/g, '')) : null,
         };
         saveProfilePartial(payload, setWealthMessage, setIsSavingWealth, 'wealth');
+        setInitialWealthData(wealthData);
     };
 
     const handleAddRow = () => {
@@ -291,6 +335,7 @@ export default function FinanceSummaryClient() {
             const savedRows = [...rows];
             savedRows.sort((a, b) => `${b.year}-${b.month}`.localeCompare(`${a.year}-${a.month}`));
             setRows(savedRows);
+            setInitialRows(savedRows);
 
             setMessage({ text: "Finance Summary saved successfully.", type: "success" });
         } catch (error) {
@@ -301,39 +346,39 @@ export default function FinanceSummaryClient() {
     };
 
     // Dynamic Logic
-    const totalIncome = (parseFloat(budgetData.budgetPaycheck) || 0) +
-        (parseFloat(budgetData.budgetDividends) || 0) +
-        (parseFloat(budgetData.budgetBonus) || 0) +
-        (parseFloat(budgetData.budgetOtherIncome) || 0);
+    const totalIncome = (parseFloat(budgetData.budgetPaycheck?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetDividends?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetBonus?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetOtherIncome?.replace(/,/g, '') || '0'));
 
-    const totalExpenses = (parseFloat(budgetData.budgetFixedHome) || 0) +
-        (parseFloat(budgetData.budgetFixedUtilities) || 0) +
-        (parseFloat(budgetData.budgetFixedCar) || 0) +
-        (parseFloat(budgetData.budgetFixedFood) || 0) +
-        (parseFloat(budgetData.budgetDiscretionary) || 0);
+    const totalExpenses = (parseFloat(budgetData.budgetFixedHome?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetFixedUtilities?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetFixedCar?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetFixedFood?.replace(/,/g, '') || '0')) +
+        (parseFloat(budgetData.budgetDiscretionary?.replace(/,/g, '') || '0'));
 
     const totalBudgetSavings = totalIncome - totalExpenses;
 
-    const rentalIncome = parseFloat(rentalData.budgetRentalIncome) || 0;
-    const rentalExpenses = parseFloat(rentalData.budgetRentalExpenses) || 0;
+    const rentalIncome = parseFloat(rentalData.budgetRentalIncome?.replace(/,/g, '') || '0');
+    const rentalExpenses = parseFloat(rentalData.budgetRentalExpenses?.replace(/,/g, '') || '0');
     const rentalNetProfit = rentalIncome - rentalExpenses;
 
     // Wealth Calculations
     const totalAssets = (
-        (parseFloat(wealthData.wealthAssetCash) || 0) +
+        (parseFloat(wealthData.wealthAssetCash?.replace(/,/g, '') || '0')) +
         totalInvestmentValue +
-        (parseFloat(wealthData.wealthAssetCar) || 0) +
-        (parseFloat(wealthData.wealthAssetPrimaryResidence) || 0) +
-        (parseFloat(wealthData.wealthAssetRentalProperties) || 0)
+        (parseFloat(wealthData.wealthAssetCar?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthAssetPrimaryResidence?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthAssetRentalProperties?.replace(/,/g, '') || '0'))
     );
 
     const totalLiabilities = (
-        (parseFloat(wealthData.wealthLiabilityMortgage) || 0) +
-        (parseFloat(wealthData.wealthLiabilityHeloc) || 0) +
-        (parseFloat(wealthData.wealthLiabilityRentalMortgage) || 0) +
-        (parseFloat(wealthData.wealthLiabilityRentalHeloc) || 0) +
-        (parseFloat(wealthData.wealthLiabilityCreditCards) || 0) +
-        (parseFloat(wealthData.wealthLiabilityCarLease) || 0)
+        (parseFloat(wealthData.wealthLiabilityMortgage?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthLiabilityHeloc?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthLiabilityRentalMortgage?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthLiabilityRentalHeloc?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthLiabilityCreditCards?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthLiabilityCarLease?.replace(/,/g, '') || '0'))
     );
 
     const netWorth = totalAssets - totalLiabilities;
@@ -426,7 +471,7 @@ export default function FinanceSummaryClient() {
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                disabled={isSavingBudget}
+                                disabled={isSavingBudget || JSON.stringify(budgetData) === JSON.stringify(initialBudgetData)}
                                 className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
                             >
                                 {isSavingBudget ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
@@ -495,30 +540,33 @@ export default function FinanceSummaryClient() {
                                                 <td className="px-4 py-3 relative">
                                                     <span className="absolute left-7 top-5 text-sm text-neutral-400 dark:text-neutral-500">$</span>
                                                     <input
-                                                        type="number"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         placeholder="0.00"
-                                                        value={row.income}
-                                                        onChange={(e) => handleChange(row.id, 'income', e.target.value)}
+                                                        value={formatCurrencyInput(row.income)}
+                                                        onChange={(e) => handleChange(row.id, 'income', e.target.value.replace(/,/g, ''))}
                                                         className="w-full min-w-[120px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-teal-500/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3 relative">
                                                     <span className="absolute left-7 top-5 text-sm text-neutral-400 dark:text-neutral-500">$</span>
                                                     <input
-                                                        type="number"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         placeholder="0.00"
-                                                        value={row.expenses}
-                                                        onChange={(e) => handleChange(row.id, 'expenses', e.target.value)}
+                                                        value={formatCurrencyInput(row.expenses)}
+                                                        onChange={(e) => handleChange(row.id, 'expenses', e.target.value.replace(/,/g, ''))}
                                                         className="w-full min-w-[120px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-teal-500/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3 relative">
                                                     <span className="absolute left-7 top-5 text-sm text-neutral-400 dark:text-neutral-500">$</span>
                                                     <input
-                                                        type="number"
+                                                        type="text"
+                                                        inputMode="decimal"
                                                         placeholder="0.00"
-                                                        value={row.cashReserves}
-                                                        onChange={(e) => handleChange(row.id, 'cashReserves', e.target.value)}
+                                                        value={formatCurrencyInput(row.cashReserves)}
+                                                        onChange={(e) => handleChange(row.id, 'cashReserves', e.target.value.replace(/,/g, ''))}
                                                         className="w-full min-w-[120px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:border-teal-500/50"
                                                     />
                                                 </td>
@@ -552,7 +600,7 @@ export default function FinanceSummaryClient() {
                         <div className="flex justify-end pt-4">
                             <button
                                 type="submit"
-                                disabled={isSaving}
+                                disabled={isSaving || JSON.stringify(rows) === JSON.stringify(initialRows)}
                                 className="flex items-center space-x-2 bg-teal-600 hover:bg-teal-500 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
                             >
                                 {isSaving ? (
@@ -629,7 +677,7 @@ export default function FinanceSummaryClient() {
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                disabled={isSavingRental}
+                                disabled={isSavingRental || JSON.stringify(rentalData) === JSON.stringify(initialRentalData)}
                                 className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
                             >
                                 {isSavingRental ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
@@ -734,7 +782,7 @@ export default function FinanceSummaryClient() {
                         <div className="flex justify-end">
                             <button
                                 type="submit"
-                                disabled={isSavingWealth}
+                                disabled={isSavingWealth || JSON.stringify(wealthData) === JSON.stringify(initialWealthData)}
                                 className="flex items-center space-x-2 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-white text-white dark:text-neutral-900 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50"
                             >
                                 {isSavingWealth ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
