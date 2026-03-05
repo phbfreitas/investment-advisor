@@ -38,8 +38,28 @@ export default function GuidanceClient() {
             });
 
             if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error || "Failed to generate guidance");
+                let errorMessage = `Failed to generate guidance (Status: ${res.status})`;
+                const contentType = res.headers.get("content-type");
+
+                if (contentType && contentType.includes("application/json")) {
+                    try {
+                        const errData = await res.json();
+                        if (errData.error) errorMessage = errData.error;
+                    } catch (e) {
+                        console.error("Failed to parse JSON error response");
+                    }
+                } else {
+                    // CloudFront 504 Timeout or 500 Server Error HTML pages
+                    if (res.status === 504) {
+                        errorMessage = "The AI request timed out. The model may be taking too long to respond.";
+                    } else if (res.status === 500) {
+                        errorMessage = "A server error occurred, and CloudFront blocked the response.";
+                    }
+                    const textContent = await res.text();
+                    console.error("Non-JSON API Error Response:", textContent.substring(0, 200));
+                }
+
+                throw new Error(errorMessage);
             }
 
             // Read the stream

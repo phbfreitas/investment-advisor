@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // Extend AWS/Vercel timeout limit to 60s
 
 // Initialize Gemini
 const apiKey = process.env.GEMINI_API_KEY || "";
