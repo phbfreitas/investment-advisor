@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target } from "lucide-react";
+import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
@@ -12,6 +12,7 @@ const navigation = [
     { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
     { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },
     { name: "AI Guidance", href: "/profile/guidance", icon: Target },
+    { name: "User Guide", href: "/user-guide", icon: BookOpen },
     { name: "Settings", href: "/settings", icon: Settings },
 ];
 
