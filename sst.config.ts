@@ -33,6 +33,9 @@ export default $config({
                     resources: ["*"],
                 },
             ],
+            server: {
+                timeout: "60 seconds",
+            },
             domain: undefined, // Add your custom domain here if you buy one later!
         });
     },
