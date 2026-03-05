@@ -130,14 +130,21 @@ USER INFO & PORTFOLIO:\n${contextString}`;
 
         // Call Gemini with streaming
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash", // Reverting to flash model to avoid AWS CloudFront 30s strict timeout limits
+            model: "gemini-3.1-pro-preview", // Re-upgraded to massive model, timeout bypassed via stream padding
             systemInstruction: "You are an elite, highly intelligent Chief Investment Officer. Your communication style is immaculate, highly structured, and visually scannable. You abhor 'wall of text' responses. You structure every response utilizing Markdown headers, bullet points, bold text for emphasis on metrics, and tables where data is compared. Be crisp, professional, and actionable."
         });
-        const resultStream = await model.generateContentStream(prompt);
 
         const stream = new ReadableStream({
             async start(controller) {
+                // Keep-alive heartbeat to bypass AWS CloudFront 30s connection limits 
+                // We emit a zero-width space every 5 seconds before the actual LLM responds.
+                const heartbeatInterval = setInterval(() => {
+                    const invisibleByte = '\u200B';
+                    controller.enqueue(new TextEncoder().encode(invisibleByte));
+                }, 5000);
+
                 try {
+                    const resultStream = await model.generateContentStream(prompt);
                     for await (const chunk of resultStream.stream) {
                         const chunkText = chunk.text();
                         controller.enqueue(new TextEncoder().encode(chunkText));
@@ -145,6 +152,7 @@ USER INFO & PORTFOLIO:\n${contextString}`;
                 } catch (e) {
                     console.error("Stream error", e);
                 } finally {
+                    clearInterval(heartbeatInterval);
                     controller.close();
                 }
             }
