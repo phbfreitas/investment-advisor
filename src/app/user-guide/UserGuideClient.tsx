@@ -436,16 +436,39 @@ export default function UserGuideClient() {
                             <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                                 <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features six targeted AI Directives:</p>
                                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <strong>Rebalance with Precision:</strong> Identifies asset allocation drifts.</li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <strong>Optimize Dividend Growth:</strong> Suggests moves to increase cash flow.</li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <strong>Maintain Tactical Aggression:</strong> Highlights 'Buy the Dip' opportunities.</li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <strong>Investment Idea Evaluation:</strong> A rigorous 4-pillar analysis for a specific new asset (requires ticker input).</li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <strong>Portfolio Report:</strong> Multi-factor analysis highlighting strengths and weaknesses.</li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <strong>Stock Recommendations:</strong> Agent recommendations based on expert opinions.</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <span><strong>Rebalance with Precision:</strong> Identifies asset allocation drifts.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <span><strong>Optimize Dividend Growth:</strong> Suggests moves to increase cash flow.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <span><strong>Maintain Tactical Aggression:</strong> Highlights 'Buy the Dip' opportunities.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <span><strong>Investment Idea Evaluation:</strong> A rigorous 4-pillar analysis for a specific new asset (requires ticker input).</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <span><strong>Portfolio Report:</strong> Multi-factor analysis highlighting strengths and weaknesses.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <span><strong>Stock Recommendations:</strong> Agent recommendations based on expert opinions.</span></li>
                                 </ul>
-                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Live Streaming Interface:</strong>
-                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.</span>
+                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4">
+                                    <div>
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Live Streaming Interface:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Intelligent Caching:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">To maximize speed and minimize API costs, the system caches every generated report. If you open a previously generated directive, it will load instantly exactly as it was.</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Stale Data Warnings:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400 block mb-3">The system takes a fingerprint snapshot of your Portfolio and Strategy whenever an analysis is generated. If you change your holdings or risk tolerance and then open a cached report, you will be greeted by an Amber Warning Banner explicitly listing which underlying data fields have changed since the last run.</span>
+                                        <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/50 rounded-lg p-4">
+                                            <strong className="text-xs text-amber-900 dark:text-amber-400 uppercase tracking-wider block mb-2 flex items-center"><Zap className="h-3 w-3 mr-1" /> Monitored Fields (Triggers Stale Warning)</strong>
+                                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5 list-none">
+                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Investment Strategy</li>
+                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Financial Goals</li>
+                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Risk Tolerance</li>
+                                                <li className="flex items-start"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 mt-1 shrink-0" /><span className="leading-tight">Portfolio Asset Changes (Tickers, Shares Owned, Current Price, Market Value, Book Cost, and Expected Dividends)</span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Content Blurring & On-Demand Refresh:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">To prevent you from acting on outdated advice, the presence of a Stale Data Warning will dynamically blur the underlying report. You can either dismiss the warning or click the <strong>"Refresh Analysis"</strong> button to force the AI to generate a brand new, up-to-date report. A timestamp in the header always ensures you know exactly when the current analysis was generated.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

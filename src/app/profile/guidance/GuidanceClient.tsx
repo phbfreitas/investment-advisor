@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, Loader2, TrendingUp, PieChart, Target, Lightbulb, FileText, LineChart, X, ChevronRight, Play } from "lucide-react";
+import { BrainCircuit, Loader2, TrendingUp, PieChart, Target, Lightbulb, FileText, LineChart, X, ChevronRight, Play, RefreshCw, Clock, AlertTriangle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -12,12 +12,18 @@ export default function GuidanceClient() {
     const [isGuidanceLoading, setIsGuidanceLoading] = useState(false);
     const [guidanceTicker, setGuidanceTicker] = useState("");
     const [guidanceError, setGuidanceError] = useState("");
+    const [guidanceLastUpdated, setGuidanceLastUpdated] = useState<string | null>(null);
+    const [changedFields, setChangedFields] = useState<string[]>([]);
+    const [isWarningDismissed, setIsWarningDismissed] = useState(false);
 
     const handleGuidanceClick = (directiveId: number) => {
         setActiveDirective(directiveId);
         setGuidanceResponse("");
         setGuidanceError("");
         setGuidanceTicker("");
+        setGuidanceLastUpdated(null);
+        setChangedFields([]);
+        setIsWarningDismissed(false);
 
         // If it's NOT directive 4, immediately fetch
         if (directiveId !== 4) {
@@ -25,17 +31,37 @@ export default function GuidanceClient() {
         }
     };
 
-    const fetchGuidance = async (directiveId: number, ticker?: string) => {
+    const fetchGuidance = async (directiveId: number, ticker?: string, forceRefresh = false) => {
         setIsGuidanceLoading(true);
         setGuidanceResponse("");
         setGuidanceError("");
+        setGuidanceLastUpdated(null);
+        setChangedFields([]);
+        setIsWarningDismissed(false);
 
         try {
             const res = await fetch("/api/guidance", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ directiveId, ticker }),
+                body: JSON.stringify({ directiveId, ticker, forceRefresh }),
             });
+
+            const lastUpdated = res.headers.get("X-Guidance-Last-Updated");
+            if (lastUpdated) {
+                setGuidanceLastUpdated(lastUpdated);
+            } else if (forceRefresh || res.ok) {
+                // If it generated fresh, tag it as just now
+                setGuidanceLastUpdated(new Date().toISOString());
+            }
+
+            const changedFieldsHeader = res.headers.get("X-Guidance-Changed-Fields");
+            if (changedFieldsHeader) {
+                try {
+                    setChangedFields(JSON.parse(changedFieldsHeader));
+                } catch (e) {
+                    console.error("Failed to parse changed fields header");
+                }
+            }
 
             if (!res.ok) {
                 let errorMessage = `Failed to generate guidance (Status: ${res.status})`;
@@ -148,21 +174,89 @@ export default function GuidanceClient() {
 
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900">
-                            <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100 flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-600" />
-                                AI Guidance Report
-                            </h3>
-                            <button
-                                onClick={closeGuidanceModal}
-                                disabled={isGuidanceLoading}
-                                className="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
+                            <div className="flex items-center">
+                                <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100 flex items-center mr-4">
+                                    <BrainCircuit className="h-5 w-5 mr-2 text-teal-600" />
+                                    AI Guidance Report
+                                </h3>
+
+                                {guidanceResponse && !isGuidanceLoading && (
+                                    <div className="hidden sm:flex items-center space-x-4 ml-2 pl-4 border-l border-neutral-300 dark:border-neutral-700 text-sm text-neutral-500">
+                                        <div className="flex items-center">
+                                            <Clock className="h-4 w-4 mr-1.5" />
+                                            {guidanceLastUpdated ? (
+                                                <span>Updated {new Date(guidanceLastUpdated).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                            ) : (
+                                                <span>Generated just now</span>
+                                            )}
+                                        </div>
+                                        {(changedFields.length === 0 || isWarningDismissed) && (
+                                            <button
+                                                onClick={() => fetchGuidance(activeDirective, guidanceTicker, true)}
+                                                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-neutral-200/60 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors text-neutral-700 dark:text-neutral-300 font-medium"
+                                            >
+                                                <RefreshCw className="h-3.5 w-3.5" />
+                                                <span>Refresh</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                {guidanceResponse && !isGuidanceLoading && (changedFields.length === 0 || isWarningDismissed) && (
+                                    <button
+                                        onClick={() => fetchGuidance(activeDirective, guidanceTicker, true)}
+                                        className="sm:hidden p-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+                                        title="Refresh Analysis"
+                                    >
+                                        <RefreshCw className="h-5 w-5" />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={closeGuidanceModal}
+                                    disabled={isGuidanceLoading}
+                                    className="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Modal Body */}
                         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+
+                            {/* Stale Data Warning Banner */}
+                            {changedFields.length > 0 && !isGuidanceLoading && !isWarningDismissed && (
+                                <div className="mb-6 p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/10 flex flex-col sm:flex-row sm:items-start justify-between gap-4 animate-in fade-in slide-in-from-top-2 relative z-10">
+                                    <div className="flex items-start flex-1 text-sm">
+                                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <strong className="text-amber-900 dark:text-amber-400 block mb-1">Stale Data Warning</strong>
+                                            <p className="text-amber-800 dark:text-amber-300/90 leading-relaxed">
+                                                Your underlying data has changed since this analysis was generated: <span className="font-semibold">{changedFields.join(", ")}</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2 sm:self-start flex-shrink-0">
+                                        <button
+                                            onClick={() => fetchGuidance(activeDirective, guidanceTicker, true)}
+                                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-colors font-medium text-sm"
+                                        >
+                                            <RefreshCw className="h-4 w-4" />
+                                            <span>Refresh Analysis</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setIsWarningDismissed(true)}
+                                            className="p-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 hover:bg-amber-200/50 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
+                                            title="Dismiss Warning"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Special Input for Directive 4 */}
                             {activeDirective === 4 && !guidanceResponse && !isGuidanceLoading && (
                                 <div className="max-w-md mx-auto mt-8">
@@ -201,7 +295,7 @@ export default function GuidanceClient() {
                             )}
 
                             {guidanceResponse && (
-                                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-neutral-700 dark:text-neutral-300">
+                                <div className={`prose prose-sm md:prose-base dark:prose-invert max-w-none text-neutral-700 dark:text-neutral-300 transition-all duration-500 ${changedFields.length > 0 && !isWarningDismissed && !isGuidanceLoading ? 'blur-md pointer-events-none select-none opacity-60' : ''}`}>
                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                         {guidanceResponse}
                                     </ReactMarkdown>
@@ -214,6 +308,7 @@ export default function GuidanceClient() {
                                     <p className="animate-pulse">Synthesizing portfolio data and expert opinions...</p>
                                 </div>
                             )}
+
                         </div>
                     </div>
                 </div>

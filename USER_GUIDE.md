@@ -132,6 +132,10 @@ The page features six targeted AI Directives, each acting as a distinct analytic
 6. **Stock Recommendations:** Agent recommendations based on expert opinions.
 
 - **Live Streaming Interface:** When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.
+- **Intelligent Caching:** To maximize speed and minimize API costs, the system caches every generated report. If you open a previously generated directive, it will load instantly exactly as it was.
+- **Stale Data Warnings:** The system takes a fingerprint snapshot of your Portfolio and Strategy whenever an analysis is generated. If you change your holdings or risk tolerance and then open a cached report, you will be greeted by an Amber Warning Banner explicitly listing which underlying data fields have changed since the last run.
+  - **Monitored Fields:** Ensure you keep your data accurate across the app. The backend monitors changes to the following fields: _Investment Strategy_, _Financial Goals_, _Risk Tolerance_, and _Portfolio Assets_ (including any changes to Tickers, Shares Owned, Current Price, Total Market Value, Book Cost, or Expected Dividends).
+- **Content Blurring & On-Demand Refresh:** To prevent you from acting on outdated advice, the presence of a Stale Data Warning will dynamically blur the underlying report. You can either dismiss the warning or click the **"Refresh Analysis"** button to force the AI to generate a brand new, up-to-date report. A timestamp in the header always ensures you know exactly when the current analysis was generated.
 
 ### The Ripple Effect Example: The 4-Pillar Test (Directive 4)
 John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (Section 4), noting he is a **Conservative near-retiree**. It simulates different expert perspectives (like Cathie Wood vs. Warren Buffett), acts as Chairman, and concludes that while the asset might go up, it **violates John's strict profile rules**. The final output firmly rejects the purchase.

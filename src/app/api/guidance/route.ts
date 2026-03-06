@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db, TABLE_NAME } from "@/lib/db";
-import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -27,13 +27,16 @@ export async function POST(request: Request) {
         }
 
         const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
-        const { directiveId, ticker } = await request.json();
+        const { directiveId, ticker, forceRefresh } = await request.json();
 
         if (!directiveId) {
             return NextResponse.json({ error: "Directive ID is required" }, { status: 400 });
         }
 
-        // 1. Fetch User Context
+        // Cache Key Logic
+        const CACHE_SK = `GUIDANCE#${directiveId}#${ticker || ""}`;
+
+        // Fetch User Context FIRST to build the snapshot
         const { Item: profile } = await db.send(
             new GetCommand({
                 TableName: TABLE_NAME,
@@ -52,8 +55,47 @@ export async function POST(request: Request) {
             })
         );
 
-        // Build context string from profile and assets
+        // Build Current Snapshot for Comparison
         const assetsList = assets || [];
+        const currentSnapshot = {
+            strategy: profile?.strategy || "Not specified",
+            riskTolerance: profile?.riskTolerance || "Not specified",
+            goals: profile?.goals || "Not specified",
+            portfolioFingerprint: assetsList.map(a => `${a.ticker}:${a.quantity}`).sort().join("|") // e.g. "AAPL:10|MSFT:5"
+        };
+
+        // 1. Check Cache first (unless force refresh)
+        if (!forceRefresh) {
+            const { Item: cached } = await db.send(
+                new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { PK: PROFILE_KEY, SK: CACHE_SK },
+                })
+            );
+
+            if (cached && cached.response) {
+                // Compare snapshots
+                const changedFields: string[] = [];
+                const cachedSnapshot = cached.requestSnapshot || {};
+
+                if (cachedSnapshot.strategy !== currentSnapshot.strategy) changedFields.push("Investment Strategy");
+                if (cachedSnapshot.riskTolerance !== currentSnapshot.riskTolerance) changedFields.push("Risk Tolerance");
+                if (cachedSnapshot.goals !== currentSnapshot.goals) changedFields.push("Financial Goals");
+                if (cachedSnapshot.portfolioFingerprint !== currentSnapshot.portfolioFingerprint) changedFields.push("Portfolio Holdings");
+
+                // Return cached response instantly
+                return new Response(cached.response, {
+                    headers: {
+                        "Content-Type": "text/plain; charset=utf-8",
+                        "Cache-Control": "no-cache",
+                        "X-Guidance-Last-Updated": cached.updatedAt || "",
+                        "X-Guidance-Changed-Fields": JSON.stringify(changedFields),
+                    }
+                });
+            }
+        }
+
+        // Build context string from profile and assets
         const assetSummary = assetsList.length > 0
             ? assetsList.map(a => `- ${a.quantity} units of ${a.ticker} (Cost: $${a.bookCost}, Value: $${a.marketValue}, Yield: ${a.yield}%)`).join("\n")
             : "No assets documented.";
@@ -149,12 +191,31 @@ Your goal is to provide high-conviction, professional investment intelligence.`
                     controller.enqueue(new TextEncoder().encode(invisibleByte));
                 }, 5000);
 
+                let fullResponse = "";
+
                 try {
                     const resultStream = await model.generateContentStream(prompt);
                     for await (const chunk of resultStream.stream) {
                         const chunkText = chunk.text();
+                        fullResponse += chunkText; // Accumulate the response to save
                         controller.enqueue(new TextEncoder().encode(chunkText));
                     }
+
+                    // Save to DynamoDB after stream finishes successfully
+                    const now = new Date().toISOString();
+                    await db.send(
+                        new PutCommand({
+                            TableName: TABLE_NAME,
+                            Item: {
+                                PK: PROFILE_KEY,
+                                SK: CACHE_SK,
+                                response: fullResponse,
+                                updatedAt: now,
+                                entityType: "CACHE",
+                                requestSnapshot: currentSnapshot, // Save fingerprint for future comparisons
+                            },
+                        })
+                    );
                 } catch (e) {
                     console.error("Stream error", e);
                 } finally {
