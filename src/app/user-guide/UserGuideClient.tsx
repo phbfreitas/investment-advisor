@@ -1,261 +1,518 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
     ChevronRight,
-    Info,
-    Target,
+    Users,
     LayoutDashboard,
     Wallet,
     BrainCircuit,
-    Users,
-    Download,
-    Share2,
-    Maximize2,
-    BookOpen
+    Target,
+    Settings,
+    Code,
+    Zap,
+    Info,
+    LineChart
 } from "lucide-react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const sections = [
     {
-        id: "getting-started",
-        title: "Getting Started",
-        icon: BookOpen,
+        id: "intro-john",
+        title: "Introduction",
+        icon: Info,
+        subsections: []
+    },
+    {
+        id: "warren-buffett",
+        title: "1. Warren Buffett",
+        icon: Users,
         subsections: [
-            { id: "what-is-investai", title: "What is InvestAI?" },
-            { id: "core-concept", title: "The Data-to-Intelligence Loop" },
+            { id: "wb-logic", title: "Logic Mapping" },
+            { id: "wb-ripple", title: " Ripple Effect" },
         ]
     },
     {
-        id: "portfolio-management",
-        title: "Portfolio Management",
+        id: "portfolio",
+        title: "2. My Investment Portfolio",
         icon: LayoutDashboard,
         subsections: [
-            { id: "dashboard-overview", title: "Dashboard Overview" },
-            { id: "adding-assets", title: "Adding & Updating Assets" },
+            { id: "port-logic", title: "Mathematical Logic" },
+            { id: "port-ripple", title: "Cascading Effects" },
         ]
     },
     {
         id: "finance-summary",
-        title: "Finance & Net Worth",
+        title: "3. My Finance Summary",
         icon: Wallet,
         subsections: [
-            { id: "cashflow-tracking", title: "Monthly Cashflow Tracking" },
-            { id: "personal-wealth", title: "Building Net Worth" },
+            { id: "fin-logic", title: "Cashflow Mathematics" },
+            { id: "fin-ripple", title: "The Ultimate Metric" },
         ]
     },
     {
-        id: "ai-intelligence",
-        title: "AI Guidance",
+        id: "strategy-profile",
+        title: "4. My Investment Strategy",
+        icon: BrainCircuit,
+        subsections: [
+            { id: "strat-logic", title: "The Steering Wheel" },
+            { id: "strat-ripple", title: "Dynamic Rewiring" },
+        ]
+    },
+    {
+        id: "ai-guidance",
+        title: "5. AI Guidance",
         icon: Target,
         subsections: [
-            { id: "ai-directives", title: "AI Directives Explained" },
-            { id: "the-4-pillar-analysis", title: "The 4-Pillar Evaluation" },
+            { id: "ai-logic", title: "The Data Assembly Line" },
+            { id: "ai-ripple", title: "The 4-Pillar Test" },
         ]
     },
     {
-        id: "collaboration",
-        title: "Household Collaboration",
-        icon: Users,
+        id: "settings",
+        title: "6. Settings",
+        icon: Settings,
         subsections: [
-            { id: "managing-members", title: "Managing Household Members" },
+            { id: "set-logic", title: "Household Isolation" },
+            { id: "set-ripple", title: "Instant Synchronization" },
         ]
     },
 ];
 
 export default function UserGuideClient() {
-    const [activeSection, setActiveSection] = useState("what-is-investai");
+    const [activeSection, setActiveSection] = useState("intro-john");
     const contentRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
-    const scrollToSection = (id: string) => {
-        setActiveSection(id);
+    const scrollToSection = (id: string, parentId?: string) => {
+        setActiveSection(parentId || id);
         contentRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     return (
         <div className="flex flex-col md:flex-row h-full bg-white dark:bg-[#050505] transition-colors duration-300">
 
-            {/* Secondary Sidebar (Documentation Nav) */}
+            {/* Internal Navigation Sidebar */}
             <aside className="w-full md:w-72 border-r border-neutral-200 dark:border-neutral-800 flex flex-col bg-neutral-50/50 dark:bg-[#080808]">
                 <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">User Guide</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Logic Manual</h2>
                 </div>
                 <nav className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
                     {sections.map((section) => (
                         <div key={section.id} className="space-y-1">
-                            <div className="flex items-center space-x-2 px-2 py-1 text-neutral-900 dark:text-neutral-100 font-medium text-sm">
-                                <section.icon className="h-4 w-4 text-teal-600" />
+                            <button
+                                onClick={() => scrollToSection(section.id)}
+                                className={cn(
+                                    "flex items-center space-x-2 w-full text-left px-2 py-2 rounded-lg transition-colors font-medium text-sm",
+                                    activeSection === section.id
+                                        ? "bg-teal-50 dark:bg-teal-900/10 text-teal-700 dark:text-teal-400"
+                                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                                )}
+                            >
+                                <section.icon className={cn("h-4 w-4", activeSection === section.id ? "text-teal-600" : "text-neutral-500")} />
                                 <span>{section.title}</span>
-                            </div>
-                            <div className="space-y-0.5 ml-6 border-l border-neutral-200 dark:border-neutral-800">
-                                {section.subsections.map((sub) => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => scrollToSection(sub.id)}
-                                        className={cn(
-                                            "w-full text-left px-4 py-1.5 text-sm transition-colors block border-l -ml-px",
-                                            activeSection === sub.id
-                                                ? "border-teal-500 text-teal-600 font-medium bg-teal-50/50 dark:bg-teal-900/10"
-                                                : "border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-700"
-                                        )}
-                                    >
-                                        {sub.title}
-                                    </button>
-                                ))}
-                            </div>
+                            </button>
+                            {section.subsections.length > 0 && (
+                                <div className="space-y-0.5 ml-6 border-l border-neutral-200 dark:border-neutral-800 mt-1">
+                                    {section.subsections.map((sub) => (
+                                        <button
+                                            key={sub.id}
+                                            onClick={() => scrollToSection(sub.id, section.id)}
+                                            className="w-full text-left px-4 py-1.5 text-sm transition-colors block border-l -ml-px border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-700"
+                                        >
+                                            {sub.title}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </nav>
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto custom-scrollbar md:p-12 p-6">
-                <div className="max-w-4xl mx-auto space-y-16 pb-24">
+            <main className="flex-1 overflow-y-auto custom-scrollbar md:p-12 p-6 scroll-smooth">
+                <div className="max-w-4xl mx-auto space-y-20 pb-32">
 
-                    {/* Breadcrumbs & Controls */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                        <nav className="flex items-center space-x-2 text-sm text-neutral-500">
-                            <span className="hover:text-teal-600 cursor-pointer">Documentation</span>
-                            <ChevronRight className="h-3 w-3" />
-                            <span className="text-neutral-900 dark:text-neutral-200 font-medium">User Guide</span>
-                        </nav>
-                        <div className="flex items-center space-x-2">
-                            <button className="p-2 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors">
-                                <Download className="h-4 w-4 text-neutral-500" />
-                            </button>
-                            <button className="p-2 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors">
-                                <Share2 className="h-4 w-4 text-neutral-500" />
-                            </button>
+                    {/* Intro & Hero Section */}
+                    <section id="intro-john" ref={el => { contentRefs.current["intro-john"] = el; }} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-4">
+                                System Logic & Ripple Effect Manual
+                            </h1>
+                            <p className="text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-3xl">
+                                A definitive backend-to-business translation manual. Understand exactly how the AI engine processes your inputs and triggers cascading effects across the platform.
+                            </p>
                         </div>
-                    </div>
 
-                    {/* Intro Section */}
-                    <section id="what-is-investai" ref={el => { contentRefs.current["what-is-investai"] = el; }} className="space-y-6">
-                        <h1 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100">What is InvestAI?</h1>
+                        {/* Narrative Hero Card */}
+                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-teal-50/50 dark:from-indigo-950/20 dark:via-neutral-900 dark:to-teal-900/20 border border-neutral-200 dark:border-neutral-800 shadow-xl dark:shadow-2xl">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-400/10 dark:bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 dark:bg-indigo-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+
+                            <div className="relative p-8 md:p-10">
+                                <div className="flex items-center space-x-3 mb-6">
+                                    <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-700 dark:text-teal-400 font-bold backdrop-blur-sm shadow-sm ring-1 ring-teal-500/20">
+                                        J
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Meet our Example User: John</h3>
+                                        <p className="text-sm text-neutral-500 dark:text-neutral-400">To make assimilation easy, we follow a single running example.</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white/60 dark:bg-black/20 backdrop-blur-md rounded-xl p-6 border border-white/20 dark:border-white/5 shadow-inner">
+                                    <p className="text-neutral-700 dark:text-neutral-300 font-medium text-lg leading-relaxed italic">
+                                        "John is a 55-year-old preparing for retirement. He has a $100,000 stock portfolio and keeps $15,000 in cash reserves. He just logged into the app."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 1: Warren Buffett */}
+                    <section id="warren-buffett" ref={el => { contentRefs.current["warren-buffett"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Warren Buffett (Chat Engine)</h2>
+                        </div>
+
+
+
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            InvestAI is a high-performance wealth management platform built for individuals and households who demand professional-grade financial intelligence.
-                            By merging your personal financial data with cutting-edge AI reasoning, we transform static numbers into actionable "Executive Crispy" investment strategies.
+                            This is the homepage of the app, featuring a conversational AI designed to emulate Warren Buffett. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
 
-                        <div className="bg-teal-50 border border-teal-100 dark:bg-teal-900/10 dark:border-teal-900/20 rounded-xl p-6 flex items-start space-x-4">
-                            <Info className="h-6 w-6 text-teal-600 mt-1 shrink-0" />
-                            <div>
-                                <h4 className="font-semibold text-teal-900 dark:text-teal-400">Note</h4>
-                                <p className="text-teal-800/80 dark:text-teal-300/70 text-sm leading-relaxed">
-                                    InvestAI is not a financial brokerage. We provide the intelligence layer; your actual trades and capital remain with your existing banks and brokers.
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section id="core-concept" ref={el => { contentRefs.current["core-concept"] = el; }} className="space-y-6">
-                        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">The Data-to-Intelligence Loop</h2>
-                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            Our AI operates on a feedback loop. Every ticker you add, every budget item you track, and every goal you set refined the AI's internal model of your wealth.
-                            This ensures that when you ask for guidance, it's not generic advice—it's intelligence tailored to <strong>your</strong> strategy.
-                        </p>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800" />
-
-                    {/* Dashboard Section */}
-                    <section id="dashboard-overview" ref={el => { contentRefs.current["dashboard-overview"] = el; }} className="space-y-6">
-                        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Dashboard Overview</h2>
-                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The Dashboard is where you track your equities, ETFs, and overall portfolio performance. It converts raw ticker data into visual metrics like total yield and market value.
-                        </p>
-                        <div className="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-xl group">
-                            <img
-                                src="/docs/screenshots/dashboard.png"
-                                alt="Dashboard Screenshot"
-                                className="w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-                            <div className="absolute bottom-4 right-4 animate-pulse">
-                                <div className="bg-white/90 dark:bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-xs font-medium flex items-center">
-                                    <Maximize2 className="h-3 w-3 mr-2" /> Live Dashboard View
+                        <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
+                            <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Key Built-in Prompts:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                    <LineChart className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Analyze my current portfolio</span>
+                                </div>
+                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                    <BrainCircuit className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Critique my investment strategy</span>
                                 </div>
                             </div>
                         </div>
-                    </section>
 
-                    {/* Finance Section */}
-                    <section id="cashflow-tracking" ref={el => { contentRefs.current["cashflow-tracking"] = el; }} className="space-y-6">
-                        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Finance & Cashflow Tracking</h2>
-                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            A professional investment strategy requires a robust cashflow foundation. In the Finance Summary, you track your monthly savings which the AI uses to suggest deployment amounts.
-                        </p>
-                        <div className="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-xl group">
-                            <img
-                                src="/docs/screenshots/finance.png"
-                                alt="Finance Summary Screenshot"
-                                className="w-full h-auto transition-transform duration-500 group-hover:scale-[1.02]"
-                            />
-                            <div className="absolute inset-0 bg-black/5 p-8 flex flex-col justify-end">
-                                <div className="bg-teal-600/90 text-white p-4 rounded-xl max-w-sm backdrop-blur-sm translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                                    <h4 className="font-bold mb-1 italic">CIO Pro-Tip:</h4>
-                                    <p className="text-sm opacity-90 italic">Keep your 'Net Savings' accurate. The AI uses this figure to determine if your portfolio is 'under-funded' for your long-term goals.</p>
-                                </div>
-                            </div>
+                        <div id="wb-logic" ref={el => { contentRefs.current["wb-logic"] = el; }} className="space-y-4">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> How it Thinks (Logic Mapping)
+                            </h3>
+                            <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Context Harvesting</strong>
+                                    Before the AI sees your typed question, it secretly builds a "Context String" by grabbing your Profile Settings, your Budget Status (Cash Reserves & Savings), and your Live Portfolio.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Dynamic Prompting</strong>
+                                    It pastes all these numbers into the invisible instructions given to the AI.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Tool Calling</strong>
+                                    Only <em>then</em> does it give the AI the question, along with a hidden tool to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.
+                                </li>
+                            </ul>
                         </div>
-                    </section>
 
-                    {/* AI Strategy Section */}
-                    <section id="ai-directives" ref={el => { contentRefs.current["ai-directives"] = el; }} className="space-y-6">
-                        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">AI Intelligence & Guidance</h2>
-                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The AI Guidance engine is accessible via "Directives." Each directive triggers a specialized reasoning path.
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div id="wb-ripple" ref={el => { contentRefs.current["wb-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
+                            </div>
                             <div className="space-y-4">
-                                <h3 className="text-xl font-bold text-teal-600 italic">## The Executive Report</h3>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed italic border-l-2 border-teal-500 pl-4">
-                                    "I identified a 3.5% drift in your growth-to-income ratio. To maintain your strategy, halt DRIP on HYLD and rotate $1,200 of capital into VFV."
+                                <p className="text-neutral-700 dark:text-neutral-300">
+                                    Let's say John types: <br /><strong className="text-teal-700 dark:text-teal-400 italic text-lg">"Should I buy $20,000 worth of Tesla stock today?"</strong>
                                 </p>
-                                <p className="text-neutral-500 text-sm">
-                                    This is an example of an actionable AI output. It uses your strategy text to define the rebalancing threshold.
-                                </p>
-                            </div>
-                            <div className="rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-lg">
-                                <img src="/docs/screenshots/guidance.png" alt="AI Guidance Screenshot" className="w-full h-auto" />
+                                <ol className="list-decimal list-outside ml-5 space-y-2 text-neutral-600 dark:text-neutral-400">
+                                    <li>The AI engine checks John's injected context and sees: <code className="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-sm text-neutral-900 dark:text-neutral-200 font-mono font-medium">CASH RESERVES: $15,000</code>.</li>
+                                    <li><strong>The Logic Branch:</strong> The system immediately flags a contradiction. The user is asking to spend $20k, but only has $15k liquid.</li>
+                                    <li><strong>The Result:</strong> Instead of analyzing Tesla's P/E ratio, the "Warren Buffett" persona will immediately reject the premise, scolding John: <em className="text-neutral-800 dark:text-neutral-200 block mt-2 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-neutral-100 dark:border-neutral-800">"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess..."</em></li>
+                                </ol>
                             </div>
                         </div>
                     </section>
 
-                    {/* Profile Section */}
-                    <section id="the-4-pillar-analysis" ref={el => { contentRefs.current["the-4-pillar-analysis"] = el; }} className="space-y-6">
-                        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">The Strategic Profile</h2>
-                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The Profile page is where you define your Risk Tolerance and Strategy. This is the most important "context" you provide to the platform.
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 2: Portfolio */}
+                    <section id="portfolio" ref={el => { contentRefs.current["portfolio"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <LayoutDashboard className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">2. My Investment Portfolio</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
                         </p>
-                        <div className="relative rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-xl group">
-                            <img
-                                src="/docs/screenshots/profile.png"
-                                alt="Profile Screenshot"
-                                className="w-full h-auto"
-                            />
+
+                        <div id="port-logic" ref={el => { contentRefs.current["port-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <LayoutDashboard className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
+                                        <LineChart className="h-4 w-4 mr-2 text-indigo-500" /> KPI Summary Cards
+                                    </h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Total Market Value:</strong> Sums the real-time value of every asset you own. Pulls live market data.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Total Return:</strong> Percentage of profit or loss across your entire portfolio based on initial Book Cost.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Avg Dividend Yield:</strong> Computes a weighted average of your dividend yields.</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
+                                        <LayoutDashboard className="h-4 w-4 mr-2 text-rose-500" /> The Holdings Breakdown Table
+                                    </h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Sorting & Filtering:</strong> Click column headers to sort; type in filter boxes to isolate specific rows.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Editable Inline Rows:</strong> Click the blue pencil icon to edit asset details inline.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Live Ticker Price:</strong> Auto-fetches live prices from Yahoo Finance when editing a ticker symbol.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="port-ripple" ref={el => { contentRefs.current["port-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <p className="text-neutral-700 dark:text-neutral-300">
+                                    John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's <em>Total Market Value</em> in the Holdings Breakdown increases by $1,000.
+                                </p>
+                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
+                                    <strong>The Ripple:</strong> This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the <strong>My Finance Summary</strong> page, instantly increasing John's calculated <code>Net Worth</code> without him typing a single thing.
+                                </div>
+                            </div>
                         </div>
                     </section>
 
-                    {/* Footer Navigation */}
-                    <div className="pt-12 border-t border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
-                        <div className="flex flex-col">
-                            <span className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Previous</span>
-                            <span className="text-teal-600 font-medium cursor-pointer flex items-center group">
-                                <ChevronRight className="h-4 w-4 rotate-180 mr-1 group-hover:-translate-x-1 transition-transform" />
-                                Dashboard Overview
-                            </span>
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 3: Finance Summary */}
+                    <section id="finance-summary" ref={el => { contentRefs.current["finance-summary"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Wallet className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">3. My Finance Summary</h2>
                         </div>
-                        <div className="flex flex-col text-right">
-                            <span className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Next</span>
-                            <span className="text-teal-600 font-medium cursor-pointer flex items-center justify-end group">
-                                AI Directives
-                                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                            </span>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
+                        </p>
+
+                        <div id="fin-logic" ref={el => { contentRefs.current["fin-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Wallet className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">A. Budget Monthly Cashflow</h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Income & Expense Inputs:</strong> Enter values for Paycheck, Dividends, Fixed Home, etc. Auto-formats currency.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Auto-Calculated Savings:</strong> Instantly updates Income minus Expenses as you type.</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">B. Actual Monthly Cash Flow</h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Tabular Tracking:</strong> Add rows for Years and Months. Enter actual Income, Expenses, and ending Cash Reserves.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Row Management:</strong> Easily add new rows or remove mistakes with the trashcan icon.</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">C. Rental Cashflow</h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                        A dedicated module to isolate income and expenses related to rental properties, calculating an isolated Net Profit / Loss.
+                                    </p>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">D. Personal Wealth</h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Asset Integrations:</strong> Enter values for Real Estate, Cash, and Cars.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Synced Investment Field:</strong> Read-only field pulling Total Market Value directly from the Portfolio page.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Net Worth Calculation:</strong> Total Assets minus Total Liabilities, instantly updated and timestamped.</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <div id="fin-ripple" ref={el => { contentRefs.current["fin-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ultimate Metric: Net Worth</h3>
+                            </div>
+                            <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+                                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed italic">
+                                    "If the stock market crashes (Section 2) AND John buys a new car on credit (Section 3 expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of wealth."
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 4: Strategy */}
+                    <section id="strategy-profile" ref={el => { contentRefs.current["strategy-profile"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <BrainCircuit className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. My Investment Strategy</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            This page is the <strong>Steering Wheel</strong> for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine.
+                        </p>
+
+                        <div id="strat-logic" ref={el => { contentRefs.current["strat-logic"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center mb-4">
+                                <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-4 list-disc list-outside ml-4">
+                                <li><strong>Overall Investment Strategy:</strong> A free-text area describing your narrative focus (e.g., "Dividend growth for passive income"). Auto-resizes as you type.</li>
+                                <li><strong>Financial Goals:</strong> Define short term and long term milestones.</li>
+                                <li><strong>Risk Tolerance Dropdown:</strong> Select from Conservative, Moderate, Aggressive, or Speculative. Rigidly defines AI safety margins.</li>
+                            </ul>
+                        </div>
+
+                        <div id="strat-ripple" ref={el => { contentRefs.current["strat-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: Risk Tolerance</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div className="p-6 rounded-xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-900/10">
+                                    <h4 className="font-bold text-teal-900 dark:text-teal-400 mb-2">John sets: Conservative Dividend Focus</h4>
+                                    <p className="text-sm text-teal-800 dark:text-teal-300/80 leading-relaxed">
+                                        When John clicks "Buy the Dip" in AI Guidance, the AI ONLY recommends buying safe, 100-year-old companies.
+                                    </p>
+                                </div>
+                                <div className="p-6 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-900/10">
+                                    <h4 className="font-bold text-rose-900 dark:text-rose-400 mb-2">John's son sets: Aggressive Speculation</h4>
+                                    <p className="text-sm text-rose-800 dark:text-rose-300/80 leading-relaxed">
+                                        Using the exact same button, the AI recommends high-beta distressed tech startups, explicitly ignoring safe dividend stocks.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 5: AI Guidance */}
+                    <section id="ai-guidance" ref={el => { contentRefs.current["ai-guidance"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Target className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">5. AI Guidance</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            This is the heavy-duty analytics engine that generates multi-page strategic reports using highly engineered "Directives".
+                        </p>
+
+                        <div id="ai-logic" ref={el => { contentRefs.current["ai-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Target className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features six targeted AI Directives:</p>
+                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <strong>Rebalance with Precision:</strong> Identifies asset allocation drifts.</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <strong>Optimize Dividend Growth:</strong> Suggests moves to increase cash flow.</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <strong>Maintain Tactical Aggression:</strong> Highlights 'Buy the Dip' opportunities.</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <strong>Investment Idea Evaluation:</strong> A rigorous 4-pillar analysis for a specific new asset (requires ticker input).</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <strong>Portfolio Report:</strong> Multi-factor analysis highlighting strengths and weaknesses.</li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <strong>Stock Recommendations:</strong> Agent recommendations based on expert opinions.</li>
+                                </ul>
+                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Live Streaming Interface:</strong>
+                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ai-ripple" ref={el => { contentRefs.current["ai-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-indigo-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-indigo-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: The 4-Pillar Test</h3>
+                            </div>
+                            <p className="text-neutral-700 dark:text-neutral-300 mb-4">
+                                John inputs <code className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded">IBIT</code> (A high-risk Bitcoin ETF) to see if he should buy it.
+                            </p>
+                            <ul className="space-y-3 text-neutral-600 dark:text-neutral-400 text-sm list-disc list-inside">
+                                <li>The AI pulls John's Profile: <strong>Conservative near-retiree</strong>.</li>
+                                <li>AI simulates Cathie Wood: <em>Loves it (blockchain disruption).</em></li>
+                                <li>AI simulates Warren Buffett: <em>Hates it (lacks intrinsic value).</em></li>
+                                <li className="font-semibold text-neutral-900 dark:text-white mt-4">
+                                    The Final Verdict: <span className="text-rose-600 dark:text-rose-400 font-normal">While the asset might go up, it violates John's strict profile rules. The output firmly rejects the purchase, proving algorithm loyalty to user intent.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 6: Settings */}
+                    <section id="settings" ref={el => { contentRefs.current["settings"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Settings & Infrastructure</h2>
+                        </div>
+
+                        <div id="set-logic" ref={el => { contentRefs.current["set-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Settings className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-neutral-600 dark:text-neutral-400">
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <strong className="text-neutral-900 dark:text-white block mb-2">A. Appearance</strong>
+                                    Theme Toggles: Instantly switch between Light, Dark, or System themes. The UI provides a real-time preview context noting which theme is actively applied.
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <strong className="text-neutral-900 dark:text-white block mb-2">B. Account & Security</strong>
+                                    Identity Display shows the authorized email. Perfect Segregation confirms all data is cryptographically isolated to your unique Household ID.
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2">
+                                    <strong className="text-neutral-900 dark:text-white block mb-2">C. Household Settings</strong>
+                                    Household Management lets you create or join a household using secure alphanumeric ID codes. Shared Access allows you to invite spouses or financial planners into your cryptographic partition, securely sharing data.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="set-ripple" ref={el => { contentRefs.current["set-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: Instant Synchronization</h3>
+                            </div>
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 relative">
+                                <Zap className="h-6 w-6 text-yellow-500 absolute top-4 right-4 animate-pulse opacity-50" />
+                                <p className="text-neutral-700 dark:text-neutral-300 italic text-sm leading-relaxed max-w-2xl">
+                                    "John links his wife Mary to his Household ID. Because they share the cryptographic partition, the moment John hits 'Save' on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks Warren Buffett a question, the AI immediately knows about the new money John just added. Zero lag. One interconnected entity."
+                                </p>
+                            </div>
+                        </div>
+                    </section>
 
                 </div>
             </main>

@@ -1,80 +1,160 @@
-# User Guide: Investment Advisor Platform
+# System Logic & Ripple Effect Manual: Investment Advisor Platform
 
-Welcome to your elite Investment Advisor platform. This guide is designed to help you and your household members maximize the power of AI-driven financial intelligence. 
+Welcome to the definitive backend-to-business translation manual for the Investment Advisor. 
 
-The platform operates on a "Data-to-Intelligence" loop: your inputs provide the context, and our AI (built on Gemini 1.5 Pro) synthesizes this data into high-conviction, professional investment strategies.
+This guide is built to help non-technical users and domain experts understand exactly **how the software thinks**. We will walk through the application exactly as it appears in the navigation sidebar. For each section, we will explain the mathematical logic and the "Ripple Effect"—how a number entered in one place triggers changes across the entire system.
 
----
+To make assimilation easy, we will follow a single running example throughout this guide.
 
-## 1. Setting Your Strategic Foundation (Profile Page)
-
-Before the AI can give you advice, it needs to know your personal "Investment North Star." This happens in the **Profile** section.
-
-### Key Fields & Their AI Impact
-| Field Name | Description | How the AI Uses It |
-| :--- | :--- | :--- |
-| **Overall Strategy** | Your high-level philosophy (e.g., "Max Yield with 10% annual growth"). | This is the primary "Directive" for the AI. It filters every recommendation through this lens. |
-| **Risk Tolerance** | How you handle volatility (0-100% scale). | Influences the "Strategic Direction" pillar in AI reports. Higher risk allows for more aggressive "Buy the Dip" suggestions. |
-| **Financial Goals** | Your short and long-term targets (e.g., "$3k/month in passive income"). | The AI calculates "Milestone Gaps"—identifying if your current portfolio trajectory will hit these goals. |
+> **Meet our Example User: John**
+> John is a 55-year-old preparing for retirement. He has a $100,000 stock portfolio and keeps $15,000 in cash reserves. He just logged into the app.
 
 ---
 
-## 2. Managing Your Portfolio (Dashboard)
+## 1. Warren Buffett (Chat Engine)
+**Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts`
 
-The Dashboard is your "Live Combat View." It tracks every individual equity and ETF you own.
+This is the homepage of the app, featuring a conversational AI designed to emulate Warren Buffett. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. 
 
-### Data Entry Tips
-- **Ticker Symbols**: Always use standard symbols (e.g., `AAPL`, `VFV.TO`). The AI uses these to identify asset classes.
-- **Yield %**: Crucial for income-focused strategies. The AI sums these to calculate your total "Income Engine" performance.
-- **Book Cost vs Market Value**: Entering accurate costs helps the AI identify tax-loss harvesting opportunities or "overweight" positions.
+### How it Thinks (Logic Mapping)
+Before the AI even sees your typed question, the system secretly builds a "Context String" in the background. It reaches into the database and grabs:
+1. **Your Profile Settings:** Strategy, Risk Tolerance, and Goals. 
+2. **Your Budget Status:** It calculates your `Cash Reserves` and your `Target Monthly Savings` (Total Income minus Total Expenses).
+3. **Your Live Portfolio:** It takes a snapshot of exactly what stocks you own, how many, and their current value.
 
----
+It pastes all of these numbers into the invisible instructions given to the AI.
+Only *then* does it give the AI the question you actually typed, along with a hidden tool that allows the AI to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.
 
-## 3. Financial Health & Net Worth (Finance Summary)
+### The Ripple Effect Example
+Let's say John types: ***"Should I buy $20,000 worth of Tesla stock today?"***
 
-This page provides the "Macro View" of your life—including cash flow and liabilities.
+1. The AI engine checks John's injected context and sees: **`CASH RESERVES: $15,000`**.
+2. **The Logic Branch:** The system immediately flags a contradiction. The user is asking to spend $20,000, but the database says they only have $15,000 in liquid cash.
+3. **The Result:** Instead of analyzing Tesla's P/E ratio, the "Warren Buffett" persona will immediately reject the premise, scolding John: *"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess, and never leverage yourself to buy speculative auto-manufacturers."*
 
-### Sections Explained
-1. **Budget Monthly Cashflow**: Track what is coming in and going out.
-    - *AI Integration*: The AI uses your **Net Savings** to recommend how much capital you should deploy into the market each month.
-2. **Monthly Actuals**: Use this for month-end reconciliation.
-3. **Rental Property Cashflow**: Tracks gross rent, mortgage, and expenses.
-    - *AI Integration*: The AI views your properties as "Alternative Assets" and factors their cash flow into your total passive income milestones.
-4. **Personal Wealth (Net Worth)**: Lists non-stock assets and total liabilities.
-    - *AI Integration*: Helps the AI understand your "Total Liquidity." This determines if you should be aggressive or defensive.
+By wiring the Chat Engine directly to the Finance Summary, the AI acts as a true fiduciary, prioritizing liquidity over stock picking.
 
----
-
-## 4. AI Guidance: The Intelligence Layer
-
-This is where your data turns into action. When you request a report, the AI pulls from:
-1. **Your Profile** (Strategy/Risk)
-2. **Your Portfolio** (Current holdings)
-3. **Your Finance Summary** (Savings/Wealth)
-
-### The "4-Pillar" Evaluation
-When you enter a ticker for the **Investment Idea Evaluation**, the AI performs a unique analysis:
-- **Board of Directors**: A simulated debate between titans like Warren Buffett and Ray Dalio.
-- **Multi-Factor Analysis**: Fundamental and technical scoring.
-- **Strategic Direction**: A custom check—"Does this actually fit *your* specific stated strategy?"
-- **AI Opinion**: A final high-conviction recommendation.
+### Key Features You Can Ask About
+- **Analyze my current Portfolio:** The AI will evaluate your asset allocation based on your exact holdings.
+- **Critique my investment strategy:** It will compare your current strategy setting against your portfolio and goals.
+- **How much cash do I have?** It instantly checks your liquid reserves.
+- **Get live stock quotes:** It will fetch real-time market data during your conversation.
 
 ---
 
-## 5. Collaborative Investing (Household)
+## 2. My Investment Portfolio (Dashboard)
+**Code Location:** `src/app/dashboard/DashboardClient.tsx`
 
-You can share your financial world with a spouse or partner.
+This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
 
-- **Invite Members**: Add an email to link them to your household.
-- **Shared View**: Once added, both users see and edit the **exact same data** in real-time.
-- **Security**: Only the Household Owner can invited/remove members.
+### Detailed Features & Functionalities
+
+#### A. KPI Summary Cards
+At the top, three critical indicators give you an instant macroscopic view:
+- **Total Market Value:** Sums the real-time value of every asset you own. It pulls live market data (indicated by a spinning loader when refreshing).
+- **Total Return:** Calculates the percentage of profit or loss across your entire portfolio based on your initial Book Cost versus current Market Value.
+- **Avg Dividend Yield:** Computes a weighted average of your dividend yields, ensuring large positions accurately influence the total yield metric.
+
+#### B. The Holdings Breakdown Table
+This is the interactive nerve center where every asset is dissected in detail.
+- **Sorting & Filtering:** Every column header can be clicked to sort (ascending/descending). Below each header is a filter box—type a ticker like "AAPL" or a sector like "Tech" to instantly isolate specific rows.
+- **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account, Security Type, Strategy Type, etc.).
+- **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
+- **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
+- **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
+
+### The Ripple Effect Example
+John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *Total Market Value* in the Holdings Breakdown increases by $1,000. This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the **My Finance Summary** page, instantly increasing John's calculated `Net Worth` without him typing a single thing.
 
 ---
 
-## Pro-Tips for "Crispy" Reports
-- **Keep Strategy Detail High**: The more specific your "Overall Strategy" text is, the more professional and tailored the AI's reports will be.
-- **Update Yields Regularly**: AI rebalancing advice depends heavily on accurate yield data.
-- **Utilize the Heartbeat**: On AWS, some reports take 20-40 seconds to process. Our platform uses a "Heartbeat" system—if you see the loading spinner, the AI is working hard to synthesize a complex report for you.
+## 3. My Finance Summary (Macroscopic Health Engine)
+**Code Location:** `src/app/finance-summary/FinanceSummaryClient.tsx`
+
+While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
+
+### Detailed Features & Functionalities
+
+#### A. Budget Monthly Cashflow
+Set your baseline income and expense goals to automatically calculate your target savings.
+- **Income & Expense Inputs:** Enter values for Paycheck, Dividends, Fixed Home, Discretionary, etc. 
+- **Auto-Formatting:** Currency fields automatically add commas as you type for easy reading.
+- **Auto-Calculated Savings:** As you change any income or expense field, the "Savings" panel instantly updates (Income minus Expenses).
+
+#### B. Actual Monthly Cash Flow
+A historical ledger to track your observed financial health over time.
+- **Tabular Tracking:** Add rows for specific Years and Months. Enter actual Income, Expenses, and ending Cash Reserves.
+- **Row Management:** You can easily add new rows via "Add Row" or remove mistakes with the red trashcan icon.
+
+#### C. Rental Cashflow
+A dedicated module to isolate income and expenses specifically related to your rental properties, calculating an isolated Net Profit / Loss.
+
+#### D. Personal Wealth
+Track your overall Net Worth by keeping all assets and liabilities up to date over time.
+- **Asset Integrations:** Enter values for Real Estate, Cash, and Cars.
+- **Synced Investment Field:** The "Investment" field is strictly read-only. It automatically pulls the sum of your *Total Market Value* directly from the **My Investment Portfolio** page.
+- **Net Worth Calculation:** Total Assets minus Total Liabilities, instantly updated and saved with a timestamp.
+
+### The Ripple Effect Example (The Ultimate Metric)
+This is the master culmination of the entire app. If the stock market crashes (Section 2) AND John buys a new car on credit (Section 3 expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of John's wealth.
 
 ---
-*For support or custom feature requests, please contact your platform administrator.*
+
+## 4. My Investment Strategy (Profile Page)
+**Code Location:** `src/app/profile/ProfileClient.tsx`
+
+This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine.
+
+### Detailed Features & Functionalities
+- **Overall Investment Strategy:** A free-text area where you describe your narrative focus (e.g., "Dividend growth for passive income"). The box automatically resizes as you type.
+- **Financial Goals:** Define short term and long term milestones.
+- **Risk Tolerance Dropdown:** Select from Conservative, Moderate, Aggressive, or Speculative. This rigidly defines the safety margins the AI will recommend in its reports.
+
+### The Ripple Effect Example: Risk Tolerance
+Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, these fields are stapled to the top of your request.
+- **If John sets his Risk Tolerance to `Conservative Dividend Focus`:** Later, when using AI Guidance, the AI will ONLY recommend buying dips on extremely safe, 100-year-old companies.
+- **If John sets Risk Tolerance to `Aggressive Speculation`:** The AI will recommend buying distressed, highly volatile tech start-ups, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this specific page.
+
+---
+
+## 5. AI Guidance (Reasoning & Directive Engine)
+**Code Location:** `src/app/profile/guidance/GuidanceClient.tsx`
+
+This page is the heavy-duty analytics engine. It triggers "Directives"—highly engineered prompts that force the AI to process your Portfolio (Section 2) using your Strategy rules (Section 4).
+
+### Detailed Features & Functionalities
+The page features six targeted AI Directives, each acting as a distinct analytical report:
+1. **Rebalance with Precision:** Identifies asset allocation drifts.
+2. **Optimize Dividend Growth:** Suggests moves to increase cash flow.
+3. **Maintain Tactical Aggression:** Highlights 'Buy the Dip' opportunities.
+4. **Investment Idea Evaluation:** A rigorous 4-pillar analysis for a specific new asset. *Clicking this opens an input box requiring you to enter a specific ticker symbol (e.g., AAPL) before analyzing.*
+5. **Portfolio Report:** Multi-factor analysis highlighting strengths and weaknesses.
+6. **Stock Recommendations:** Agent recommendations based on expert opinions.
+
+- **Live Streaming Interface:** When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.
+
+### The Ripple Effect Example: The 4-Pillar Test (Directive 4)
+John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (Section 4), noting he is a **Conservative near-retiree**. It simulates different expert perspectives (like Cathie Wood vs. Warren Buffett), acts as Chairman, and concludes that while the asset might go up, it **violates John's strict profile rules**. The final output firmly rejects the purchase.
+
+---
+
+## 6. Settings (Household Infrastructure)
+**Code Location:** `src/app/settings/SettingsClient.tsx`
+
+This section handles the app's multi-tenant architecture, security, and aesthetics.
+
+### Detailed Features & Functionalities
+
+#### A. Appearance
+- **Theme Toggles:** Instantly switch between Light, Dark, or System themes. The UI provides a real-time preview context noting which theme is actively applied.
+
+#### B. Account & Security
+- **Identity Display:** Shows the currently authorized email identity.
+- **Perfect Segregation:** Confirms that all data is cryptographically isolated to your unique Household ID in the database.
+
+#### C. Household Settings
+- **Household Management:** Create or join a household using secure alphanumeric ID codes.
+- **Shared Access:** Allows you to invite spouses or financial planners into your cryptographic partition, securely sharing data.
+
+### The Ripple Effect Example
+John links his wife Mary to his Household ID in Settings. Because they share the cryptographic partition, the moment John hits "Save" on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks Warren Buffett a question in the Chat, the AI immediately knows about the new money John just added seconds ago.
