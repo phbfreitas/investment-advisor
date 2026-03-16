@@ -25,11 +25,11 @@ export async function POST(request: Request) {
 
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !(session.user as any)?.householdId) {
+    if (!session || !session.user?.householdId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+    const PROFILE_KEY = `HOUSEHOLD#${session.user!.householdId!}`;
 
     const { message, selectedPersonas } = await request.json();
 
@@ -118,7 +118,7 @@ ${assetSummary}
         // Initialize model with specific system instruction
         const model = genAI.getGenerativeModel({
           model: "gemini-2.5-flash", // Reverted to the latest capable Flash model for fast multi-persona chat
-          systemInstruction: generateSystemPrompt(personaId as any, contextString, ragContext),
+          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext),
           tools: tools,
         });
 
@@ -132,7 +132,8 @@ ${assetSummary}
           const toolResponses = [];
           for (const call of calls) {
             if (call.name === 'fetchStockData') {
-              const data = await fetchStockData((call.args as any).ticker);
+              const args = call.args as { ticker: string };
+              const data = await fetchStockData(args.ticker);
               toolResponses.push({
                 functionResponse: { name: call.name, response: data }
               });
@@ -150,9 +151,10 @@ ${assetSummary}
           status: "success",
           content: responseText,
         };
-      } catch (err: any) {
+      } catch (err) {
         console.error(`Error generating response for ${personaId}: `, err);
-        const isRateLimit = err.status === 429 || (err.message && err.message.includes('429'));
+        const e = err as { status?: number; message?: string };
+        const isRateLimit = e.status === 429 || (e.message && e.message.includes('429'));
         return {
           personaId,
           status: "error",
@@ -166,7 +168,7 @@ ${assetSummary}
     const allResponses = await Promise.all(selectedPersonas.map(fetchPersonaResponse));
 
     return NextResponse.json({ responses: allResponses });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Global Chat API Error:", error);
     return NextResponse.json(
       { error: "An error occurred while processing your request." },

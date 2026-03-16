@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Wallet, Save, Loader2, AlertCircle, Plus, Trash2, LineChart, Home, Landmark } from "lucide-react";
+import type { BudgetData, RentalData, WealthData } from "@/types";
 
 type CashFlowRow = {
     id: string;
@@ -29,7 +30,9 @@ const formatCurrencyInput = (value: string | number) => {
     return (isNegative ? '-' : '') + wholePart + decimalPart;
 };
 
-const InputField = ({ label, name, value, onChange }: { label: string, name: string, value: string | number, onChange: any }) => {
+type InputChangeEvent = { target: { name: string; value: string } };
+
+const InputField = ({ label, name, value, onChange }: { label: string; name: string; value: string | number; onChange: (e: InputChangeEvent) => void }) => {
     const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const unformatted = e.target.value.replace(/,/g, '');
         onChange({ target: { name, value: unformatted } });
@@ -87,9 +90,9 @@ export default function FinanceSummaryClient() {
     const [rows, setRows] = useState<CashFlowRow[]>([]);
 
     // Initial States for Dirty Checking
-    const [initialBudgetData, setInitialBudgetData] = useState<any>(null);
-    const [initialRentalData, setInitialRentalData] = useState<any>(null);
-    const [initialWealthData, setInitialWealthData] = useState<any>(null);
+    const [initialBudgetData, setInitialBudgetData] = useState<BudgetData | null>(null);
+    const [initialRentalData, setInitialRentalData] = useState<RentalData | null>(null);
+    const [initialWealthData, setInitialWealthData] = useState<WealthData | null>(null);
     const [initialRows, setInitialRows] = useState<CashFlowRow[]>([]);
 
     // Wealth State
@@ -161,7 +164,7 @@ export default function FinanceSummaryClient() {
 
                 // Fetch Investment Values
                 if (profileData.assets && profileData.assets.length > 0) {
-                    const totalVal = profileData.assets.reduce((acc: number, curr: any) => {
+                    const totalVal = profileData.assets.reduce((acc: number, curr: { marketValue?: unknown }) => {
                         return acc + (Number(curr.marketValue) || 0);
                     }, 0);
                     setTotalInvestmentValue(totalVal);
@@ -209,15 +212,20 @@ export default function FinanceSummaryClient() {
     }, []);
 
     // Handlers
-    const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBudgetChange = (e: InputChangeEvent) => {
         setBudgetData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleRentalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRentalChange = (e: InputChangeEvent) => {
         setRentalData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const saveProfilePartial = async (payload: any, setStatusMessage: any, setSavingState: any, section: 'budget' | 'rental' | 'wealth') => {
+    const saveProfilePartial = async (
+        payload: Record<string, number | null>,
+        setStatusMessage: (msg: { text: string; type: string }) => void,
+        setSavingState: (saving: boolean) => void,
+        section: 'budget' | 'rental' | 'wealth'
+    ) => {
         setSavingState(true);
         setStatusMessage({ text: "", type: "" });
         try {
@@ -268,7 +276,7 @@ export default function FinanceSummaryClient() {
         setInitialRentalData(rentalData);
     };
 
-    const handleWealthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleWealthChange = (e: InputChangeEvent) => {
         setWealthData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 

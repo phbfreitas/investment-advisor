@@ -11,11 +11,11 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any)?.householdId) {
+        if (!session || !session.user?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+        const PROFILE_KEY = `HOUSEHOLD#${session.user.householdId}`;
 
         const formData = await request.formData();
         const file = formData.get("file") as Blob;
@@ -33,7 +33,14 @@ export async function POST(request: Request) {
             skipEmptyLines: true,
         });
 
-        const data = result.data as any[];
+        interface CsvRow {
+            Symbol?: string;
+            Action?: string;
+            Quantity?: string;
+            Price?: string;
+            Currency?: string;
+        }
+        const data = result.data as CsvRow[];
 
         // Very basic aggregation for MVP: 
         const holdings = new Map<string, { quantity: number; totalCost: number; currency: string }>();
@@ -91,7 +98,10 @@ export async function POST(request: Request) {
             })
         );
 
-        const writeRequests: any[] = [];
+        type WriteRequest =
+            | { PutRequest: { Item: Record<string, unknown> } }
+            | { DeleteRequest: { Key: { PK: string; SK: string } } };
+        const writeRequests: WriteRequest[] = [];
 
         // Add Delete requests for old assets
         if (existingAssets) {

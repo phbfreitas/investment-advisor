@@ -7,7 +7,8 @@ export async function GET() {
     try {
         const text = await getRagContext("buffett", "test query");
         return NextResponse.json({ success: true, text });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message, stack: e.stack });
+    } catch (e) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        return NextResponse.json({ success: false, error: err.message, stack: err.stack });
     }
 }

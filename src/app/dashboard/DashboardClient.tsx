@@ -2,24 +2,25 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Upload, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
+import type { Asset, MarketData } from "@/types";
 
 export default function DashboardPage() {
-  const [assets, setAssets] = useState<any[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
 
   // Market data is now optional/helper since the table uses DB values, but we still fetch it for live updates
-  const [marketData, setMarketData] = useState<Record<string, any>>({});
+  const [marketData, setMarketData] = useState<Record<string, MarketData>>({});
   const [isMarketLoading, setIsMarketLoading] = useState(false);
 
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<Partial<Asset>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   // Sorting and Filtering state
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Asset; direction: 'asc' | 'desc' } | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
   // Option lists derived from existing data
@@ -42,15 +43,15 @@ export default function DashboardPage() {
 
     try {
       const promises = uniqueTickers.map(ticker =>
-        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json().catch(() => null))
+        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json().catch(() => null)) as Promise<MarketData | null>
       );
 
       const results = await Promise.all(promises);
-      const newMarketData: Record<string, any> = {};
+      const newMarketData: Record<string, MarketData> = {};
 
       results.forEach(data => {
         if (data && data.ticker && !data.error) {
-          newMarketData[data.ticker] = data;
+          newMarketData[data.ticker] = data as MarketData;
         }
       });
 
@@ -71,8 +72,8 @@ export default function DashboardPage() {
       ]);
       const data = await res.json();
       if (data && data.assets) {
-        setAssets(data.assets);
-        fetchMarketData(data.assets.map((a: any) => a.ticker));
+        setAssets(data.assets as Asset[]);
+        fetchMarketData((data.assets as Asset[]).map(a => a.ticker));
       }
     } catch (error) {
       console.error("Failed to load assets", error);
@@ -93,7 +94,7 @@ export default function DashboardPage() {
           const res = await fetch(`/api/market-data?ticker=${editForm.ticker}`);
           const data = await res.json();
           if (data && !data.error && data.currentPrice) {
-            setEditForm((prev: any) => ({
+            setEditForm(prev => ({
               ...prev,
               liveTickerPrice: data.currentPrice
             }));
@@ -114,18 +115,19 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Failed to delete asset");
       fetchAssets();
       setMessage({ text: "Asset row deleted.", type: "success" });
-    } catch (error: any) {
-      setMessage({ text: error.message || "Failed to delete asset.", type: "error" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete asset.";
+      setMessage({ text: message, type: "error" });
     }
   };
 
-  const startEdit = (asset: any) => {
+  const startEdit = (asset: Asset) => {
     setEditingId(asset.id);
     setEditForm({ ...asset });
   };
 
-  const handleEditChange = (field: string, value: any) => {
-    setEditForm((prev: any) => ({ ...prev, [field]: value }));
+  const handleEditChange = (field: keyof Asset, value: string | number) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
   const saveEdit = async () => {
@@ -145,8 +147,9 @@ export default function DashboardPage() {
       setEditingId(null);
       setEditForm({});
       fetchAssets();
-    } catch (error: any) {
-      setMessage({ text: error.message || "Failed to save asset.", type: "error" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save asset.";
+      setMessage({ text: message, type: "error" });
     } finally {
       setIsSaving(false);
     }
@@ -181,7 +184,7 @@ export default function DashboardPage() {
     });
   };
 
-  const handleSort = (key: string) => {
+  const handleSort = (key: keyof Asset) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -195,10 +198,10 @@ export default function DashboardPage() {
       return Object.entries(filters).every(([key, filterValue]) => {
         if (!filterValue) return true;
 
-        let assetValue = asset[key];
-        if (key === 'liveTickerPrice') {
-          assetValue = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
-        }
+        let assetValue: string | number | undefined =
+          key === 'liveTickerPrice'
+            ? (marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice)
+            : asset[key as keyof Asset] as string | number | undefined;
 
         if (assetValue == null) return false;
         return assetValue.toString().toLowerCase().includes(filterValue.toLowerCase());
@@ -209,8 +212,8 @@ export default function DashboardPage() {
     let sortableItems = [...filteredAssets];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
+        let aValue: string | number | undefined = a[sortConfig.key] as string | number | undefined;
+        let bValue: string | number | undefined = b[sortConfig.key] as string | number | undefined;
 
         // Ensure live ticker price uses the actively fetched market data when sorting
         if (sortConfig.key === 'liveTickerPrice') {
@@ -239,7 +242,7 @@ export default function DashboardPage() {
     return sortableItems;
   }, [assets, sortConfig, filters, marketData]);
 
-  const renderSortableHeader = (label: string, sortKey: string) => (
+  const renderSortableHeader = (label: string, sortKey: keyof Asset) => (
     <th
       key={sortKey}
       className="px-3 py-3 font-semibold text-neutral-900 dark:text-neutral-100 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group select-none whitespace-nowrap"
@@ -419,16 +422,16 @@ export default function DashboardPage() {
                       </td>
                     </tr>
                   ) : (
-                    [...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].map((asset) => {
+                    [...sortedAssets, ...(editingId === "NEW" ? [editForm as Asset] : [])].map((asset) => {
                       const isEditing = editingId === asset.id;
 
-                      const renderField = (field: string, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
+                      const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
                         if (isEditing) {
                           if (isSelect) {
                             return (
                               <select
                                 className={`w-28 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 ${bgClass}`}
-                                value={editForm[field] || ""}
+                                value={(editForm[field] as string | number) || ""}
                                 onChange={(e) => handleEditChange(field, e.target.value)}
                               >
                                 <option value=""></option>
@@ -442,17 +445,18 @@ export default function DashboardPage() {
                             <input
                               type={type}
                               className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
-                              value={editForm[field] ?? ""}
+                              value={(editForm[field] as string | number) ?? ""}
                               onChange={(e) => handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
                             />
                           );
                         }
 
                         // Display mode
+                        const displayValue = asset[field] as string | number;
                         if (type === 'number') {
-                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{Number(asset[field] || 0)?.toLocaleString()}</span>;
+                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{Number(displayValue || 0)?.toLocaleString()}</span>;
                         }
-                        return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{asset[field]}</span>;
+                        return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue}</span>;
                       };
 
                       return (

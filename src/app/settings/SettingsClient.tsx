@@ -4,8 +4,9 @@ import { useTheme } from "next-themes";
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import HouseholdSettings from "../profile/household/HouseholdSettings";
+import type { Session } from "next-auth";
 
-export function SettingsClient({ user }: { user?: any }) {
+export function SettingsClient({ user }: { user?: Session["user"] }) {
     const { theme, setTheme, systemTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 

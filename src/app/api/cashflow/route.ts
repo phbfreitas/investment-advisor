@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any)?.householdId) {
+        if (!session || !session.user?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+        const PROFILE_KEY = `HOUSEHOLD#${session.user!.householdId!}`;
 
         const { Items } = await db.send(
             new QueryCommand({
@@ -36,11 +36,11 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any)?.householdId) {
+        if (!session || !session.user?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+        const PROFILE_KEY = `HOUSEHOLD#${session.user!.householdId!}`;
         const cashflows = await request.json();
 
         if (!Array.isArray(cashflows)) {
@@ -61,7 +61,10 @@ export async function POST(request: Request) {
         const deleteKeys = existingKeys.filter(sk => !incomingKeys.includes(sk));
 
         // 2. Prepare Batch Write Requests (max 25 per batch)
-        const writeRequests = [];
+        type WriteRequest =
+            | { PutRequest: { Item: Record<string, unknown> } }
+            | { DeleteRequest: { Key: { PK: string; SK: string } } };
+        const writeRequests: WriteRequest[] = [];
 
         // Add Deletes
         for (const sk of deleteKeys) {

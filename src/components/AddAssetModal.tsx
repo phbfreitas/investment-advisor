@@ -53,8 +53,9 @@ export function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetModalProps
             setInstitution("");
 
             onSuccess();
-        } catch (err: any) {
-            setError(err.message || "Something went wrong.");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Something went wrong.";
+            setError(message);
         } finally {
             setIsSubmitting(false);
         }

@@ -22,11 +22,11 @@ export async function POST(request: Request) {
 
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any)?.householdId) {
+        if (!session || !session.user?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+        const PROFILE_KEY = `HOUSEHOLD#${session.user!.householdId!}`;
         const { directiveId, ticker, forceRefresh } = await request.json();
 
         if (!directiveId) {
@@ -232,11 +232,12 @@ Your goal is to provide high-conviction, professional investment intelligence.`
             }
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Guidance API Error:", error);
 
         // Handle Gemini Rate Limits gracefully
-        const isRateLimit = error?.status === 429 || error?.message?.includes("429");
+        const err = error as { status?: number; message?: string };
+        const isRateLimit = err?.status === 429 || err?.message?.includes("429");
         if (isRateLimit) {
             return NextResponse.json(
                 { error: "The AI Advisor is currently experiencing high traffic and is rate-limited. Please wait 60 seconds and try again." },

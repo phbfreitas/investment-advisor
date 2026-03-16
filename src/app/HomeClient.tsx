@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import { BrainCircuit, Send, BarChart2, Loader2, RefreshCw } from "lucide-react";
 import { PanelResponse } from "@/components/PanelResponse";
 import { personas, PersonaId } from "@/lib/personas";
+import type { PersonaResponse } from "@/types";
 
 interface Message {
   id: string;
   role: "user" | "board";
-  content: string; // The user's query
-  responses?: any[]; // The panel's responses
+  content: string;
+  responses?: PersonaResponse[];
 }
 
 export default function Home() {

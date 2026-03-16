@@ -1,13 +1,10 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { personas, PersonaId } from "@/lib/personas";
+import type { PersonaResponse } from "@/types";
 
 interface PanelResponseProps {
-    responses: {
-        personaId: PersonaId;
-        status: "success" | "error";
-        content: string;
-    }[];
+    responses: PersonaResponse[];
 }
 
 export function PanelResponse({ responses }: PanelResponseProps) {
@@ -22,7 +19,7 @@ export function PanelResponse({ responses }: PanelResponseProps) {
 
             <div className="grid grid-cols-1 gap-6">
                 {responses.map((response, index) => {
-                    const persona = personas[response.personaId];
+                    const persona = personas[response.personaId as PersonaId];
                     if (!persona) return null;
 
                     return (

@@ -11,11 +11,11 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || !(session.user as any)?.householdId) {
+        if (!session || !session.user?.householdId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const PROFILE_KEY = `HOUSEHOLD#${(session.user as any).householdId}`;
+        const PROFILE_KEY = `HOUSEHOLD#${session.user.householdId}`;
         const data = await request.json();
 
         const { Item: profile } = await db.send(

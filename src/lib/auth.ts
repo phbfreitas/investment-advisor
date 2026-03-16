@@ -75,8 +75,7 @@ export const authOptions: NextAuthOptions = {
         },
         async session({ session, token }) {
             if (session.user) {
-                // Override types dynamically to inject the retrieved householdId
-                (session.user as any).householdId = token.householdId;
+                session.user.householdId = token.householdId;
             }
             return session;
         }

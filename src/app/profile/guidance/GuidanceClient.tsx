@@ -101,9 +101,10 @@ export default function GuidanceClient() {
                 const cleanChunk = chunk.replace(/\u200B/g, "");
                 setGuidanceResponse((prev) => prev + cleanChunk);
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Guidance Error:", error);
-            setGuidanceError(error.message || "An error occurred fetching guidance.");
+            const message = error instanceof Error ? error.message : "An error occurred fetching guidance.";
+            setGuidanceError(message);
         } finally {
             setIsGuidanceLoading(false);
         }
