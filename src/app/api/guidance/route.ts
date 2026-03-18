@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db, TABLE_NAME } from "@/lib/db";
 import { GetCommand, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { formatStrategyContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -57,11 +58,27 @@ export async function POST(request: Request) {
 
         // Build Current Snapshot for Comparison
         const assetsList = assets || [];
+
+        const strategyFingerprint = JSON.stringify({
+            assetMixGrowth: profile?.assetMixGrowth || 0,
+            assetMixIncome: profile?.assetMixIncome || 0,
+            assetMixMixed: profile?.assetMixMixed || 0,
+            philosophies: (profile?.philosophies || []).slice().sort().join(","),
+            corePrinciples: (profile?.corePrinciples || []).slice().sort().join(","),
+            accountTypes: (profile?.accountTypes || []).slice().sort().join(","),
+            tradingMethodologies: (profile?.tradingMethodologies || []).slice().sort().join(","),
+            sectorAllocation: JSON.stringify(profile?.sectorAllocation || {}),
+            geographicExposure: JSON.stringify(profile?.geographicExposure || {}),
+            targetAnnualReturn: profile?.targetAnnualReturn || 0,
+            targetMonthlyDividend: profile?.targetMonthlyDividend || 0,
+        });
+
         const currentSnapshot = {
             strategy: profile?.strategy || "Not specified",
             riskTolerance: profile?.riskTolerance || "Not specified",
             goals: profile?.goals || "Not specified",
-            portfolioFingerprint: assetsList.map(a => `${a.ticker}:${a.quantity}`).sort().join("|") // e.g. "AAPL:10|MSFT:5"
+            portfolioFingerprint: assetsList.map(a => `${a.ticker}:${a.quantity}`).sort().join("|"),
+            strategyFingerprint,
         };
 
         // 1. Check Cache first (unless force refresh)
@@ -82,6 +99,7 @@ export async function POST(request: Request) {
                 if (cachedSnapshot.riskTolerance !== currentSnapshot.riskTolerance) changedFields.push("Risk Tolerance");
                 if (cachedSnapshot.goals !== currentSnapshot.goals) changedFields.push("Financial Goals");
                 if (cachedSnapshot.portfolioFingerprint !== currentSnapshot.portfolioFingerprint) changedFields.push("Portfolio Holdings");
+                if (cachedSnapshot.strategyFingerprint !== currentSnapshot.strategyFingerprint) changedFields.push("Strategy Configuration");
 
                 // Return cached response instantly
                 return new Response(cached.response, {
@@ -100,12 +118,14 @@ export async function POST(request: Request) {
             ? assetsList.map(a => `- ${a.quantity} units of ${a.ticker} (Cost: $${a.bookCost}, Value: $${a.marketValue}, Yield: ${a.yield}%)`).join("\n")
             : "No assets documented.";
 
+        const strategyContext = formatStrategyContext(profile || {});
+
         const contextString = `
 USER PORTFOLIO DATA:
 Strategy: ${profile?.strategy || "Not specified"}
 Risk Tolerance: ${profile?.riskTolerance || "Not specified"}
 Goals: ${profile?.goals || "Not specified"}
-Assets:
+${strategyContext ? strategyContext + "\n" : ""}Assets:
 ${assetSummary}
 `;
 

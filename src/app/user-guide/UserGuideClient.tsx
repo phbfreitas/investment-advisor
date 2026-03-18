@@ -378,37 +378,71 @@ export default function UserGuideClient() {
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This page is the <strong>Steering Wheel</strong> for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine.
+                            This page is the <strong>Steering Wheel</strong> for the AI. It combines free-text narrative context with structured strategy configuration, giving advisors both qualitative and quantitative understanding of your investment approach.
                         </p>
 
-                        <div id="strat-logic" ref={el => { contentRefs.current["strat-logic"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center mb-4">
+                        <div id="strat-logic" ref={el => { contentRefs.current["strat-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
                                 <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
                             </h3>
-                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-4 list-disc list-outside ml-4">
-                                <li><strong>Overall Investment Strategy:</strong> A free-text area describing your narrative focus (e.g., "Dividend growth for passive income"). Auto-resizes as you type.</li>
-                                <li><strong>Financial Goals:</strong> Define short term and long term milestones.</li>
-                                <li><strong>Risk Tolerance Dropdown:</strong> Select from Conservative, Moderate, Aggressive, or Speculative. Rigidly defines AI safety margins.</li>
-                            </ul>
+
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">A. Narrative Context</h4>
+                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                    <li><strong>Overall Investment Strategy:</strong> A free-text area describing your narrative focus (e.g., &quot;Dividend growth for passive income&quot;). Auto-resizes as you type.</li>
+                                    <li><strong>Financial Goals:</strong> Define short term and long term milestones.</li>
+                                    <li><strong>Risk Tolerance Dropdown:</strong> Select from Conservative, Moderate, Aggressive, or Speculative. Rigidly defines AI safety margins.</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">B. Strategy Configuration (8 Collapsible Sections)</h4>
+                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                    <li><strong>Asset Mix:</strong> Define Growth / Income / Mixed target percentages (must sum to 100%). A visual stacked bar chart updates in real-time.</li>
+                                    <li><strong>Investment Philosophies:</strong> Toggle-select from 11 options grouped by Value-Based (purple), Strategy-Based (teal), and Style-Based (amber).</li>
+                                    <li><strong>Core Principles:</strong> Select Diversification, Discipline/Rebalancing, and/or Cost Minimization.</li>
+                                    <li><strong>Account Types:</strong> Specify TFSA, RRSP, and/or Non-Registered accounts.</li>
+                                    <li><strong>Trading Methodology:</strong> Choose from Buy and Hold, Trend Following, Value Averaging, Sector Rotation, and Swing Trading.</li>
+                                    <li><strong>Sector Allocation:</strong> Set target percentages across 11 sectors. Includes an inline <strong>drift table</strong> comparing targets to actuals from your portfolio. Sectors drifting &gt;5% are flagged.</li>
+                                    <li><strong>Geographic Exposure:</strong> Set target percentages across 5 regions with same drift detection.</li>
+                                    <li><strong>Performance Targets:</strong> Set Expected Annual Return (%) and Target Monthly Dividend ($). The system projects estimates from your actual holdings and flags when targets exceed reality.</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">C. Validation</h4>
+                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                    <li>All percentage groups must sum to exactly 100% before saving. Real-time &quot;Remaining: X%&quot; indicators turn green/red.</li>
+                                    <li>Server-side validation provides a second safety net, returning specific error messages.</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div id="strat-ripple" ref={el => { contentRefs.current["strat-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
                             <div className="flex items-center space-x-2 mb-4">
                                 <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: Risk Tolerance</h3>
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: Risk Tolerance + Strategy Config</h3>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                                <div className="p-6 rounded-xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-900/10">
-                                    <h4 className="font-bold text-teal-900 dark:text-teal-400 mb-2">John sets: Conservative Dividend Focus</h4>
-                                    <p className="text-sm text-teal-800 dark:text-teal-300/80 leading-relaxed">
-                                        When John clicks "Buy the Dip" in AI Guidance, the AI ONLY recommends buying safe, 100-year-old companies.
-                                    </p>
+                            <div className="space-y-4">
+                                <p className="text-neutral-700 dark:text-neutral-300 text-sm">
+                                    Both narrative fields AND structured strategy config are injected into every AI request.
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="p-6 rounded-xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-900/10">
+                                        <h4 className="font-bold text-teal-900 dark:text-teal-400 mb-2">John: Conservative + Buy and Hold</h4>
+                                        <p className="text-sm text-teal-800 dark:text-teal-300/80 leading-relaxed">
+                                            The AI ONLY recommends safe, established companies with strong dividends and broad portfolio diversification.
+                                        </p>
+                                    </div>
+                                    <div className="p-6 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-900/10">
+                                        <h4 className="font-bold text-rose-900 dark:text-rose-400 mb-2">John&apos;s son: Aggressive + Swing Trading</h4>
+                                        <p className="text-sm text-rose-800 dark:text-rose-300/80 leading-relaxed">
+                                            The AI recommends distressed, volatile opportunities for short-term gains, ignoring safe dividend stocks.
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="p-6 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-900/10">
-                                    <h4 className="font-bold text-rose-900 dark:text-rose-400 mb-2">John's son sets: Aggressive Speculation</h4>
-                                    <p className="text-sm text-rose-800 dark:text-rose-300/80 leading-relaxed">
-                                        Using the exact same button, the AI recommends high-beta distressed tech startups, explicitly ignoring safe dividend stocks.
-                                    </p>
+                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
+                                    <strong>Drift Alert:</strong> If John sets 20% target for Financials but only has 14% actual, the drift table shows -6% with a warning — reminding him to rebalance.
                                 </div>
                             </div>
                         </div>
@@ -461,6 +495,7 @@ export default function UserGuideClient() {
                                                 <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Investment Strategy</li>
                                                 <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Financial Goals</li>
                                                 <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Risk Tolerance</li>
+                                                <li className="flex items-start"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 mt-1 shrink-0" /><span className="leading-tight">Strategy Configuration (Asset Mix, Philosophies, Principles, Account Types, Trading Methodology, Sector/Geographic Targets, Performance Targets)</span></li>
                                                 <li className="flex items-start"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 mt-1 shrink-0" /><span className="leading-tight">Portfolio Asset Changes (Tickers, Shares Owned, Current Price, Market Value, Book Cost, and Expected Dividends)</span></li>
                                             </ul>
                                         </div>

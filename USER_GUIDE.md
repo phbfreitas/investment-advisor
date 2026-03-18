@@ -110,17 +110,40 @@ This is the master culmination of the entire app. If the stock market crashes (S
 ## 4. My Investment Strategy (Profile Page)
 **Code Location:** `src/app/profile/ProfileClient.tsx`
 
-This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine.
+This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine. It combines free-text narrative context with structured strategy configuration, giving the advisors both qualitative and quantitative understanding of your investment approach.
 
 ### Detailed Features & Functionalities
+
+#### A. Narrative Context (Existing)
 - **Overall Investment Strategy:** A free-text area where you describe your narrative focus (e.g., "Dividend growth for passive income"). The box automatically resizes as you type.
 - **Financial Goals:** Define short term and long term milestones.
 - **Risk Tolerance Dropdown:** Select from Conservative, Moderate, Aggressive, or Speculative. This rigidly defines the safety margins the AI will recommend in its reports.
 
-### The Ripple Effect Example: Risk Tolerance
-Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, these fields are stapled to the top of your request.
-- **If John sets his Risk Tolerance to `Conservative Dividend Focus`:** Later, when using AI Guidance, the AI will ONLY recommend buying dips on extremely safe, 100-year-old companies.
-- **If John sets Risk Tolerance to `Aggressive Speculation`:** The AI will recommend buying distressed, highly volatile tech start-ups, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this specific page.
+#### B. Strategy Configuration (Collapsible Sections)
+Eight new structured configuration sections, each collapsible:
+
+- **Asset Mix:** Define your target allocation between Growth, Income, and Mixed assets as percentages (must sum to 100%). A visual stacked bar chart updates in real-time as you adjust the values.
+- **Investment Philosophies:** Toggle-select from 11 philosophies grouped into three categories:
+  - *Value-Based:* Regular Value, Deep Value, Mispriced Special Situations, Fundamental Value
+  - *Strategy-Based:* Event-Driven, Indexing, Buy the Dip, Contrarian
+  - *Style-Based:* Technical Analysis, Socially Responsible, Long-term Growth
+- **Core Principles:** Select guiding principles — Diversification, Discipline/Rebalancing (triggers drift alerts), and Cost Minimization.
+- **Account Types:** Specify which account types you use — TFSA, RRSP, Non-Registered.
+- **Trading Methodology:** Select your trading approaches — Buy and Hold, Trend Following, Value Averaging, Sector Rotation, Swing Trading.
+- **Sector Allocation:** Set target percentages across 11 market sectors (IT, Financials, Healthcare, etc., must sum to 100%). The system compares your targets against your actual portfolio holdings and displays an inline **drift table** showing Target %, Actual %, and Drift % for each sector. Sectors drifting more than 5% from target are flagged with a warning.
+- **Geographic Exposure:** Set target percentages across 5 geographic regions (North America, Europe, Asia, Emerging Markets, Frontier Markets, must sum to 100%). Same drift detection as sectors.
+- **Performance Targets:** Set your Expected Annual Return (%) and Target Monthly Dividend Income ($). The system calculates projections from your actual portfolio (weighted average 1-year return and sum of expected dividends) and compares them against your targets, flagging when targets exceed estimates.
+
+#### C. Validation
+- All percentage groups (Asset Mix, Sector Allocation, Geographic Exposure) must sum to exactly 100% before saving.
+- Real-time "Remaining: X%" indicators turn green when the sum is correct and red when it's off.
+- Server-side validation provides a second safety net.
+
+### The Ripple Effect Example: Risk Tolerance + Strategy Config
+Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, both the narrative fields AND the structured strategy config are stapled to the top of your request.
+- **If John sets his Risk Tolerance to `Conservative Dividend Focus` and selects "Buy and Hold" + "Diversification":** The AI will ONLY recommend safe, established companies with strong dividends and broad portfolio diversification.
+- **If John sets Risk Tolerance to `Aggressive Speculation` and selects "Swing Trading" + "Deep Value":** The AI will recommend distressed, highly volatile opportunities for short-term gains, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this page.
+- **Drift Alerts:** If John sets a 20% target for Financials but his actual portfolio only has 14% in financial stocks, the drift table shows a -6% warning — reminding him to rebalance before his next purchase.
 
 ---
 
@@ -141,7 +164,7 @@ The page features six targeted AI Directives, each acting as a distinct analytic
 - **Live Streaming Interface:** When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.
 - **Intelligent Caching:** To maximize speed and minimize API costs, the system caches every generated report. If you open a previously generated directive, it will load instantly exactly as it was.
 - **Stale Data Warnings:** The system takes a fingerprint snapshot of your Portfolio and Strategy whenever an analysis is generated. If you change your holdings or risk tolerance and then open a cached report, you will be greeted by an Amber Warning Banner explicitly listing which underlying data fields have changed since the last run.
-  - **Monitored Fields:** Ensure you keep your data accurate across the app. The backend monitors changes to the following fields: _Investment Strategy_, _Financial Goals_, _Risk Tolerance_, and _Portfolio Assets_ (including any changes to Tickers, Shares Owned, Current Price, Total Market Value, Book Cost, or Expected Dividends).
+  - **Monitored Fields:** Ensure you keep your data accurate across the app. The backend monitors changes to the following fields: _Investment Strategy_, _Financial Goals_, _Risk Tolerance_, _Strategy Configuration_ (Asset Mix, Philosophies, Principles, Account Types, Trading Methodology, Sector/Geographic Targets, Performance Targets), and _Portfolio Assets_ (including any changes to Tickers, Shares Owned, Current Price, Total Market Value, Book Cost, or Expected Dividends).
 - **Content Blurring & On-Demand Refresh:** To prevent you from acting on outdated advice, the presence of a Stale Data Warning will dynamically blur the underlying report. You can either dismiss the warning or click the **"Refresh Analysis"** button to force the AI to generate a brand new, up-to-date report. A timestamp in the header always ensures you know exactly when the current analysis was generated.
 
 ### The Ripple Effect Example: The 4-Pillar Test (Directive 4)

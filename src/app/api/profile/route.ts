@@ -64,6 +64,26 @@ export async function POST(request: Request) {
             })
         );
 
+        // Validate percentage sums (only when non-zero values present)
+        const mixSum = (data.assetMixGrowth || 0) + (data.assetMixIncome || 0) + (data.assetMixMixed || 0);
+        if (mixSum > 0 && Math.abs(mixSum - 100) > 0.01) {
+            return NextResponse.json({ error: "Asset mix percentages must sum to 100%" }, { status: 400 });
+        }
+
+        if (data.sectorAllocation) {
+            const sectorSum = Object.values(data.sectorAllocation as Record<string, number>).reduce((a: number, b: number) => a + b, 0);
+            if (sectorSum > 0 && Math.abs(sectorSum - 100) > 0.01) {
+                return NextResponse.json({ error: "Sector allocation must sum to 100%" }, { status: 400 });
+            }
+        }
+
+        if (data.geographicExposure) {
+            const geoSum = Object.values(data.geographicExposure as Record<string, number>).reduce((a: number, b: number) => a + b, 0);
+            if (geoSum > 0 && Math.abs(geoSum - 100) > 0.01) {
+                return NextResponse.json({ error: "Geographic exposure must sum to 100%" }, { status: 400 });
+            }
+        }
+
         // Put operation naturally updates or creates
         const profileData = {
             PK: PROFILE_KEY,
@@ -96,6 +116,19 @@ export async function POST(request: Request) {
             wealthLiabilityRentalHeloc: data.wealthLiabilityRentalHeloc !== undefined ? data.wealthLiabilityRentalHeloc : existingProfile?.wealthLiabilityRentalHeloc,
             wealthLiabilityCreditCards: data.wealthLiabilityCreditCards !== undefined ? data.wealthLiabilityCreditCards : existingProfile?.wealthLiabilityCreditCards,
             wealthLiabilityCarLease: data.wealthLiabilityCarLease !== undefined ? data.wealthLiabilityCarLease : existingProfile?.wealthLiabilityCarLease,
+
+            // Strategy Configuration
+            assetMixGrowth: data.assetMixGrowth !== undefined ? data.assetMixGrowth : existingProfile?.assetMixGrowth,
+            assetMixIncome: data.assetMixIncome !== undefined ? data.assetMixIncome : existingProfile?.assetMixIncome,
+            assetMixMixed: data.assetMixMixed !== undefined ? data.assetMixMixed : existingProfile?.assetMixMixed,
+            philosophies: data.philosophies !== undefined ? data.philosophies : existingProfile?.philosophies,
+            corePrinciples: data.corePrinciples !== undefined ? data.corePrinciples : existingProfile?.corePrinciples,
+            accountTypes: data.accountTypes !== undefined ? data.accountTypes : existingProfile?.accountTypes,
+            tradingMethodologies: data.tradingMethodologies !== undefined ? data.tradingMethodologies : existingProfile?.tradingMethodologies,
+            sectorAllocation: data.sectorAllocation !== undefined ? data.sectorAllocation : existingProfile?.sectorAllocation,
+            geographicExposure: data.geographicExposure !== undefined ? data.geographicExposure : existingProfile?.geographicExposure,
+            targetAnnualReturn: data.targetAnnualReturn !== undefined ? data.targetAnnualReturn : existingProfile?.targetAnnualReturn,
+            targetMonthlyDividend: data.targetMonthlyDividend !== undefined ? data.targetMonthlyDividend : existingProfile?.targetMonthlyDividend,
 
             updatedAt: new Date().toISOString(),
         };

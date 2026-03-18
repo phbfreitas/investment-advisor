@@ -89,3 +89,106 @@ export type WealthData = {
     wealthLiabilityCreditCards: string;
     wealthLiabilityCarLease: string;
 };
+
+// --- Strategy Configuration ---
+
+export interface StrategyConfig {
+    // Asset Mix (must sum to 100)
+    assetMixGrowth: number;
+    assetMixIncome: number;
+    assetMixMixed: number;
+
+    // Multi-select philosophy/principle/account/methodology
+    philosophies: string[];
+    corePrinciples: string[];
+    accountTypes: string[];
+    tradingMethodologies: string[];
+
+    // Portfolio Constraints (each must sum to 100)
+    sectorAllocation: Record<string, number>;
+    geographicExposure: Record<string, number>;
+
+    // Performance Targets
+    targetAnnualReturn: number;
+    targetMonthlyDividend: number;
+}
+
+// --- Predefined Option Constants ---
+
+export const PHILOSOPHY_OPTIONS = [
+    { value: "regular-value", label: "Regular Basic Value", group: "value" as const },
+    { value: "deep-value", label: "Deep Value", group: "value" as const },
+    { value: "mispriced-situations", label: "Mispriced Special Situations", group: "value" as const },
+    { value: "fundamental-value", label: "Fundamental Value", group: "value" as const },
+    { value: "event-driven", label: "Event-Driven", group: "strategy" as const },
+    { value: "indexing", label: "Indexing", group: "strategy" as const },
+    { value: "buy-the-dip", label: "Buy the Dip", group: "strategy" as const },
+    { value: "contrarian", label: "Contrarian", group: "strategy" as const },
+    { value: "technical-analysis", label: "Technical Analysis", group: "style" as const },
+    { value: "socially-responsible", label: "Socially Responsible", group: "style" as const },
+    { value: "long-term-growth", label: "Long-term Growth", group: "style" as const },
+];
+
+export const CORE_PRINCIPLE_OPTIONS = [
+    { value: "diversification", label: "Diversification", description: "Spread risk across asset classes and sectors" },
+    { value: "discipline-rebalancing", label: "Discipline / Rebalancing", description: "Trigger alerts when targets drift" },
+    { value: "cost-minimization", label: "Cost Minimization", description: "Minimize fees, commissions, and tax drag" },
+];
+
+export const ACCOUNT_TYPE_OPTIONS = [
+    { value: "registered-tfsa", label: "TFSA" },
+    { value: "registered-rrsp", label: "RRSP" },
+    { value: "non-registered", label: "Non-Registered" },
+];
+
+export const TRADING_METHODOLOGY_OPTIONS = [
+    { value: "buy-and-hold", label: "Buy and Hold" },
+    { value: "trend-following", label: "Trend Following" },
+    { value: "value-averaging", label: "Value Averaging" },
+    { value: "sector-rotation", label: "Sector Rotation" },
+    { value: "swing-trading", label: "Swing Trading" },
+];
+
+export const SECTOR_KEYS = [
+    "it", "financials", "healthcare", "consumer-discretionary",
+    "communication-services", "industrials", "staples",
+    "energy-utilities", "real-estate", "materials", "metals",
+] as const;
+
+export const SECTOR_LABELS: Record<string, string> = {
+    "it": "IT",
+    "financials": "Financials",
+    "healthcare": "Healthcare",
+    "consumer-discretionary": "Consumer Discretionary",
+    "communication-services": "Communication Services",
+    "industrials": "Industrials",
+    "staples": "Staples",
+    "energy-utilities": "Energy & Utilities",
+    "real-estate": "Real Estate",
+    "materials": "Materials",
+    "metals": "Metals",
+};
+
+export const GEO_KEYS = ["na", "europe", "asia", "em", "frontier"] as const;
+
+export const GEO_LABELS: Record<string, string> = {
+    "na": "North America",
+    "europe": "Europe",
+    "asia": "Asia",
+    "em": "Emerging Markets",
+    "frontier": "Frontier Markets",
+};
+
+export const STRATEGY_CONFIG_DEFAULTS: StrategyConfig = {
+    assetMixGrowth: 0,
+    assetMixIncome: 0,
+    assetMixMixed: 0,
+    philosophies: [],
+    corePrinciples: [],
+    accountTypes: [],
+    tradingMethodologies: [],
+    sectorAllocation: {},
+    geographicExposure: {},
+    targetAnnualReturn: 0,
+    targetMonthlyDividend: 0,
+};

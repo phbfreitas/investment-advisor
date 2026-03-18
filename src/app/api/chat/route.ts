@@ -5,6 +5,7 @@ import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { personas, generateSystemPrompt, PersonaId } from "@/lib/personas";
 import { getRagContext } from "@/lib/rag";
 import { fetchStockData, fetchStockDataToolDefinition } from "@/lib/finance-tools";
+import { formatStrategyContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -90,13 +91,15 @@ export async function POST(request: Request) {
         ? `BUDGETED DECLARED INCOME: $${tIncome}\nBUDGETED DECLARED EXPENSES: $${tExpenses}\nTARGET MONTHLY SAVINGS: $${tIncome - tExpenses}`
         : "No monthly budget defined.";
 
+      const strategyContext = formatStrategyContext(profile);
+
       contextString = `
 STRATEGY: ${profile.strategy || "Not specified"}
 RISK TOLERANCE: ${profile.riskTolerance || "Not specified"}
 GOALS: ${profile.goals || "Not specified"}
 CASH RESERVES: $${currentCashReserves}
 ${budgetSummary}
-PORTFOLIO HOLDINGS:
+${strategyContext ? strategyContext + "\n" : ""}PORTFOLIO HOLDINGS:
 ${assetSummary}
 `;
     }
