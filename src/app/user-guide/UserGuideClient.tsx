@@ -182,7 +182,7 @@ export default function UserGuideClient() {
 
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the homepage of the app, featuring a conversational AI featuring a panel of legendary investors — Warren Buffett, Luiz Barsi, Max Gunther, Morgan Housel, and Dave Ramsey. Select which advisors to consult per question. Each brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
+                            This is the homepage of the app, featuring a panel of legendary investors — Warren Buffett, Luiz Barsi, Max Gunther, Morgan Housel, and Dave Ramsey. Select which advisors to consult per question. Each brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
@@ -531,7 +531,7 @@ export default function UserGuideClient() {
                             <div className="p-4 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 relative">
                                 <Zap className="h-6 w-6 text-yellow-500 absolute top-4 right-4 animate-pulse opacity-50" />
                                 <p className="text-neutral-700 dark:text-neutral-300 italic text-sm leading-relaxed max-w-2xl">
-                                    "John links his wife Mary to his Household ID. Because they share the cryptographic partition, the moment John hits 'Save' on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks Warren Buffett a question, the AI immediately knows about the new money John just added. Zero lag. One interconnected entity."
+                                    "John links his wife Mary to his Household ID. Because they share the cryptographic partition, the moment John hits 'Save' on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks a question on the Advisory Board, the AI immediately knows about the new money John just added. Zero lag. One interconnected entity."
                                 </p>
                             </div>
                         </div>

@@ -168,4 +168,4 @@ This section handles the app's multi-tenant architecture, security, and aestheti
 - **Shared Access:** Allows you to invite spouses or financial planners into your cryptographic partition, securely sharing data.
 
 ### The Ripple Effect Example
-John links his wife Mary to his Household ID in Settings. Because they share the cryptographic partition, the moment John hits "Save" on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks Warren Buffett a question in the Chat, the AI immediately knows about the new money John just added seconds ago.
+John links his wife Mary to his Household ID in Settings. Because they share the cryptographic partition, the moment John hits "Save" on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks a question on the Advisory Board, the AI immediately knows about the new money John just added seconds ago.

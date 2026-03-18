@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: true, persona, query, text });
     } catch (e) {
         const err = e instanceof Error ? e : new Error(String(e));
-        return NextResponse.json({ success: false, error: err.message, stack: err.stack });
+        console.error("[debug-rag] Error:", err.stack);
+        return NextResponse.json({ success: false, error: err.message });
     }
 }
