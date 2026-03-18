@@ -13,7 +13,7 @@ export function PanelResponse({ responses }: PanelResponseProps) {
     return (
         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center space-x-2 px-2">
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-neutral-500">Buffett's Analysis</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-neutral-500">Advisory Board Responses</h3>
                 <div className="h-px bg-neutral-800 flex-1" />
             </div>
 
