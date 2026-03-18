@@ -10,13 +10,13 @@ export interface DocumentChunk {
     id: string;
     text: string;
     metadata: {
-        year: number;
+        sourceLabel: string;
         source: string;
     };
     embedding: number[];
 }
 
-let cachedBuffettIndex: DocumentChunk[] | null = null;
+const cachedIndexes: Map<string, DocumentChunk[]> = new Map();
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
     let dotProduct = 0;
@@ -31,23 +31,35 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-export async function getRagContext(personaId: string, query: string, topK: number = 3): Promise<string> {
-    if (personaId !== 'buffett') return ""; // Only Buffett has RAG for now
+const RELEVANCE_THRESHOLD = 0.30;
+const MAX_CONTEXT_TOKENS = 2000;
 
+function estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+}
+
+export async function getRagContext(personaId: string, query: string, topK: number = 3): Promise<string> {
     try {
-        if (!cachedBuffettIndex) {
-            const indexPath = path.join(process.cwd(), "data", "personas", "buffett-index.json");
-            const fileData = await fs.readFile(indexPath, 'utf-8');
-            cachedBuffettIndex = JSON.parse(fileData);
+        if (!cachedIndexes.has(personaId)) {
+            const indexPath = path.join(process.cwd(), "data", "personas", `${personaId}-index.json`);
+            try {
+                const fileData = await fs.readFile(indexPath, 'utf-8');
+                cachedIndexes.set(personaId, JSON.parse(fileData));
+            } catch {
+                // Index file doesn't exist — persona works without RAG
+                console.log(`[RAG] No index file found for persona "${personaId}". Skipping RAG context.`);
+                return "";
+            }
         }
 
-        if (!cachedBuffettIndex) return "";
+        const index = cachedIndexes.get(personaId);
+        if (!index || index.length === 0) return "";
 
         const queryEmbeddingResult = await embeddingModel.embedContent(query);
         const queryEmbedding = queryEmbeddingResult.embedding.values;
 
         // Calculate similarities
-        const scoredChunks = cachedBuffettIndex.map(chunk => ({
+        const scoredChunks = index.map(chunk => ({
             ...chunk,
             score: cosineSimilarity(queryEmbedding, chunk.embedding)
         }));
@@ -55,20 +67,50 @@ export async function getRagContext(personaId: string, query: string, topK: numb
         // Sort by highest score
         scoredChunks.sort((a, b) => b.score - a.score);
 
-        const topChunks = scoredChunks.slice(0, topK);
+        // Log top scores for debugging
+        const topScores = scoredChunks.slice(0, topK).map(c => ({
+            id: c.id,
+            score: c.score.toFixed(4),
+            source: c.metadata.sourceLabel,
+        }));
+        console.log(`[RAG:${personaId}] Query: "${query.slice(0, 80)}..." | Top scores:`, topScores);
 
-        // Format the retrieved context
+        // Filter by relevance threshold
+        const relevantChunks = scoredChunks
+            .slice(0, topK)
+            .filter(chunk => chunk.score >= RELEVANCE_THRESHOLD);
+
+        if (relevantChunks.length === 0) {
+            console.log(`[RAG:${personaId}] No chunks passed relevance threshold (${RELEVANCE_THRESHOLD}). Skipping RAG context.`);
+            return "";
+        }
+
+        // Apply token budget — include as many chunks as fit
         let contextString = "\n### RETRIEVED KNOWLEDGE BASE EXTRACTS:\n";
         contextString += "These are specific, retrieved excerpts from your actual writings meant to help you directly answer the user's question.\n\n";
 
-        topChunks.forEach((chunk, index) => {
-            contextString += `--- Extract ${index + 1} (Source: ${chunk.metadata.year} Shareholder Letter) ---\n`;
-            contextString += `${chunk.text}\n\n`;
-        });
+        const headerTokens = estimateTokens(contextString);
+        let usedTokens = headerTokens;
+        let includedCount = 0;
 
+        for (const chunk of relevantChunks) {
+            const chunkText = `--- Extract ${includedCount + 1} (Source: ${chunk.metadata.sourceLabel}) ---\n${chunk.text}\n\n`;
+            const chunkTokens = estimateTokens(chunkText);
+
+            if (usedTokens + chunkTokens > MAX_CONTEXT_TOKENS && includedCount > 0) {
+                console.log(`[RAG:${personaId}] Token budget reached (${usedTokens}/${MAX_CONTEXT_TOKENS}). Included ${includedCount}/${relevantChunks.length} relevant chunks.`);
+                break;
+            }
+
+            contextString += chunkText;
+            usedTokens += chunkTokens;
+            includedCount++;
+        }
+
+        console.log(`[RAG:${personaId}] Included ${includedCount} chunks (~${usedTokens} tokens).`);
         return contextString;
     } catch (e) {
         console.error(`Error retrieving RAG context for ${personaId}:`, e);
-        return ""; // Silently fail and return no context if something goes wrong
+        return "";
     }
 }
