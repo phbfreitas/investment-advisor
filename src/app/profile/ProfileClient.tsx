@@ -107,7 +107,7 @@ export default function ProfilePage() {
                         <div>
                             <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Personal Context</h2>
                             <p className="text-neutral-600 dark:text-neutral-400">
-                                Warren will use this persistent context to tailor his advice to your specific situation.
+                                Your advisors will use this persistent context to tailor their advice to your specific situation.
                             </p>
                         </div>
                     </div>

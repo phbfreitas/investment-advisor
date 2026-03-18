@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
 const navigation = [
-    { name: "Warren Buffett", href: "/", icon: Users },
+    { name: "Advisory Board", href: "/", icon: Users },
     { name: "My Investment Portfolio", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
     { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },

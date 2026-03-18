@@ -6,8 +6,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Warren Buffett Advisor",
-  description: "Your personalized Warren Buffett advisor powered by his actual writings",
+  title: "Investment Advisory Board",
+  description: "Your personalized investment advisory board powered by the wisdom of legendary investors",
 };
 
 import { Providers } from "@/components/Providers";
