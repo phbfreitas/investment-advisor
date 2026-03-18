@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { BrainCircuit, Send, BarChart2, Loader2, RefreshCw } from "lucide-react";
+import { BrainCircuit, Send, BarChart2, Loader2, RefreshCw, Users } from "lucide-react";
 import { PanelResponse } from "@/components/PanelResponse";
 import { personas, PersonaId } from "@/lib/personas";
 import type { PersonaResponse } from "@/types";
@@ -13,12 +13,14 @@ interface Message {
   responses?: PersonaResponse[];
 }
 
+const allPersonaIds = Object.keys(personas) as PersonaId[];
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [selectedPersonas] = useState<PersonaId[]>(["buffett"]);
+  const [selectedPersonas, setSelectedPersonas] = useState<PersonaId[]>(allPersonaIds);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,6 +29,16 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const togglePersona = (id: PersonaId) => {
+    setSelectedPersonas(prev => {
+      if (prev.includes(id)) {
+        if (prev.length === 1) return prev; // Keep at least 1
+        return prev.filter(p => p !== id);
+      }
+      return [...prev, id];
+    });
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -53,19 +65,19 @@ export default function Home() {
 
       if (!res.ok) throw new Error(data.error || "Failed to get response");
 
+      const responseCount = data.responses?.length || 0;
       setMessages(prev => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: "board",
-          content: "Warren has responded.",
+          content: `${responseCount} advisor${responseCount !== 1 ? "s" : ""} responded.`,
           responses: data.responses
         }
       ]);
 
     } catch (error) {
       console.error("Chat error:", error);
-      // Basic error handling for MVP
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +93,32 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
       {/* Header */}
-      <header className="flex-none h-14 md:h-16 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
-        <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Value Investing Advisor</h1>
+      <header className="flex-none border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
+        <div className="flex items-center h-14 md:h-16 px-4 md:px-8">
+          <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Investment Advisory Board</h1>
+        </div>
+
+        {/* Persona Selector */}
+        <div className="flex items-center gap-2 px-4 md:px-8 pb-3 overflow-x-auto custom-scrollbar">
+          {allPersonaIds.map(id => {
+            const persona = personas[id];
+            const isSelected = selectedPersonas.includes(id);
+            return (
+              <button
+                key={id}
+                onClick={() => togglePersona(id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${
+                  isSelected
+                    ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/30"
+                    : "bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600 border-neutral-200 dark:border-neutral-800 opacity-60"
+                }`}
+              >
+                <span className="text-base">{persona.avatar}</span>
+                <span>{persona.name}</span>
+              </button>
+            );
+          })}
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -91,12 +127,12 @@ export default function Home() {
 
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 md:py-20 text-center space-y-4 md:space-y-6 animate-in fade-in duration-700">
-              <div className="h-16 w-16 md:h-20 md:w-20 rounded-full glass-panel-accent flex items-center justify-center mb-2 md:mb-4 text-3xl md:text-4xl shadow-inner">
-                👴
+              <div className="h-16 w-16 md:h-20 md:w-20 rounded-full glass-panel-accent flex items-center justify-center mb-2 md:mb-4 shadow-inner">
+                <Users className="h-8 w-8 md:h-10 md:w-10 text-teal-600 dark:text-teal-400" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome to your Buffett Advisor</h2>
+              <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome to your Advisory Board</h2>
               <p className="text-neutral-600 dark:text-neutral-400 max-w-lg text-base md:text-lg">
-                Ask the Oracle of Omaha for guidance, market analysis, or strategy reviews tailored to your context, grounded in his original letters.
+                Consult your panel of legendary investors for guidance, market analysis, or strategy reviews tailored to your financial context.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 md:mt-8 w-full max-w-xl">
@@ -135,7 +171,7 @@ export default function Home() {
               {isLoading && (
                 <div className="flex items-center space-x-3 md:space-x-4 text-teal-700 dark:text-teal-500 bg-teal-50 dark:bg-teal-500/5 px-4 py-3 md:px-6 md:py-4 rounded-2xl w-[90%] md:w-fit border border-teal-200 dark:border-teal-500/10 animate-pulse transition-colors duration-300">
                   <RefreshCw className="h-4 w-4 md:h-5 md:w-5 animate-spin flex-shrink-0" />
-                  <span className="font-medium tracking-wide text-sm md:text-base">Warren is reviewing his letters and analyzing your portfolio...</span>
+                  <span className="font-medium tracking-wide text-sm md:text-base">Your advisors are analyzing your portfolio...</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -154,7 +190,7 @@ export default function Home() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               className="flex-1 max-h-48 min-h-[56px] w-full resize-none bg-transparent px-3 py-3 md:px-4 md:py-4 pr-14 md:pr-16 text-sm md:text-base text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-0 custom-scrollbar mb-1"
-              placeholder="Ask Warren..."
+              placeholder="Ask your advisors..."
               rows={1}
               disabled={isLoading}
             />
