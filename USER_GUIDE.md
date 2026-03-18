@@ -11,18 +11,25 @@ To make assimilation easy, we will follow a single running example throughout th
 
 ---
 
-## 1. Warren Buffett (Chat Engine)
-**Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts`
+## 1. Investment Advisory Board (Chat Engine)
+**Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts` & `src/lib/personas.ts`
 
-This is the homepage of the app, featuring a conversational AI designed to emulate Warren Buffett. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. 
+This is the homepage of the app, featuring a conversational AI with a panel of legendary investors. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. You select which advisors to consult per question — each brings a distinct investment philosophy and will respond in their own voice.
+
+The five available advisors are:
+- **Warren Buffett** (The Oracle of Omaha) — Value investing, economic moats, long-term holding
+- **Luiz Barsi Filho** (The Dividend King) — Dividend-focused, long-term accumulation
+- **Max Gunther** (The Zurich Speculator) — Calculated risk-taking, contrarian thinking
+- **Morgan Housel** (The Behavioral Analyst) — Behavioral finance, compounding patience
+- **Dave Ramsey** (The Debt Destroyer) — Zero debt, emergency fund, disciplined budgeting
 
 ### How it Thinks (Logic Mapping)
 Before the AI even sees your typed question, the system secretly builds a "Context String" in the background. It reaches into the database and grabs:
-1. **Your Profile Settings:** Strategy, Risk Tolerance, and Goals. 
+1. **Your Profile Settings:** Strategy, Risk Tolerance, and Goals.
 2. **Your Budget Status:** It calculates your `Cash Reserves` and your `Target Monthly Savings` (Total Income minus Total Expenses).
 3. **Your Live Portfolio:** It takes a snapshot of exactly what stocks you own, how many, and their current value.
 
-It pastes all of these numbers into the invisible instructions given to the AI.
+It pastes all of these numbers into the invisible instructions given to the selected advisors.
 Only *then* does it give the AI the question you actually typed, along with a hidden tool that allows the AI to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.
 
 ### The Ripple Effect Example
@@ -30,14 +37,14 @@ Let's say John types: ***"Should I buy $20,000 worth of Tesla stock today?"***
 
 1. The AI engine checks John's injected context and sees: **`CASH RESERVES: $15,000`**.
 2. **The Logic Branch:** The system immediately flags a contradiction. The user is asking to spend $20,000, but the database says they only have $15,000 in liquid cash.
-3. **The Result:** Instead of analyzing Tesla's P/E ratio, the "Warren Buffett" persona will immediately reject the premise, scolding John: *"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess, and never leverage yourself to buy speculative auto-manufacturers."*
+3. **The Result:** Instead of analyzing Tesla's P/E ratio, the selected advisors will immediately address the contradiction — each through their own lens. For example: *"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess, and never leverage yourself to buy speculative auto-manufacturers."*
 
-By wiring the Chat Engine directly to the Finance Summary, the AI acts as a true fiduciary, prioritizing liquidity over stock picking.
+By wiring the Chat Engine directly to the Finance Summary, the Advisory Board acts as a true fiduciary, prioritizing liquidity over stock picking.
 
 ### Key Features You Can Ask About
-- **Analyze my current Portfolio:** The AI will evaluate your asset allocation based on your exact holdings.
-- **Critique my investment strategy:** It will compare your current strategy setting against your portfolio and goals.
-- **How much cash do I have?** It instantly checks your liquid reserves.
+- **Analyze my current Portfolio:** The selected advisors will evaluate your asset allocation based on your exact holdings — and you'll get multi-perspective commentary if you select more than one.
+- **Critique my investment strategy:** Each advisor will compare your current strategy setting against your portfolio and goals through their own philosophical lens.
+- **How much cash do I have?** The AI instantly checks your liquid reserves.
 - **Get live stock quotes:** It will fetch real-time market data during your conversation.
 
 ---

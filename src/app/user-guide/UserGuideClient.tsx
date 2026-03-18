@@ -24,12 +24,12 @@ const sections = [
         subsections: []
     },
     {
-        id: "warren-buffett",
-        title: "1. Warren Buffett",
+        id: "advisory-board",
+        title: "1. Advisory Board",
         icon: Users,
         subsections: [
-            { id: "wb-logic", title: "Logic Mapping" },
-            { id: "wb-ripple", title: " Ripple Effect" },
+            { id: "ab-logic", title: "Logic Mapping" },
+            { id: "ab-ripple", title: " Ripple Effect" },
         ]
     },
     {
@@ -170,19 +170,19 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 1: Warren Buffett */}
-                    <section id="warren-buffett" ref={el => { contentRefs.current["warren-buffett"] = el; }} className="space-y-8 scroll-m-8">
+                    {/* Section 1: Advisory Board */}
+                    <section id="advisory-board" ref={el => { contentRefs.current["advisory-board"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Warren Buffett (Chat Engine)</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Investment Advisory Board (Chat Engine)</h2>
                         </div>
 
 
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the homepage of the app, featuring a conversational AI designed to emulate Warren Buffett. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
+                            This is the homepage of the app, featuring a conversational AI featuring a panel of legendary investors — Warren Buffett, Luiz Barsi, Max Gunther, Morgan Housel, and Dave Ramsey. Select which advisors to consult per question. Each brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
@@ -199,7 +199,7 @@ export default function UserGuideClient() {
                             </div>
                         </div>
 
-                        <div id="wb-logic" ref={el => { contentRefs.current["wb-logic"] = el; }} className="space-y-4">
+                        <div id="ab-logic" ref={el => { contentRefs.current["ab-logic"] = el; }} className="space-y-4">
                             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
                                 <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> How it Thinks (Logic Mapping)
                             </h3>
@@ -222,7 +222,7 @@ export default function UserGuideClient() {
                             </ul>
                         </div>
 
-                        <div id="wb-ripple" ref={el => { contentRefs.current["wb-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                        <div id="ab-ripple" ref={el => { contentRefs.current["ab-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
                             <div className="flex items-center space-x-2 mb-4">
                                 <Zap className="h-5 w-5 text-teal-600" />
                                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
@@ -234,7 +234,7 @@ export default function UserGuideClient() {
                                 <ol className="list-decimal list-outside ml-5 space-y-2 text-neutral-600 dark:text-neutral-400">
                                     <li>The AI engine checks John's injected context and sees: <code className="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-sm text-neutral-900 dark:text-neutral-200 font-mono font-medium">CASH RESERVES: $15,000</code>.</li>
                                     <li><strong>The Logic Branch:</strong> The system immediately flags a contradiction. The user is asking to spend $20k, but only has $15k liquid.</li>
-                                    <li><strong>The Result:</strong> Instead of analyzing Tesla's P/E ratio, the "Warren Buffett" persona will immediately reject the premise, scolding John: <em className="text-neutral-800 dark:text-neutral-200 block mt-2 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-neutral-100 dark:border-neutral-800">"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess..."</em></li>
+                                    <li><strong>The Result:</strong> Instead of analyzing Tesla's P/E ratio, your selected advisors will immediately address the contradiction, each through their own lens: <em className="text-neutral-800 dark:text-neutral-200 block mt-2 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-neutral-100 dark:border-neutral-800">"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess..."</em></li>
                                 </ol>
                             </div>
                         </div>
