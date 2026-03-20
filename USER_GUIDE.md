@@ -41,6 +41,13 @@ Let's say John types: ***"Should I buy $20,000 worth of Tesla stock today?"***
 
 By wiring the Chat Engine directly to the Finance Summary, the Advisory Board acts as a true fiduciary, prioritizing liquidity over stock picking.
 
+### Prompt Templates (Pill Buttons)
+Each advisor card displays four built-in prompt templates as pill buttons in the chat area. Clicking any pill instantly populates the chat input with a fully engineered prompt tailored for that advisor's philosophy:
+- **Investment Suggestions** — asks the advisor for stock or asset ideas aligned with your strategy and portfolio.
+- **Financial Analysis** — requests a holistic review of your current financial position.
+- **Portfolio Rebalancing** — asks the advisor to identify drift and recommend rebalancing moves.
+- **Financial Health Audit** — prompts a comprehensive audit of income, expenses, savings, and net worth.
+
 ### Key Features You Can Ask About
 - **Analyze my current Portfolio:** The selected advisors will evaluate your asset allocation based on your exact holdings — and you'll get multi-perspective commentary if you select more than one.
 - **Critique my investment strategy:** Each advisor will compare your current strategy setting against your portfolio and goals through their own philosophical lens.
@@ -70,6 +77,14 @@ This is the interactive nerve center where every asset is dissected in detail.
 - **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
 - **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
 
+#### C. Profile Page: Investment Portfolio Table
+A dedicated portfolio entry table on the My Investment Strategy page provides a streamlined way to add and manage holdings:
+- **Ticker Auto-Lookup:** Type a ticker symbol and the system automatically fetches the current price from Yahoo Finance — no manual price entry required.
+- **Account Name Autofill:** The account name field auto-suggests based on previously used account names, speeding up data entry.
+- **Auto-Calculated Fields:** Weight % (position size relative to the total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.
+- **Totals Row:** The table footer auto-sums market value, book cost, and expected dividends across all entries.
+- **CSV Export:** Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.
+
 ### The Ripple Effect Example
 John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *Total Market Value* in the Holdings Breakdown increases by $1,000. This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the **My Finance Summary** page, instantly increasing John's calculated `Net Worth` without him typing a single thing.
 
@@ -98,7 +113,7 @@ A dedicated module to isolate income and expenses specifically related to your r
 
 #### D. Personal Wealth
 Track your overall Net Worth by keeping all assets and liabilities up to date over time.
-- **Asset Integrations:** Enter values for Real Estate, Cash, and Cars.
+- **Asset Integrations:** Enter values for Real Estate, Cash, Cars, and **Other Assets** (a catch-all field for any asset not covered by other categories, such as collectibles, business interests, or personal property).
 - **Synced Investment Field:** The "Investment" field is strictly read-only. It automatically pulls the sum of your *Total Market Value* directly from the **My Investment Portfolio** page.
 - **Net Worth Calculation:** Total Assets minus Total Liabilities, instantly updated and saved with a timestamp.
 
@@ -117,7 +132,7 @@ This page is the **Steering Wheel** for the AI. What you type here fundamentally
 #### A. Narrative Context (Existing)
 - **Overall Investment Strategy:** A free-text area where you describe your narrative focus (e.g., "Dividend growth for passive income"). The box automatically resizes as you type.
 - **Financial Goals:** Define short term and long term milestones.
-- **Risk Tolerance Dropdown:** Select from Conservative, Moderate, Aggressive, or Speculative. This rigidly defines the safety margins the AI will recommend in its reports.
+- **Risk Tolerance Slider:** A 1–10 numeric slider replaces the old dropdown. A score of 1 is maximally conservative; 10 is fully speculative. The selected value is passed directly to the AI, allowing it to calibrate advice with finer precision than broad category labels.
 
 #### B. Strategy Configuration (Collapsible Sections)
 Eight new structured configuration sections, each collapsible:
@@ -130,8 +145,8 @@ Eight new structured configuration sections, each collapsible:
 - **Core Principles:** Select guiding principles — Diversification, Discipline/Rebalancing (triggers drift alerts), and Cost Minimization.
 - **Account Types:** Specify which account types you use — TFSA, RRSP, Non-Registered.
 - **Trading Methodology:** Select your trading approaches — Buy and Hold, Trend Following, Value Averaging, Sector Rotation, Swing Trading.
-- **Sector Allocation:** Set target percentages across 11 market sectors (IT, Financials, Healthcare, etc., must sum to 100%). The system compares your targets against your actual portfolio holdings and displays an inline **drift table** showing Target %, Actual %, and Drift % for each sector. Sectors drifting more than 5% from target are flagged with a warning.
-- **Geographic Exposure:** Set target percentages across 5 geographic regions (North America, Europe, Asia, Emerging Markets, Frontier Markets, must sum to 100%). Same drift detection as sectors.
+- **Sector Allocation:** Set target percentages across 11 standard market sectors (IT, Financials, Healthcare, etc.) plus two additional options — **S&P 500** (for broad index exposure) and **Other** (for assets that don't fit a standard sector). Values must sum to 100%. The system compares your targets against your actual portfolio holdings and displays an inline **drift table** showing Target %, Actual %, and Drift % for each sector. Sectors drifting more than 5% from target are flagged with a warning.
+- **Geographic Exposure:** Set target percentages across geographic regions (must sum to 100%). Three new regions have been added — **USA Only**, **Canada Only**, and **Global Mix** — alongside existing options (North America, Europe, Asia, Emerging Markets, Frontier Markets). Same drift detection applies.
 - **Performance Targets:** Set your Expected Annual Return (%) and Target Monthly Dividend Income ($). The system calculates projections from your actual portfolio (weighted average 1-year return and sum of expected dividends) and compares them against your targets, flagging when targets exceed estimates.
 
 #### C. Validation
@@ -141,8 +156,8 @@ Eight new structured configuration sections, each collapsible:
 
 ### The Ripple Effect Example: Risk Tolerance + Strategy Config
 Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, both the narrative fields AND the structured strategy config are stapled to the top of your request.
-- **If John sets his Risk Tolerance to `Conservative Dividend Focus` and selects "Buy and Hold" + "Diversification":** The AI will ONLY recommend safe, established companies with strong dividends and broad portfolio diversification.
-- **If John sets Risk Tolerance to `Aggressive Speculation` and selects "Swing Trading" + "Deep Value":** The AI will recommend distressed, highly volatile opportunities for short-term gains, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this page.
+- **If John sets his Risk Tolerance to `2` (near-conservative) and selects "Buy and Hold" + "Diversification":** The AI will ONLY recommend safe, established companies with strong dividends and broad portfolio diversification.
+- **If John sets Risk Tolerance to `9` (near-speculative) and selects "Swing Trading" + "Deep Value":** The AI will recommend distressed, highly volatile opportunities for short-term gains, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this page.
 - **Drift Alerts:** If John sets a 20% target for Financials but his actual portfolio only has 14% in financial stocks, the drift table shows a -6% warning — reminding him to rebalance before his next purchase.
 
 ---

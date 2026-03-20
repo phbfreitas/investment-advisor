@@ -186,15 +186,26 @@ export default function UserGuideClient() {
                         </p>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
-                            <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Key Built-in Prompts:</h4>
+                            <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Prompt Templates (Pill Buttons):</h4>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                                Each advisor card displays four built-in prompt templates as pill buttons in the chat area. Clicking any pill instantly populates the chat input with a fully engineered prompt tailored for that advisor&apos;s philosophy.
+                            </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
                                     <LineChart className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Analyze my current portfolio</span>
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Investment Suggestions</span>
                                 </div>
                                 <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
                                     <BrainCircuit className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Critique my investment strategy</span>
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Financial Analysis</span>
+                                </div>
+                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                    <Target className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Portfolio Rebalancing</span>
+                                </div>
+                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                    <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Financial Health Audit</span>
                                 </div>
                             </div>
                         </div>
@@ -282,6 +293,21 @@ export default function UserGuideClient() {
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
                                     </ul>
                                 </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
+                                        <Code className="h-4 w-4 mr-2 text-teal-500" /> Profile Page: Investment Portfolio Table
+                                    </h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                                        A dedicated portfolio entry table lives on the My Investment Strategy page, designed for adding and editing holdings with maximum automation:
+                                    </p>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Ticker Auto-Lookup:</strong> Type a ticker symbol and the system automatically fetches the current price from Yahoo Finance — no manual price entry required.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Account Name Autofill:</strong> The account name field auto-suggests based on your previously used account names, speeding up data entry.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Auto-Calculated Fields:</strong> Weight % (position size relative to total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> The table footer auto-sums market value, book cost, and expected dividends across all entries.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">CSV Export:</strong> Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
@@ -345,7 +371,7 @@ export default function UserGuideClient() {
                                 <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                                     <h4 className="font-bold text-neutral-900 dark:text-white mb-2">D. Personal Wealth</h4>
                                     <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Asset Integrations:</strong> Enter values for Real Estate, Cash, and Cars.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Asset Integrations:</strong> Enter values for Real Estate, Cash, Cars, and <strong>Other Assets</strong> (a catch-all field for any asset not covered by other categories, such as collectibles, business interests, or personal property).</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Synced Investment Field:</strong> Read-only field pulling Total Market Value directly from the Portfolio page.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Net Worth Calculation:</strong> Total Assets minus Total Liabilities, instantly updated and timestamped.</li>
                                     </ul>
@@ -391,7 +417,7 @@ export default function UserGuideClient() {
                                 <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
                                     <li><strong>Overall Investment Strategy:</strong> A free-text area describing your narrative focus (e.g., &quot;Dividend growth for passive income&quot;). Auto-resizes as you type.</li>
                                     <li><strong>Financial Goals:</strong> Define short term and long term milestones.</li>
-                                    <li><strong>Risk Tolerance Dropdown:</strong> Select from Conservative, Moderate, Aggressive, or Speculative. Rigidly defines AI safety margins.</li>
+                                    <li><strong>Risk Tolerance Slider:</strong> A 1–10 numeric slider replaces the old dropdown. A score of 1 is maximally conservative; 10 is fully speculative. The selected value is passed directly to the AI, allowing it to calibrate advice with finer precision than broad category labels.</li>
                                 </ul>
                             </div>
 
@@ -403,8 +429,8 @@ export default function UserGuideClient() {
                                     <li><strong>Core Principles:</strong> Select Diversification, Discipline/Rebalancing, and/or Cost Minimization.</li>
                                     <li><strong>Account Types:</strong> Specify TFSA, RRSP, and/or Non-Registered accounts.</li>
                                     <li><strong>Trading Methodology:</strong> Choose from Buy and Hold, Trend Following, Value Averaging, Sector Rotation, and Swing Trading.</li>
-                                    <li><strong>Sector Allocation:</strong> Set target percentages across 11 sectors. Includes an inline <strong>drift table</strong> comparing targets to actuals from your portfolio. Sectors drifting &gt;5% are flagged.</li>
-                                    <li><strong>Geographic Exposure:</strong> Set target percentages across 5 regions with same drift detection.</li>
+                                    <li><strong>Sector Allocation:</strong> Set target percentages across 11 standard sectors plus two additional options — <strong>S&amp;P 500</strong> (for broad index exposure) and <strong>Other</strong> (for assets that don&apos;t fit a standard sector). Includes an inline <strong>drift table</strong> comparing targets to actuals from your portfolio. Sectors drifting &gt;5% are flagged.</li>
+                                    <li><strong>Geographic Exposure:</strong> Set target percentages across geographic regions. Three new regions have been added — <strong>USA Only</strong>, <strong>Canada Only</strong>, and <strong>Global Mix</strong> — alongside existing options (North America, Europe, Asia, Emerging Markets, Frontier Markets). Same drift detection applies.</li>
                                     <li><strong>Performance Targets:</strong> Set Expected Annual Return (%) and Target Monthly Dividend ($). The system projects estimates from your actual holdings and flags when targets exceed reality.</li>
                                 </ul>
                             </div>
