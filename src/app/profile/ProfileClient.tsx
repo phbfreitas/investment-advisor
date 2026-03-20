@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { BrainCircuit, Save, Loader2, AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { BrainCircuit, Save, Loader2, AlertCircle, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import type { Asset, StrategyConfig } from "@/types";
 import {
     PHILOSOPHY_OPTIONS,
@@ -122,6 +122,12 @@ export default function ProfilePage() {
     const [formData, setFormData] = useState<FormData>({ ...DEFAULT_FORM });
     const [initialData, setInitialData] = useState<FormData>({ ...DEFAULT_FORM });
     const [assets, setAssets] = useState<Asset[]>([]);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [newHolding, setNewHolding] = useState({
+        account: '', ticker: '', securityType: '', sector: '', market: '',
+        quantity: '', bookCost: '', currency: 'CAD',
+    });
+    const [tickerLoading, setTickerLoading] = useState(false);
 
     useEffect(() => {
         async function loadProfile() {
@@ -184,6 +190,23 @@ export default function ProfilePage() {
     );
 
     const hasAssets = assets.length > 0;
+
+    const uniqueAccounts = useMemo(() => {
+        const accounts = new Set(assets.map((a) => a.account).filter(Boolean));
+        return Array.from(accounts);
+    }, [assets]);
+
+    const portfolioTotals = useMemo(() => {
+        const totalMarketValue = assets.reduce((sum, a) => sum + (a.marketValue || 0), 0);
+        const totalBookCost = assets.reduce((sum, a) => sum + (a.bookCost || 0) * (a.quantity || 0), 0);
+        const totalPL = assets.reduce((sum, a) => sum + (a.profitLoss || 0), 0);
+        return { totalMarketValue, totalBookCost, totalPL };
+    }, [assets]);
+
+    const assetWeight = (asset: Asset) => {
+        if (!portfolioTotals.totalMarketValue) return 0;
+        return ((asset.marketValue || 0) / portfolioTotals.totalMarketValue) * 100;
+    };
 
     const sectorWarnings = driftData.sectorDrift.filter((d) => d.warning);
     const geoWarnings = driftData.geoDrift.filter((d) => d.warning);
@@ -262,6 +285,85 @@ export default function ProfilePage() {
             setMessage({ text: error instanceof Error ? error.message : "Error saving profile.", type: "error" });
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleTickerLookup = async (symbol: string) => {
+        if (!symbol.trim()) return;
+        setTickerLoading(true);
+        try {
+            const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}`);
+            if (res.ok) {
+                const data = await res.json();
+                setNewHolding((prev) => ({
+                    ...prev,
+                    sector: data.sector || prev.sector,
+                    market: data.market || prev.market,
+                    securityType: data.securityType || prev.securityType,
+                }));
+            }
+        } catch (err) {
+            console.error('Ticker lookup failed:', err);
+        } finally {
+            setTickerLoading(false);
+        }
+    };
+
+    const handleExportCSV = () => {
+        const headers = ['Account', 'Ticker', 'Type', 'Sector', 'Market', 'Qty', 'Book Cost', 'Market Value', 'Weight %', 'P/L'];
+        const rows = assets.map((a) => [
+            a.account, a.ticker, a.securityType, a.sector, a.market,
+            a.quantity, (a.bookCost || 0) * (a.quantity || 0),
+            a.marketValue, assetWeight(a).toFixed(1) + '%', a.profitLoss,
+        ]);
+        const totalsRow = ['Totals', '', '', '', '', '',
+            portfolioTotals.totalBookCost, portfolioTotals.totalMarketValue,
+            '100%', portfolioTotals.totalPL,
+        ];
+        const csv = [headers, ...rows, totalsRow].map((r) => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleAddHolding = async () => {
+        try {
+            const res = await fetch('/api/assets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    account: newHolding.account,
+                    ticker: newHolding.ticker,
+                    securityType: newHolding.securityType,
+                    sector: newHolding.sector,
+                    market: newHolding.market,
+                    quantity: parseFloat(newHolding.quantity) || 0,
+                    bookCost: parseFloat(newHolding.bookCost) || 0,
+                    currency: newHolding.currency,
+                }),
+            });
+            if (res.ok) {
+                const profileRes = await fetch('/api/profile');
+                const data = await profileRes.json();
+                setAssets(data.assets || []);
+                setShowAddForm(false);
+                setNewHolding({ account: '', ticker: '', securityType: '', sector: '', market: '', quantity: '', bookCost: '', currency: 'CAD' });
+            }
+        } catch (err) {
+            console.error('Failed to add holding:', err);
+        }
+    };
+
+    const handleDeleteHolding = async (assetId: string) => {
+        try {
+            await fetch(`/api/assets/${assetId}`, { method: 'DELETE' });
+            setAssets((prev) => prev.filter((a) => a.id !== assetId));
+        } catch (err) {
+            console.error('Failed to delete holding:', err);
         }
     };
 
@@ -602,6 +704,221 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                             </div>
+                        </CollapsibleSection>
+
+                        {/* Section 12: Investment Portfolio */}
+                        <CollapsibleSection title="Investment Portfolio">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs text-neutral-500">{assets.length} holding{assets.length !== 1 ? 's' : ''}</span>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAddForm((v) => !v)}
+                                        className="px-3 py-1.5 text-xs bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors"
+                                    >
+                                        + Add Holding
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleExportCSV}
+                                        disabled={assets.length === 0}
+                                        className="px-3 py-1.5 text-xs border border-neutral-700 text-neutral-300 hover:bg-neutral-800 rounded-lg transition-colors disabled:opacity-40"
+                                    >
+                                        Export CSV
+                                    </button>
+                                </div>
+                            </div>
+
+                            <datalist id="account-list">
+                                {uniqueAccounts.map((acc) => <option key={acc} value={acc} />)}
+                            </datalist>
+
+                            <div className="max-h-96 overflow-y-auto rounded-lg border border-neutral-800">
+                                <table className="w-full text-xs">
+                                    <thead className="sticky top-0 bg-neutral-900 z-10">
+                                        <tr className="text-teal-400 uppercase tracking-wide">
+                                            <th className="text-left px-3 py-2">Account</th>
+                                            <th className="text-left px-3 py-2">Ticker</th>
+                                            <th className="text-left px-3 py-2">Type</th>
+                                            <th className="text-left px-3 py-2">Sector</th>
+                                            <th className="text-left px-3 py-2">Market</th>
+                                            <th className="text-right px-3 py-2">Qty</th>
+                                            <th className="text-right px-3 py-2">Book Cost</th>
+                                            <th className="text-right px-3 py-2">Mkt Value</th>
+                                            <th className="text-right px-3 py-2">Weight %</th>
+                                            <th className="text-right px-3 py-2">P/L</th>
+                                            <th className="px-3 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {assets.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={11} className="px-3 py-6 text-center text-neutral-500">No holdings yet. Add one above.</td>
+                                            </tr>
+                                        ) : assets.map((asset) => {
+                                            const pl = asset.profitLoss || 0;
+                                            const weight = assetWeight(asset);
+                                            return (
+                                                <tr key={asset.id} className="border-t border-neutral-800 hover:bg-neutral-800/30 transition-colors">
+                                                    <td className="px-3 py-2 text-neutral-300">{asset.account || '—'}</td>
+                                                    <td className="px-3 py-2 font-semibold text-neutral-100">{asset.ticker}</td>
+                                                    <td className="px-3 py-2 text-neutral-400">{asset.securityType || '—'}</td>
+                                                    <td className="px-3 py-2 text-neutral-400">{asset.sector || '—'}</td>
+                                                    <td className="px-3 py-2 text-neutral-400">{asset.market || '—'}</td>
+                                                    <td className="px-3 py-2 text-right text-neutral-300">{asset.quantity ?? '—'}</td>
+                                                    <td className="px-3 py-2 text-right text-neutral-300">${((asset.bookCost || 0) * (asset.quantity || 0)).toFixed(2)}</td>
+                                                    <td className="px-3 py-2 text-right text-neutral-300">{asset.marketValue != null ? `$${asset.marketValue.toFixed(2)}` : '—'}</td>
+                                                    <td className="px-3 py-2 text-right text-teal-400">{weight.toFixed(1)}%</td>
+                                                    <td className={`px-3 py-2 text-right font-medium ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {asset.profitLoss != null ? `${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}` : '—'}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteHolding(asset.id)}
+                                                            className="text-neutral-600 hover:text-red-400 transition-colors"
+                                                            title="Delete holding"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                    {assets.length > 0 && (
+                                        <tfoot className="border-t-2 border-neutral-700 bg-neutral-900">
+                                            <tr className="font-bold text-neutral-200">
+                                                <td className="px-3 py-2" colSpan={6}>Totals</td>
+                                                <td className="px-3 py-2 text-right">${portfolioTotals.totalBookCost.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right">${portfolioTotals.totalMarketValue.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-teal-400">100%</td>
+                                                <td className={`px-3 py-2 text-right ${portfolioTotals.totalPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {portfolioTotals.totalPL >= 0 ? '+' : ''}${portfolioTotals.totalPL.toFixed(2)}
+                                                </td>
+                                                <td className="px-3 py-2"></td>
+                                            </tr>
+                                        </tfoot>
+                                    )}
+                                </table>
+                            </div>
+
+                            {showAddForm && (
+                                <div className="mt-4 p-4 rounded-xl border border-neutral-800 bg-neutral-900/60 space-y-3">
+                                    <p className="text-xs font-semibold text-teal-400 uppercase tracking-wide">New Holding</p>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Account</label>
+                                            <input
+                                                type="text"
+                                                list="account-list"
+                                                value={newHolding.account}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, account: e.target.value }))}
+                                                placeholder="e.g. TFSA"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Ticker</label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newHolding.ticker}
+                                                    onChange={(e) => setNewHolding((prev) => ({ ...prev, ticker: e.target.value.toUpperCase() }))}
+                                                    onBlur={() => handleTickerLookup(newHolding.ticker)}
+                                                    placeholder="e.g. AAPL"
+                                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                                />
+                                                {tickerLoading && <span className="text-xs text-teal-400 whitespace-nowrap">Looking up...</span>}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Type</label>
+                                            <input
+                                                type="text"
+                                                value={newHolding.securityType}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, securityType: e.target.value }))}
+                                                placeholder="e.g. Stock"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Sector</label>
+                                            <input
+                                                type="text"
+                                                value={newHolding.sector}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, sector: e.target.value }))}
+                                                placeholder="e.g. Technology"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Market</label>
+                                            <input
+                                                type="text"
+                                                value={newHolding.market}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, market: e.target.value }))}
+                                                placeholder="e.g. US"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Currency</label>
+                                            <select
+                                                value={newHolding.currency}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, currency: e.target.value }))}
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:border-teal-500/50"
+                                            >
+                                                <option value="CAD">CAD</option>
+                                                <option value="USD">USD</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Quantity</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step="any"
+                                                value={newHolding.quantity}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, quantity: e.target.value }))}
+                                                placeholder="0"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-neutral-500 mb-1">Book Cost (per share)</label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                step="any"
+                                                value={newHolding.bookCost}
+                                                onChange={(e) => setNewHolding((prev) => ({ ...prev, bookCost: e.target.value }))}
+                                                placeholder="0.00"
+                                                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-teal-500/50"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={handleAddHolding}
+                                            className="px-4 py-2 text-xs bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors"
+                                        >
+                                            Save Holding
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddForm(false);
+                                                setNewHolding({ account: '', ticker: '', securityType: '', sector: '', market: '', quantity: '', bookCost: '', currency: 'CAD' });
+                                            }}
+                                            className="px-4 py-2 text-xs border border-neutral-700 text-neutral-400 hover:bg-neutral-800 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </CollapsibleSection>
 
                         {/* Save button */}
