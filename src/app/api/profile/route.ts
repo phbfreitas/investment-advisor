@@ -120,6 +120,7 @@ export async function POST(request: Request) {
             wealthAssetCar: data.wealthAssetCar !== undefined ? data.wealthAssetCar : existingProfile?.wealthAssetCar,
             wealthAssetPrimaryResidence: data.wealthAssetPrimaryResidence !== undefined ? data.wealthAssetPrimaryResidence : existingProfile?.wealthAssetPrimaryResidence,
             wealthAssetRentalProperties: data.wealthAssetRentalProperties !== undefined ? data.wealthAssetRentalProperties : existingProfile?.wealthAssetRentalProperties,
+            wealthAssetOther: data.wealthAssetOther ?? existingProfile?.wealthAssetOther ?? null,
 
             wealthLiabilityMortgage: data.wealthLiabilityMortgage !== undefined ? data.wealthLiabilityMortgage : existingProfile?.wealthLiabilityMortgage,
             wealthLiabilityHeloc: data.wealthLiabilityHeloc !== undefined ? data.wealthLiabilityHeloc : existingProfile?.wealthLiabilityHeloc,

@@ -103,6 +103,7 @@ export default function FinanceSummaryClient() {
         wealthAssetCar: "",
         wealthAssetPrimaryResidence: "",
         wealthAssetRentalProperties: "",
+        wealthAssetOther: "",
         wealthLiabilityMortgage: "",
         wealthLiabilityHeloc: "",
         wealthLiabilityRentalMortgage: "",
@@ -141,6 +142,7 @@ export default function FinanceSummaryClient() {
                         wealthAssetCar: payload.wealthAssetCar?.toString() || "",
                         wealthAssetPrimaryResidence: payload.wealthAssetPrimaryResidence?.toString() || "",
                         wealthAssetRentalProperties: payload.wealthAssetRentalProperties?.toString() || "",
+                        wealthAssetOther: payload.wealthAssetOther?.toString() || "",
                         wealthLiabilityMortgage: payload.wealthLiabilityMortgage?.toString() || "",
                         wealthLiabilityHeloc: payload.wealthLiabilityHeloc?.toString() || "",
                         wealthLiabilityRentalMortgage: payload.wealthLiabilityRentalMortgage?.toString() || "",
@@ -287,6 +289,7 @@ export default function FinanceSummaryClient() {
             wealthAssetCar: wealthData.wealthAssetCar ? parseFloat(wealthData.wealthAssetCar) : null,
             wealthAssetPrimaryResidence: wealthData.wealthAssetPrimaryResidence ? parseFloat(wealthData.wealthAssetPrimaryResidence) : null,
             wealthAssetRentalProperties: wealthData.wealthAssetRentalProperties ? parseFloat(wealthData.wealthAssetRentalProperties) : null,
+            wealthAssetOther: wealthData.wealthAssetOther ? parseFloat(wealthData.wealthAssetOther.replace(/,/g, '')) : null,
             wealthLiabilityMortgage: wealthData.wealthLiabilityMortgage ? parseFloat(wealthData.wealthLiabilityMortgage) : null,
             wealthLiabilityHeloc: wealthData.wealthLiabilityHeloc ? parseFloat(wealthData.wealthLiabilityHeloc) : null,
             wealthLiabilityRentalMortgage: wealthData.wealthLiabilityRentalMortgage ? parseFloat(wealthData.wealthLiabilityRentalMortgage.replace(/,/g, '')) : null,
@@ -377,7 +380,8 @@ export default function FinanceSummaryClient() {
         totalInvestmentValue +
         (parseFloat(wealthData.wealthAssetCar?.replace(/,/g, '') || '0')) +
         (parseFloat(wealthData.wealthAssetPrimaryResidence?.replace(/,/g, '') || '0')) +
-        (parseFloat(wealthData.wealthAssetRentalProperties?.replace(/,/g, '') || '0'))
+        (parseFloat(wealthData.wealthAssetRentalProperties?.replace(/,/g, '') || '0')) +
+        (parseFloat(wealthData.wealthAssetOther?.replace(/,/g, '') || '0'))
     );
 
     const totalLiabilities = (
@@ -749,6 +753,7 @@ export default function FinanceSummaryClient() {
                                     <InputField label="Car" name="wealthAssetCar" value={wealthData.wealthAssetCar} onChange={handleWealthChange} />
                                     <InputField label="Primary Residence" name="wealthAssetPrimaryResidence" value={wealthData.wealthAssetPrimaryResidence} onChange={handleWealthChange} />
                                     <InputField label="Rental Properties" name="wealthAssetRentalProperties" value={wealthData.wealthAssetRentalProperties} onChange={handleWealthChange} />
+                                    <InputField label="Other Assets" name="wealthAssetOther" value={wealthData.wealthAssetOther} onChange={handleWealthChange} />
                                 </div>
                             </div>
 
