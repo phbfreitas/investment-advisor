@@ -3,6 +3,7 @@ import { db, TABLE_NAME } from "@/lib/db";
 import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { RISK_TOLERANCE_MIGRATION } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +82,16 @@ export async function POST(request: Request) {
             const geoSum = Object.values(data.geographicExposure as Record<string, number>).reduce((a: number, b: number) => a + b, 0);
             if (geoSum > 0 && Math.abs(geoSum - 100) > 0.01) {
                 return NextResponse.json({ error: "Geographic exposure must sum to 100%" }, { status: 400 });
+            }
+        }
+
+        const riskTolerance = data.riskTolerance;
+        if (riskTolerance !== undefined && riskTolerance !== null) {
+            const riskNum = typeof riskTolerance === 'string'
+                ? (RISK_TOLERANCE_MIGRATION[riskTolerance] ?? parseInt(riskTolerance))
+                : riskTolerance;
+            if (typeof riskNum !== 'number' || riskNum < 1 || riskNum > 10) {
+                return NextResponse.json({ error: 'Risk tolerance must be between 1 and 10' }, { status: 400 });
             }
         }
 

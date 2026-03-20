@@ -13,6 +13,8 @@ import {
     GEO_KEYS,
     GEO_LABELS,
     STRATEGY_CONFIG_DEFAULTS,
+    RISK_TOLERANCE_LABELS,
+    RISK_TOLERANCE_MIGRATION,
 } from "@/types";
 import {
     calculatePortfolioDrift,
@@ -129,9 +131,14 @@ export default function ProfilePage() {
                 const payload = data.Item || data;
 
                 if (payload && (payload.PK || payload.id)) {
+                    const rawRisk = payload.riskTolerance;
+                    const riskValue = typeof rawRisk === 'string'
+                        ? (RISK_TOLERANCE_MIGRATION[rawRisk] ?? 5)
+                        : (typeof rawRisk === 'number' ? rawRisk : 5);
+
                     const loadedData: FormData = {
                         strategy: payload.strategy || "",
-                        riskTolerance: payload.riskTolerance || "",
+                        riskTolerance: riskValue,
                         goals: payload.goals || "",
                         assetMixGrowth: payload.assetMixGrowth || 0,
                         assetMixIncome: payload.assetMixIncome || 0,
@@ -221,6 +228,10 @@ export default function ProfilePage() {
         e.target.style.height = "inherit";
         e.target.style.height = `${e.target.scrollHeight}px`;
         handleChange(e);
+    };
+
+    const handleFocusSelect = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.target.select();
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -332,17 +343,35 @@ export default function ProfilePage() {
                                     className={`${inputClass} min-h-[96px] overflow-hidden resize-none`}
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Risk Tolerance</label>
-                                <select name="riskTolerance" value={formData.riskTolerance} onChange={handleChange} className={`${inputClass} appearance-none`}>
-                                    <option value="">Select your risk tolerance...</option>
-                                    <option value="Conservative">Conservative (Capital preservation is priority)</option>
-                                    <option value="Moderate">Moderate (Balance of growth and safety)</option>
-                                    <option value="Aggressive">Aggressive (Maximum growth, high volatility tolerance)</option>
-                                    <option value="Speculative">Speculative (Willing to risk principal for huge rewards)</option>
-                                </select>
-                            </div>
                         </div>
+
+                        <CollapsibleSection title="Risk Tolerance">
+                            <div className="space-y-3">
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={10}
+                                    step={1}
+                                    value={formData.riskTolerance}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, riskTolerance: parseInt(e.target.value) }))
+                                    }
+                                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                    style={{
+                                        background: 'linear-gradient(to right, #22c55e, #eab308, #f97316, #ef4444)',
+                                    }}
+                                />
+                                <div className="flex justify-between text-xs text-neutral-500">
+                                    <span>1 — Conservative</span>
+                                    <span>4 — Moderate</span>
+                                    <span>7 — Aggressive</span>
+                                    <span>10 — Very Aggressive</span>
+                                </div>
+                                <p className="text-center text-sm font-semibold text-teal-500">
+                                    Current: {formData.riskTolerance} — {RISK_TOLERANCE_LABELS[formData.riskTolerance] || 'Not set'}
+                                </p>
+                            </div>
+                        </CollapsibleSection>
 
                         {/* --- NEW: Strategy Configuration --- */}
 
@@ -480,6 +509,7 @@ export default function ProfilePage() {
                                             type="number" min={0} max={100} step={1}
                                             value={formData.sectorAllocation[key] || 0}
                                             onChange={(e) => handleAllocationChange("sectorAllocation", key, Number(e.target.value) || 0)}
+                                            onFocus={handleFocusSelect}
                                             className={`${numberInputClass} w-16`}
                                         />
                                     </div>
@@ -509,6 +539,7 @@ export default function ProfilePage() {
                                             type="number" min={0} max={100} step={1}
                                             value={formData.geographicExposure[key] || 0}
                                             onChange={(e) => handleAllocationChange("geographicExposure", key, Number(e.target.value) || 0)}
+                                            onFocus={handleFocusSelect}
                                             className={`${numberInputClass} w-16`}
                                         />
                                     </div>
