@@ -109,6 +109,9 @@ export interface StrategyConfig {
     sectorAllocation: Record<string, number>;
     geographicExposure: Record<string, number>;
 
+    // Risk Profile
+    riskTolerance: number; // 1–10
+
     // Performance Targets
     targetAnnualReturn: number;
     targetMonthlyDividend: number;
@@ -210,6 +213,7 @@ export const STRATEGY_CONFIG_DEFAULTS: StrategyConfig = {
     tradingMethodologies: [],
     sectorAllocation: {},
     geographicExposure: {},
+    riskTolerance: 5,
     targetAnnualReturn: 0,
     targetMonthlyDividend: 0,
 };

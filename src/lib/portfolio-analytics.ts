@@ -6,6 +6,7 @@ import {
     TRADING_METHODOLOGY_OPTIONS,
     SECTOR_LABELS,
     GEO_LABELS,
+    RISK_TOLERANCE_LABELS,
 } from "@/types";
 
 // --- Normalization Maps ---
@@ -36,14 +37,21 @@ export const SECTOR_NORMALIZE_MAP: Record<string, string> = {
     "Metals": "metals",
     "Precious Metals": "metals",
     "Mining": "metals",
+    "s&p 500": "sp500",
+    "s&p500": "sp500",
+    "sp500": "sp500",
+    "index": "sp500",
+    "other": "other",
 };
 
 export const GEO_NORMALIZE_MAP: Record<string, string> = {
-    "US": "na",
-    "USA": "na",
-    "Canada": "na",
-    "CA": "na",
+    "US": "usa",
+    "USA": "usa",
+    "Canada": "canada",
+    "CA": "canada",
     "North America": "na",
+    "Global": "globalMix",
+    "Global Mix": "globalMix",
     "UK": "europe",
     "Germany": "europe",
     "France": "europe",
@@ -218,6 +226,11 @@ export function formatStrategyContext(profile: Partial<StrategyConfig>): string 
 
     if (profile.targetMonthlyDividend && profile.targetMonthlyDividend > 0) {
         lines.push(`TARGET MONTHLY DIVIDEND INCOME: $${profile.targetMonthlyDividend}`);
+    }
+
+    if (profile.riskTolerance != null) {
+        const riskLabel = RISK_TOLERANCE_LABELS[profile.riskTolerance] || 'Not set';
+        lines.push(`RISK TOLERANCE: ${profile.riskTolerance}/10 (${riskLabel})`);
     }
 
     return lines.length > 0 ? lines.join("\n") : "";

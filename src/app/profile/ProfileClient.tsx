@@ -91,7 +91,7 @@ function DriftTable({ entries, hasAssets }: { entries: DriftEntry[]; hasAssets: 
 
 interface FormData {
     strategy: string;
-    riskTolerance: string;
+    riskTolerance: number;
     goals: string;
     // Strategy config
     assetMixGrowth: number;
@@ -109,7 +109,6 @@ interface FormData {
 
 const DEFAULT_FORM: FormData = {
     strategy: "",
-    riskTolerance: "",
     goals: "",
     ...STRATEGY_CONFIG_DEFAULTS,
 };
