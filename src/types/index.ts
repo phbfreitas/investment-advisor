@@ -82,6 +82,7 @@ export type WealthData = {
     wealthAssetCar: string;
     wealthAssetPrimaryResidence: string;
     wealthAssetRentalProperties: string;
+    wealthAssetOther: string;
     wealthLiabilityMortgage: string;
     wealthLiabilityHeloc: string;
     wealthLiabilityRentalMortgage: string;
@@ -153,6 +154,7 @@ export const SECTOR_KEYS = [
     "it", "financials", "healthcare", "consumer-discretionary",
     "communication-services", "industrials", "staples",
     "energy-utilities", "real-estate", "materials", "metals",
+    "sp500", "other",
 ] as const;
 
 export const SECTOR_LABELS: Record<string, string> = {
@@ -167,9 +169,11 @@ export const SECTOR_LABELS: Record<string, string> = {
     "real-estate": "Real Estate",
     "materials": "Materials",
     "metals": "Metals",
+    "sp500": "S&P 500",
+    "other": "Other",
 };
 
-export const GEO_KEYS = ["na", "europe", "asia", "em", "frontier"] as const;
+export const GEO_KEYS = ["na", "europe", "asia", "em", "frontier", "usa", "canada", "globalMix"] as const;
 
 export const GEO_LABELS: Record<string, string> = {
     "na": "North America",
@@ -177,6 +181,23 @@ export const GEO_LABELS: Record<string, string> = {
     "asia": "Asia",
     "em": "Emerging Markets",
     "frontier": "Frontier Markets",
+    "usa": "USA Only",
+    "canada": "Canada Only",
+    "globalMix": "Global Mix",
+};
+
+export const RISK_TOLERANCE_LABELS: Record<number, string> = {
+    1: 'Conservative', 2: 'Conservative', 3: 'Conservative',
+    4: 'Moderate', 5: 'Moderate', 6: 'Moderate',
+    7: 'Aggressive', 8: 'Aggressive', 9: 'Aggressive',
+    10: 'Very Aggressive',
+};
+
+export const RISK_TOLERANCE_MIGRATION: Record<string, number> = {
+    'Conservative': 2,
+    'Moderate': 5,
+    'Aggressive': 8,
+    'Speculative': 10,
 };
 
 export const STRATEGY_CONFIG_DEFAULTS: StrategyConfig = {
