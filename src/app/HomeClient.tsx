@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { BrainCircuit, Send, BarChart2, Loader2, RefreshCw, Users } from "lucide-react";
+import { Send, Loader2, RefreshCw, Users } from "lucide-react";
 import { PanelResponse } from "@/components/PanelResponse";
 import { personas, PersonaId } from "@/lib/personas";
+import { PROMPT_TEMPLATES } from "@/lib/prompt-templates";
 import type { PersonaResponse } from "@/types";
 
 interface Message {
@@ -135,21 +136,17 @@ export default function Home() {
                 Consult your panel of legendary investors for guidance, market analysis, or strategy reviews tailored to your financial context.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 md:mt-8 w-full max-w-xl">
-                <button
-                  onClick={() => setInputValue("Analyze my current portfolio and tell me if I am diversified enough.")}
-                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
-                >
-                  <BarChart2 className="h-5 w-5 text-teal-600 dark:text-teal-500 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Analyze my current portfolio</span>
-                </button>
-                <button
-                  onClick={() => setInputValue("Given my risk tolerance and goals, critique my investment strategy.")}
-                  className="flex items-center space-x-3 p-4 glass-panel hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-left group"
-                >
-                  <BrainCircuit className="h-5 w-5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Critique my investment strategy</span>
-                </button>
+              {/* Quick Prompts */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {PROMPT_TEMPLATES.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    onClick={() => setInputValue(tmpl.prompt)}
+                    className="px-4 py-2 rounded-full text-sm bg-white/5 border border-white/10 hover:bg-white/10 hover:border-teal-500/30 transition-colors"
+                  >
+                    {tmpl.emoji} {tmpl.label}
+                  </button>
+                ))}
               </div>
             </div>
           ) : (
