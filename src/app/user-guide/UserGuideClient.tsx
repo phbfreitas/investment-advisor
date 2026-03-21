@@ -218,7 +218,7 @@ export default function UserGuideClient() {
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
                                     <strong className="text-neutral-900 dark:text-white block mb-1">Context Harvesting</strong>
-                                    Before the AI sees your typed question, it secretly builds a "Context String" by grabbing your Profile Settings, your Budget Status (Cash Reserves & Savings), and your Live Portfolio.
+                                    Before the AI sees your typed question, it builds a comprehensive &quot;Context String&quot; by gathering <em>all</em> of your data: your Investment Strategy configuration (asset mix, philosophies, sector/geographic targets, risk tolerance), your full Finance Summary (monthly budget, income/expenses, wealth, liabilities, net worth), and your complete Portfolio Holdings (every position with market value, P/L, yield, beta, sector, analyst consensus, and more).
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>

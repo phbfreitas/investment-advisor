@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db, TABLE_NAME } from "@/lib/db";
 import { GetCommand, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { formatStrategyContext } from "@/lib/portfolio-analytics";
+import { buildFullUserContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -45,16 +45,31 @@ export async function POST(request: Request) {
             })
         );
 
-        const { Items: assets } = await db.send(
-            new QueryCommand({
-                TableName: TABLE_NAME,
-                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-                ExpressionAttributeValues: {
-                    ":pk": PROFILE_KEY,
-                    ":skPrefix": "ASSET#",
-                },
-            })
-        );
+        const [{ Items: assets }, { Items: cashflows }] = await Promise.all([
+            db.send(
+                new QueryCommand({
+                    TableName: TABLE_NAME,
+                    KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                    ExpressionAttributeValues: {
+                        ":pk": PROFILE_KEY,
+                        ":skPrefix": "ASSET#",
+                    },
+                })
+            ),
+            db.send(
+                new QueryCommand({
+                    TableName: TABLE_NAME,
+                    KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                    ExpressionAttributeValues: {
+                        ":pk": PROFILE_KEY,
+                        ":skPrefix": "CASHFLOW#",
+                    },
+                    ScanIndexForward: false,
+                })
+            ),
+        ]);
+
+        const latestCashflow = cashflows && cashflows.length > 0 ? cashflows[0] : null;
 
         // Build Current Snapshot for Comparison
         const assetsList = assets || [];
@@ -113,21 +128,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // Build context string from profile and assets
-        const assetSummary = assetsList.length > 0
-            ? assetsList.map(a => `- ${a.quantity} units of ${a.ticker} (Cost: $${a.bookCost}, Value: $${a.marketValue}, Yield: ${a.yield}%)`).join("\n")
-            : "No assets documented.";
-
-        const strategyContext = formatStrategyContext(profile || {});
-
-        const contextString = `
-USER PORTFOLIO DATA:
-Strategy: ${profile?.strategy || "Not specified"}
-Risk Tolerance: ${profile?.riskTolerance || "Not specified"}
-Goals: ${profile?.goals || "Not specified"}
-${strategyContext ? strategyContext + "\n" : ""}Assets:
-${assetSummary}
-`;
+        const contextString = buildFullUserContext(profile || {}, assetsList, latestCashflow);
 
         const formattingRules = `
 FORMATTING RULES (CRITICAL):

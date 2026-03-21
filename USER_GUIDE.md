@@ -24,10 +24,10 @@ The five available advisors are:
 - **Dave Ramsey** (The Debt Destroyer) — Zero debt, emergency fund, disciplined budgeting
 
 ### How it Thinks (Logic Mapping)
-Before the AI even sees your typed question, the system secretly builds a "Context String" in the background. It reaches into the database and grabs:
-1. **Your Profile Settings:** Strategy, Risk Tolerance, and Goals.
-2. **Your Budget Status:** It calculates your `Cash Reserves` and your `Target Monthly Savings` (Total Income minus Total Expenses).
-3. **Your Live Portfolio:** It takes a snapshot of exactly what stocks you own, how many, and their current value.
+Before the AI even sees your typed question, the system builds a comprehensive "Context String" in the background. It reaches into the database and grabs:
+1. **Your Investment Strategy:** Asset mix targets, investment philosophies, core principles, account types, trading methodologies, sector/geographic allocation targets, performance targets, and risk tolerance.
+2. **Your Full Finance Summary:** Monthly budget breakdown (income by source, expenses by category), target savings, cash reserves, complete wealth picture (all assets including real estate, vehicles, cash, and other), all liabilities (mortgages, HELOCs, credit cards, leases), and calculated net worth.
+3. **Your Complete Portfolio Holdings:** Every position with full detail — ticker, quantity, live price, market value, book cost, P/L, yield, beta, volatility, sector, strategy type, account type, analyst consensus, 1yr/3yr returns, expected dividends, and risk flags. Plus portfolio-level totals (total market value, weighted yield, monthly dividend projection).
 
 It pastes all of these numbers into the invisible instructions given to the selected advisors.
 Only *then* does it give the AI the question you actually typed, along with a hidden tool that allows the AI to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.

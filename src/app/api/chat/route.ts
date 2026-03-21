@@ -5,7 +5,7 @@ import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { personas, generateSystemPrompt, PersonaId } from "@/lib/personas";
 import { getRagContext } from "@/lib/rag";
 import { fetchStockData, fetchStockDataToolDefinition } from "@/lib/finance-tools";
-import { formatStrategyContext } from "@/lib/portfolio-analytics";
+import { buildFullUserContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -79,29 +79,7 @@ export async function POST(request: Request) {
       const latestCashflow = cashflows && cashflows.length > 0 ? cashflows[0] : null;
       const currentCashReserves = latestCashflow?.cashReserves || 0;
 
-      const assetsList = assets || [];
-      const assetSummary = assetsList.length > 0
-        ? assetsList.map(a => `- ${a.quantity} shares of ${a.ticker} (Avg Cost: $${a.averageCost})`).join("\n")
-        : "No assets documented.";
-
-      const tIncome = (parseFloat(profile.budgetPaycheck) || 0) + (parseFloat(profile.budgetRentalIncome) || 0) + (parseFloat(profile.budgetDividends) || 0) + (parseFloat(profile.budgetBonus) || 0) + (parseFloat(profile.budgetOtherIncome) || 0);
-      const tExpenses = (parseFloat(profile.budgetFixedHome) || 0) + (parseFloat(profile.budgetFixedUtilities) || 0) + (parseFloat(profile.budgetFixedCar) || 0) + (parseFloat(profile.budgetFixedFood) || 0) + (parseFloat(profile.budgetDiscretionary) || 0) + (parseFloat(profile.budgetRentalExpenses) || 0);
-
-      const budgetSummary = tIncome > 0 || tExpenses > 0
-        ? `BUDGETED DECLARED INCOME: $${tIncome}\nBUDGETED DECLARED EXPENSES: $${tExpenses}\nTARGET MONTHLY SAVINGS: $${tIncome - tExpenses}`
-        : "No monthly budget defined.";
-
-      const strategyContext = formatStrategyContext(profile);
-
-      contextString = `
-STRATEGY: ${profile.strategy || "Not specified"}
-RISK TOLERANCE: ${profile.riskTolerance || "Not specified"}
-GOALS: ${profile.goals || "Not specified"}
-CASH RESERVES: $${currentCashReserves}
-${budgetSummary}
-${strategyContext ? strategyContext + "\n" : ""}PORTFOLIO HOLDINGS:
-${assetSummary}
-`;
+      contextString = buildFullUserContext(profile, assets || [], latestCashflow);
     }
 
     // 2. Prepare the Tool definition for Gemini

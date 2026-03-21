@@ -235,3 +235,123 @@ export function formatStrategyContext(profile: Partial<StrategyConfig>): string 
 
     return lines.length > 0 ? lines.join("\n") : "";
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function p(val: any, fallback = 0): number {
+    if (val == null || val === '') return fallback;
+    const n = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
+    return isNaN(n) ? fallback : n;
+}
+
+/**
+ * Build a comprehensive context string for AI conversations.
+ * Includes: strategy config, full portfolio holdings, finance summary (budget, wealth, net worth).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function buildFullUserContext(profile: Record<string, any>, assets: any[], latestCashflow: any): string {
+    const sections: string[] = [];
+
+    // --- 1. Strategy & Goals ---
+    sections.push("=== INVESTMENT STRATEGY ===");
+    sections.push(`Strategy: ${profile.strategy || "Not specified"}`);
+    sections.push(`Goals: ${profile.goals || "Not specified"}`);
+    const strategyCtx = formatStrategyContext(profile as Partial<StrategyConfig>);
+    if (strategyCtx) sections.push(strategyCtx);
+
+    // --- 2. Budget & Cash Flow ---
+    const tIncome = p(profile.budgetPaycheck) + p(profile.budgetRentalIncome) + p(profile.budgetDividends) + p(profile.budgetBonus) + p(profile.budgetOtherIncome);
+    const tExpenses = p(profile.budgetFixedHome) + p(profile.budgetFixedUtilities) + p(profile.budgetFixedCar) + p(profile.budgetFixedFood) + p(profile.budgetDiscretionary) + p(profile.budgetRentalExpenses);
+
+    sections.push("\n=== MONTHLY BUDGET ===");
+    if (tIncome > 0 || tExpenses > 0) {
+        sections.push(`Total Monthly Income: $${tIncome.toFixed(2)}`);
+        sections.push(`  - Paycheck: $${p(profile.budgetPaycheck).toFixed(2)}`);
+        sections.push(`  - Rental Income: $${p(profile.budgetRentalIncome).toFixed(2)}`);
+        sections.push(`  - Dividends: $${p(profile.budgetDividends).toFixed(2)}`);
+        sections.push(`  - Bonus: $${p(profile.budgetBonus).toFixed(2)}`);
+        sections.push(`  - Other Income: $${p(profile.budgetOtherIncome).toFixed(2)}`);
+        sections.push(`Total Monthly Expenses: $${tExpenses.toFixed(2)}`);
+        sections.push(`  - Housing: $${p(profile.budgetFixedHome).toFixed(2)}`);
+        sections.push(`  - Utilities: $${p(profile.budgetFixedUtilities).toFixed(2)}`);
+        sections.push(`  - Car/Transport: $${p(profile.budgetFixedCar).toFixed(2)}`);
+        sections.push(`  - Food/Groceries: $${p(profile.budgetFixedFood).toFixed(2)}`);
+        sections.push(`  - Discretionary: $${p(profile.budgetDiscretionary).toFixed(2)}`);
+        sections.push(`  - Rental Expenses: $${p(profile.budgetRentalExpenses).toFixed(2)}`);
+        sections.push(`Target Monthly Savings: $${(tIncome - tExpenses).toFixed(2)}`);
+    } else {
+        sections.push("No monthly budget defined.");
+    }
+
+    const cashReserves = latestCashflow?.cashReserves || 0;
+    if (cashReserves > 0) sections.push(`Cash Reserves: $${cashReserves}`);
+
+    // --- 3. Wealth / Net Worth ---
+    const assetCash = p(profile.wealthAssetCash);
+    const assetCar = p(profile.wealthAssetCar);
+    const assetPrimary = p(profile.wealthAssetPrimaryResidence);
+    const assetRental = p(profile.wealthAssetRentalProperties);
+    const assetOther = p(profile.wealthAssetOther);
+    const totalNonInvestmentAssets = assetCash + assetCar + assetPrimary + assetRental + assetOther;
+
+    const liabMortgage = p(profile.wealthLiabilityMortgage);
+    const liabHeloc = p(profile.wealthLiabilityHeloc);
+    const liabRentalMortgage = p(profile.wealthLiabilityRentalMortgage);
+    const liabRentalHeloc = p(profile.wealthLiabilityRentalHeloc);
+    const liabCreditCards = p(profile.wealthLiabilityCreditCards);
+    const liabCarLease = p(profile.wealthLiabilityCarLease);
+    const totalLiabilities = liabMortgage + liabHeloc + liabRentalMortgage + liabRentalHeloc + liabCreditCards + liabCarLease;
+
+    if (totalNonInvestmentAssets > 0 || totalLiabilities > 0) {
+        sections.push("\n=== WEALTH & NET WORTH ===");
+        sections.push("Non-Investment Assets:");
+        if (assetCash > 0) sections.push(`  - Cash/Savings: $${assetCash.toFixed(2)}`);
+        if (assetPrimary > 0) sections.push(`  - Primary Residence: $${assetPrimary.toFixed(2)}`);
+        if (assetRental > 0) sections.push(`  - Rental Properties: $${assetRental.toFixed(2)}`);
+        if (assetCar > 0) sections.push(`  - Vehicles: $${assetCar.toFixed(2)}`);
+        if (assetOther > 0) sections.push(`  - Other Assets: $${assetOther.toFixed(2)}`);
+        sections.push("Liabilities:");
+        if (liabMortgage > 0) sections.push(`  - Mortgage: $${liabMortgage.toFixed(2)}`);
+        if (liabHeloc > 0) sections.push(`  - HELOC: $${liabHeloc.toFixed(2)}`);
+        if (liabRentalMortgage > 0) sections.push(`  - Rental Mortgage: $${liabRentalMortgage.toFixed(2)}`);
+        if (liabRentalHeloc > 0) sections.push(`  - Rental HELOC: $${liabRentalHeloc.toFixed(2)}`);
+        if (liabCreditCards > 0) sections.push(`  - Credit Cards: $${liabCreditCards.toFixed(2)}`);
+        if (liabCarLease > 0) sections.push(`  - Car Lease/Loan: $${liabCarLease.toFixed(2)}`);
+    }
+
+    // --- 4. Full Portfolio Holdings ---
+    const assetsList = (assets || []) as Asset[];
+    const totalMV = assetsList.reduce((s, a) => s + (Number(a.marketValue) || 0), 0);
+    const totalBK = assetsList.reduce((s, a) => s + (Number(a.bookCost) || 0) * (Number(a.quantity) || 0), 0);
+    const totalPL = assetsList.reduce((s, a) => s + (Number(a.profitLoss) || 0), 0);
+    const totalExpDiv = assetsList.reduce((s, a) => s + (Number(a.expectedAnnualDividends) || 0), 0);
+    const weightedYield = totalMV > 0
+        ? assetsList.reduce((acc, a) => acc + ((Number(a.yield) || 0) * ((Number(a.marketValue) || 0) / totalMV)), 0)
+        : 0;
+
+    sections.push("\n=== PORTFOLIO HOLDINGS ===");
+    if (assetsList.length > 0) {
+        sections.push(`Total Holdings: ${assetsList.length} positions`);
+        sections.push(`Total Market Value: $${totalMV.toFixed(2)}`);
+        sections.push(`Total Book Cost: $${totalBK.toFixed(2)}`);
+        sections.push(`Total P/L: $${totalPL.toFixed(2)} (${totalBK > 0 ? ((totalPL / totalBK) * 100).toFixed(1) : 0}%)`);
+        sections.push(`Weighted Portfolio Yield: ${weightedYield.toFixed(2)}%`);
+        sections.push(`Expected Annual Dividends: $${totalExpDiv.toFixed(2)} (~$${(totalExpDiv / 12).toFixed(2)}/month)`);
+
+        // Combined net worth
+        const investmentValue = totalMV;
+        const totalAllAssets = totalNonInvestmentAssets + investmentValue;
+        const netWorth = totalAllAssets - totalLiabilities;
+        sections.push(`\nTotal Net Worth: $${netWorth.toFixed(2)} (Investments: $${investmentValue.toFixed(2)} + Other Assets: $${totalNonInvestmentAssets.toFixed(2)} - Liabilities: $${totalLiabilities.toFixed(2)})`);
+
+        sections.push("\nDetailed Holdings:");
+        for (const a of assetsList) {
+            const mv = Number(a.marketValue) || 0;
+            const weight = totalMV > 0 ? ((mv / totalMV) * 100).toFixed(1) : '0.0';
+            sections.push(`- ${a.ticker} | ${a.quantity} shares @ $${Number(a.liveTickerPrice || 0).toFixed(2)} | MV: $${mv.toFixed(2)} (${weight}%) | BK: $${((Number(a.bookCost) || 0) * (Number(a.quantity) || 0)).toFixed(2)} | P/L: $${Number(a.profitLoss || 0).toFixed(2)} | Yield: ${Number(a.yield || 0).toFixed(2)}% | Beta: ${Number(a.beta || 0).toFixed(2)} | Strategy: ${a.strategyType || 'N/A'} | Sector: ${a.sector || 'N/A'} | Market: ${a.market || 'N/A'} | Acct: ${a.account || 'N/A'} (${a.accountType || 'N/A'}) | 1yr: ${Number(a.oneYearReturn || 0).toFixed(1)}% | Analyst: ${a.analystConsensus || 'N/A'}${a.riskFlag ? ' | RISK FLAG: ' + a.riskFlag : ''}`);
+        }
+    } else {
+        sections.push("No portfolio holdings documented.");
+    }
+
+    return sections.join("\n");
+}
