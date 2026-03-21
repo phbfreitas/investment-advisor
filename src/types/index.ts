@@ -23,6 +23,13 @@ export interface Asset {
     yield: number;
     oneYearReturn: number;
     fiveYearReturn: number;
+    threeYearReturn: number;
+    exDividendDate: string;
+    analystConsensus: string;
+    beta: number;
+    riskFlag: string;
+    accountNumber: string;
+    accountType: string;
     risk: string;
     volatility: number;
     expectedAnnualDividends: number;

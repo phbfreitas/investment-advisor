@@ -126,6 +126,12 @@ export default function ProfilePage() {
     const [newHolding, setNewHolding] = useState({
         account: '', ticker: '', securityType: '', sector: '', market: '',
         quantity: '', bookCost: '', currency: 'CAD',
+        liveTickerPrice: 0, yield: 0, oneYearReturn: 0,
+        strategyType: '', call: '', managementStyle: '', managementFee: 0,
+        exDividendDate: '', threeYearReturn: 0, analystConsensus: '', externalRating: '',
+        volatility: 0, beta: 0, riskFlag: '',
+        marketValue: 0, profitLoss: 0, expectedAnnualDividends: 0,
+        accountNumber: '', accountType: '',
     });
     const [tickerLoading, setTickerLoading] = useState(false);
 
@@ -295,12 +301,35 @@ export default function ProfilePage() {
             const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}`);
             if (res.ok) {
                 const data = await res.json();
-                setNewHolding((prev) => ({
-                    ...prev,
-                    sector: data.sector || prev.sector,
-                    market: data.market || prev.market,
-                    securityType: data.securityType || prev.securityType,
-                }));
+                const qty = parseFloat(newHolding.quantity) || 0;
+                const price = data.currentPrice || 0;
+                const yieldPct = data.dividendYield || 0;
+                setNewHolding((prev) => {
+                    const bookCostNum = parseFloat(prev.bookCost) || 0;
+                    return {
+                        ...prev,
+                        sector: data.sector || prev.sector,
+                        market: data.market || prev.market,
+                        securityType: data.securityType || prev.securityType,
+                        liveTickerPrice: price,
+                        yield: yieldPct,
+                        oneYearReturn: data.oneYearReturn || 0,
+                        strategyType: data.strategyType || prev.strategyType,
+                        call: data.call || prev.call,
+                        managementStyle: data.managementStyle || prev.managementStyle,
+                        managementFee: data.managementFee || 0,
+                        exDividendDate: data.exDividendDate || "",
+                        threeYearReturn: data.threeYearReturn || 0,
+                        analystConsensus: data.analystConsensus || "",
+                        externalRating: data.externalRating || "",
+                        volatility: data.volatility || 0,
+                        beta: data.beta || 0,
+                        riskFlag: data.riskFlag || "",
+                        marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
+                        profitLoss: qty > 0 && price > 0 ? (qty * price) - (bookCostNum * qty) : prev.profitLoss,
+                        expectedAnnualDividends: qty > 0 && price > 0 && yieldPct > 0 ? qty * price * (yieldPct / 100) : 0,
+                    };
+                });
             }
         } catch (err) {
             console.error('Ticker lookup failed:', err);
@@ -310,15 +339,26 @@ export default function ProfilePage() {
     };
 
     const handleExportCSV = () => {
-        const headers = ['Account', 'Ticker', 'Type', 'Sector', 'Market', 'Qty', 'Book Cost', 'Market Value', 'Weight %', 'P/L'];
+        const headers = [
+            'Account', 'Ticker', 'Type', 'Strategy Type', 'Call', 'Sector', 'Market', 'Currency',
+            'Mgt Style', 'Mgt Fee', 'Qty', 'Live Price', 'Book Cost', 'Market Value', 'Weight %', 'P/L',
+            'Yield %', '1yr Return', '3yr Return', 'Ex-Div Date', 'Analyst', 'Ext. Rating',
+            'Beta', 'Risk Flag', 'Volatility', 'Expected Div', 'Acct #', 'Acct Type',
+        ];
         const rows = assets.map((a) => [
-            a.account, a.ticker, a.securityType, a.sector, a.market,
-            a.quantity, (a.bookCost || 0) * (a.quantity || 0),
+            a.account, a.ticker, a.securityType, a.strategyType, a.call,
+            a.sector, a.market, a.currency, a.managementStyle, a.managementFee,
+            a.quantity, a.liveTickerPrice, (a.bookCost || 0) * (a.quantity || 0),
             a.marketValue, assetWeight(a).toFixed(1) + '%', a.profitLoss,
+            a.yield, a.oneYearReturn, a.threeYearReturn || a.fiveYearReturn || 0,
+            a.exDividendDate, a.analystConsensus, a.externalRating,
+            a.beta, a.riskFlag, a.volatility, a.expectedAnnualDividends,
+            a.accountNumber, a.accountType,
         ]);
-        const totalsRow = ['Totals', '', '', '', '', '',
-            portfolioTotals.totalBookCost, portfolioTotals.totalMarketValue,
+        const totalsRow = ['Totals', '', '', '', '', '', '', '', '', '', '',
+            '', portfolioTotals.totalBookCost, portfolioTotals.totalMarketValue,
             '100%', portfolioTotals.totalPL,
+            '', '', '', '', '', '', '', '', '', '', '', '',
         ];
         const csv = [headers, ...rows, totalsRow].map((r) => r.join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -344,6 +384,25 @@ export default function ProfilePage() {
                     quantity: parseFloat(newHolding.quantity) || 0,
                     bookCost: parseFloat(newHolding.bookCost) || 0,
                     currency: newHolding.currency,
+                    liveTickerPrice: newHolding.liveTickerPrice,
+                    yield: newHolding.yield,
+                    oneYearReturn: newHolding.oneYearReturn,
+                    strategyType: newHolding.strategyType,
+                    call: newHolding.call,
+                    managementStyle: newHolding.managementStyle,
+                    managementFee: newHolding.managementFee,
+                    exDividendDate: newHolding.exDividendDate,
+                    threeYearReturn: newHolding.threeYearReturn,
+                    analystConsensus: newHolding.analystConsensus,
+                    externalRating: newHolding.externalRating,
+                    volatility: newHolding.volatility,
+                    beta: newHolding.beta,
+                    riskFlag: newHolding.riskFlag,
+                    marketValue: newHolding.marketValue,
+                    profitLoss: newHolding.profitLoss,
+                    expectedAnnualDividends: newHolding.expectedAnnualDividends,
+                    accountNumber: newHolding.accountNumber,
+                    accountType: newHolding.accountType,
                 }),
             });
             if (res.ok) {
@@ -351,7 +410,16 @@ export default function ProfilePage() {
                 const data = await profileRes.json();
                 setAssets(data.assets || []);
                 setShowAddForm(false);
-                setNewHolding({ account: '', ticker: '', securityType: '', sector: '', market: '', quantity: '', bookCost: '', currency: 'CAD' });
+                setNewHolding({
+                    account: '', ticker: '', securityType: '', sector: '', market: '',
+                    quantity: '', bookCost: '', currency: 'CAD',
+                    liveTickerPrice: 0, yield: 0, oneYearReturn: 0,
+                    strategyType: '', call: '', managementStyle: '', managementFee: 0,
+                    exDividendDate: '', threeYearReturn: 0, analystConsensus: '', externalRating: '',
+                    volatility: 0, beta: 0, riskFlag: '',
+                    marketValue: 0, profitLoss: 0, expectedAnnualDividends: 0,
+                    accountNumber: '', accountType: '',
+                });
             }
         } catch (err) {
             console.error('Failed to add holding:', err);
@@ -910,7 +978,16 @@ export default function ProfilePage() {
                                             type="button"
                                             onClick={() => {
                                                 setShowAddForm(false);
-                                                setNewHolding({ account: '', ticker: '', securityType: '', sector: '', market: '', quantity: '', bookCost: '', currency: 'CAD' });
+                                                setNewHolding({
+                    account: '', ticker: '', securityType: '', sector: '', market: '',
+                    quantity: '', bookCost: '', currency: 'CAD',
+                    liveTickerPrice: 0, yield: 0, oneYearReturn: 0,
+                    strategyType: '', call: '', managementStyle: '', managementFee: 0,
+                    exDividendDate: '', threeYearReturn: 0, analystConsensus: '', externalRating: '',
+                    volatility: 0, beta: 0, riskFlag: '',
+                    marketValue: 0, profitLoss: 0, expectedAnnualDividends: 0,
+                    accountNumber: '', accountType: '',
+                });
                                             }}
                                             className="px-4 py-2 text-xs border border-neutral-700 text-neutral-400 hover:bg-neutral-800 rounded-lg transition-colors"
                                         >

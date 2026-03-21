@@ -177,7 +177,12 @@ export default function DashboardPage() {
       profitLoss: 0,
       yield: 0,
       oneYearReturn: 0,
-      fiveYearReturn: 0,
+      threeYearReturn: 0,
+      exDividendDate: "",
+      analystConsensus: "",
+      beta: 0,
+      accountNumber: "",
+      accountType: "",
       risk: "",
       volatility: 0,
       expectedAnnualDividends: 0
@@ -302,6 +307,32 @@ export default function DashboardPage() {
             <span className="sm:hidden">Import CSV</span>
             <input type="file" accept=".csv" className="hidden" disabled={true} />
           </label>
+          <label className="cursor-pointer flex-1 md:flex-none justify-center items-center space-x-2 bg-teal-600 hover:bg-teal-700 text-white px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center">
+            <Upload className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Import PDF Statement</span>
+            <span className="sm:hidden">Import PDF</span>
+            <input type="file" accept=".pdf" className="hidden" onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setMessage({ text: 'Importing PDF statement...', type: 'success' });
+              try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await fetch('/api/portfolio-pdf', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                  setMessage({ text: `Imported ${data.count} holdings from PDF.`, type: 'success' });
+                  fetchAssets();
+                } else {
+                  setMessage({ text: data.error || 'PDF import failed.', type: 'error' });
+                }
+              } catch (err) {
+                console.error('PDF import error:', err);
+                setMessage({ text: 'Failed to import PDF.', type: 'error' });
+              }
+              e.target.value = '';
+            }} />
+          </label>
         </div>
       </header>
 
@@ -375,11 +406,17 @@ export default function DashboardPage() {
                     {renderSortableHeader("Profit/loss", "profitLoss")}
                     {renderSortableHeader("Yield", "yield")}
                     {renderSortableHeader("1 YR Return", "oneYearReturn")}
-                    {renderSortableHeader("5 YR Return", "fiveYearReturn")}
+                    {renderSortableHeader("3 YR Return", "threeYearReturn")}
                     {renderSortableHeader("Risk", "risk")}
                     {renderSortableHeader("Volatility", "volatility")}
                     {renderSortableHeader("Expected Div", "expectedAnnualDividends")}
                     {renderSortableHeader("Ext. Rating", "externalRating")}
+                    {renderSortableHeader("Strategy", "strategyType")}
+                    {renderSortableHeader("Ex-Div Date", "exDividendDate")}
+                    {renderSortableHeader("Analyst", "analystConsensus")}
+                    {renderSortableHeader("Beta", "beta")}
+                    {renderSortableHeader("Acct #", "accountNumber")}
+                    {renderSortableHeader("Acct Type", "accountType")}
                     <th className="px-3 py-3 text-right">Actions</th>
                   </tr>
                   <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
@@ -400,11 +437,17 @@ export default function DashboardPage() {
                     {renderFilterInput("profitLoss")}
                     {renderFilterInput("yield", "w-16")}
                     {renderFilterInput("oneYearReturn")}
-                    {renderFilterInput("fiveYearReturn")}
+                    {renderFilterInput("threeYearReturn")}
                     {renderFilterInput("risk", "w-16")}
                     {renderFilterInput("volatility")}
                     {renderFilterInput("expectedAnnualDividends")}
                     {renderFilterInput("externalRating")}
+                    {renderFilterInput("strategyType", "w-24")}
+                    {renderFilterInput("exDividendDate", "w-24")}
+                    {renderFilterInput("analystConsensus", "w-20")}
+                    {renderFilterInput("beta", "w-16")}
+                    {renderFilterInput("accountNumber", "w-20")}
+                    {renderFilterInput("accountType", "w-20")}
                     <td className="px-3 py-2 text-right">
                       {Object.keys(filters).length > 0 && (
                         <button onClick={clearFilters} className="text-neutral-400 hover:text-red-500 transition-colors" title="Clear Filters">
@@ -417,7 +460,7 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 transition-colors duration-300">
                   {[...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].length === 0 && !isLoading ? (
                     <tr>
-                      <td colSpan={23} className="px-6 py-8 text-center text-neutral-500">
+                      <td colSpan={29} className="px-6 py-8 text-center text-neutral-500">
                         No assets found. Click Add Row below.
                       </td>
                     </tr>
@@ -462,7 +505,22 @@ export default function DashboardPage() {
                       return (
                         <tr key={asset.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors">
                           <td className="px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200">
-                            {renderField("account", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? (
+                              <>
+                                <input
+                                  type="text"
+                                  list="account-suggestions"
+                                  className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                  value={(editForm.account as string) ?? ""}
+                                  onChange={(e) => handleEditChange("account", e.target.value)}
+                                />
+                                <datalist id="account-suggestions">
+                                  {accounts.map(a => <option key={a} value={a} />)}
+                                </datalist>
+                              </>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.account}</span>
+                            )}
                           </td>
                           <td className="px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100">
                             {renderField("ticker", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
@@ -507,13 +565,89 @@ export default function DashboardPage() {
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("yield", false, [], "number")}</td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("oneYearReturn", false, [], "number")}</td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("fiveYearReturn", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.threeYearReturn as number) ?? 0}
+                                onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)}
+                              />
+                            ) : (
+                              <span>{Number(asset.threeYearReturn || asset.fiveYearReturn || 0).toLocaleString()}</span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("volatility", false, [], "number")}</td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("externalRating", false, [], "text")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.exDividendDate as string) ?? ""}
+                                onChange={(e) => handleEditChange("exDividendDate", e.target.value)}
+                              />
+                            ) : (
+                              <span>{asset.exDividendDate}</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.analystConsensus as string) ?? ""}
+                                onChange={(e) => handleEditChange("analystConsensus", e.target.value)}
+                              />
+                            ) : (
+                              <span>{asset.analystConsensus}</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="number"
+                                className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.beta as number) ?? 0}
+                                onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)}
+                              />
+                            ) : (
+                              <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>
+                                {Number(asset.beta || 0).toLocaleString()}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.accountNumber as string) ?? ""}
+                                onChange={(e) => handleEditChange("accountNumber", e.target.value)}
+                              />
+                            ) : (
+                              <span>{asset.accountNumber}</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.accountType as string) ?? ""}
+                                onChange={(e) => handleEditChange("accountType", e.target.value)}
+                              />
+                            ) : (
+                              <span>{asset.accountType}</span>
+                            )}
+                          </td>
 
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end space-x-2">
@@ -544,7 +678,7 @@ export default function DashboardPage() {
                       <td className="px-3 py-4">\${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                       <td colSpan={6}></td>
                       <td className="px-3 py-4">\${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td colSpan={2}></td>
+                      <td colSpan={8}></td>
                     </tr>
                   )}
                 </tbody>

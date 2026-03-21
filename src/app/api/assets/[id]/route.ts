@@ -83,12 +83,32 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             yield: data.yield !== undefined ? parseFloat(data.yield) : existingAsset.yield,
             oneYearReturn: data.oneYearReturn !== undefined ? parseFloat(data.oneYearReturn) : existingAsset.oneYearReturn,
             fiveYearReturn: data.fiveYearReturn !== undefined ? parseFloat(data.fiveYearReturn) : existingAsset.fiveYearReturn,
+            threeYearReturn: data.threeYearReturn !== undefined ? parseFloat(data.threeYearReturn) : (existingAsset.threeYearReturn ?? 0),
+            exDividendDate: data.exDividendDate !== undefined ? data.exDividendDate : (existingAsset.exDividendDate ?? ""),
+            analystConsensus: data.analystConsensus !== undefined ? data.analystConsensus : (existingAsset.analystConsensus ?? ""),
+            beta: data.beta !== undefined ? parseFloat(data.beta) : (existingAsset.beta ?? 0),
+            riskFlag: data.riskFlag !== undefined ? data.riskFlag : (existingAsset.riskFlag ?? ""),
+            accountNumber: data.accountNumber !== undefined ? data.accountNumber : (existingAsset.accountNumber ?? ""),
+            accountType: data.accountType !== undefined ? data.accountType : (existingAsset.accountType ?? ""),
             risk: data.risk !== undefined ? data.risk : existingAsset.risk,
             volatility: data.volatility !== undefined ? parseFloat(data.volatility) : existingAsset.volatility,
             expectedAnnualDividends: data.expectedAnnualDividends !== undefined ? parseFloat(data.expectedAnnualDividends) : existingAsset.expectedAnnualDividends,
 
             updatedAt: new Date().toISOString(),
         };
+
+        // Auto-recompute derived fields when inputs change
+        const qty = updatedAsset.quantity || 0;
+        const price = updatedAsset.liveTickerPrice || 0;
+        const yieldPct = updatedAsset.yield || 0;
+        const bookCostPerShare = updatedAsset.bookCost || 0;
+        if (qty > 0 && price > 0) {
+            updatedAsset.marketValue = qty * price;
+            updatedAsset.profitLoss = updatedAsset.marketValue - (bookCostPerShare * qty);
+            if (yieldPct > 0) {
+                updatedAsset.expectedAnnualDividends = qty * price * (yieldPct / 100);
+            }
+        }
 
         await db.send(
             new PutCommand({
