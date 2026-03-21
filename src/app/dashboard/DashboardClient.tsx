@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Upload, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
+import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
 
 export default function DashboardPage() {
@@ -247,6 +247,85 @@ export default function DashboardPage() {
     return sortableItems;
   }, [assets, sortConfig, filters, marketData]);
 
+  // Ticker lookup — auto-populate fields when ticker is entered/changed
+  const handleTickerLookup = async (symbol: string) => {
+    if (!symbol.trim()) return;
+    try {
+      const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const qty = editForm.quantity || 0;
+        const price = data.currentPrice || 0;
+        const yieldPct = data.dividendYield || 0;
+        const bookCostNum = editForm.bookCost || 0;
+        setEditForm(prev => ({
+          ...prev,
+          sector: data.sector || prev.sector,
+          market: data.market || prev.market,
+          securityType: data.securityType || prev.securityType,
+          liveTickerPrice: price,
+          yield: yieldPct,
+          oneYearReturn: data.oneYearReturn || 0,
+          strategyType: data.strategyType || prev.strategyType,
+          call: data.call || prev.call,
+          managementStyle: data.managementStyle || prev.managementStyle,
+          managementFee: data.managementFee || 0,
+          exDividendDate: data.exDividendDate || "",
+          threeYearReturn: data.threeYearReturn || 0,
+          analystConsensus: data.analystConsensus || "",
+          externalRating: data.externalRating || "",
+          volatility: data.volatility || 0,
+          beta: data.beta || 0,
+          riskFlag: data.riskFlag || "",
+          marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
+          profitLoss: qty > 0 && price > 0 ? (qty * price) - (bookCostNum * qty) : prev.profitLoss,
+          expectedAnnualDividends: qty > 0 && price > 0 && yieldPct > 0 ? qty * price * (yieldPct / 100) : 0,
+        }));
+      }
+    } catch (err) {
+      console.error('Ticker lookup failed:', err);
+    }
+  };
+
+  // CSV Export
+  const handleExportCSV = () => {
+    const headers = [
+      'Account', 'Ticker', 'Type', 'Strategy Type', 'Call', 'Sector', 'Market', 'Currency',
+      'Mgt Style', 'Mgt Fee', 'Qty', 'Live Price', 'Book Cost', 'Market Value', 'Weight %', 'P/L',
+      'Yield %', '1yr Return', '3yr Return', 'Ex-Div Date', 'Analyst', 'Ext. Rating',
+      'Beta', 'Risk Flag', 'Volatility', 'Expected Div', 'Acct #', 'Acct Type',
+    ];
+    const totalMV = assets.reduce((s, a) => s + (a.marketValue || 0), 0);
+    const escapeCSV = (v: unknown) => {
+      const str = String(v ?? '');
+      return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+    const rows = assets.map(a => [
+      a.account, a.ticker, a.securityType, a.strategyType, a.call,
+      a.sector, a.market, a.currency, a.managementStyle, a.managementFee,
+      a.quantity, a.liveTickerPrice, (a.bookCost || 0) * (a.quantity || 0),
+      a.marketValue, totalMV > 0 ? ((a.marketValue || 0) / totalMV * 100).toFixed(1) + '%' : '0%',
+      a.profitLoss, a.yield, a.oneYearReturn, a.threeYearReturn || a.fiveYearReturn || 0,
+      a.exDividendDate, a.analystConsensus, a.externalRating,
+      a.beta, a.riskFlag, a.volatility, a.expectedAnnualDividends,
+      a.accountNumber, a.accountType,
+    ].map(escapeCSV));
+    const totalBK = assets.reduce((s, a) => s + (a.bookCost || 0) * (a.quantity || 0), 0);
+    const totalPL = assets.reduce((s, a) => s + (a.profitLoss || 0), 0);
+    const totalsRow = ['Totals', '', '', '', '', '', '', '', '', '', '',
+      '', totalBK.toFixed(2), totalMV.toFixed(2), '100%', totalPL.toFixed(2),
+      '', '', '', '', '', '', '', '', '', '', '', '',
+    ];
+    const csv = [headers.join(','), ...rows.map(r => r.join(',')), totalsRow.join(',')].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const renderSortableHeader = (label: string, sortKey: keyof Asset) => (
     <th
       key={sortKey}
@@ -333,6 +412,16 @@ export default function DashboardPage() {
               e.target.value = '';
             }} />
           </label>
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            disabled={assets.length === 0}
+            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center disabled:opacity-40"
+          >
+            <Download className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </button>
         </div>
       </header>
 
@@ -523,7 +612,17 @@ export default function DashboardPage() {
                             )}
                           </td>
                           <td className="px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100">
-                            {renderField("ticker", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                value={(editForm.ticker as string) || ""}
+                                onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())}
+                                onBlur={() => handleTickerLookup(editForm.ticker || "")}
+                              />
+                            ) : (
+                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.ticker}</span>
+                            )}
                           </td>
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
