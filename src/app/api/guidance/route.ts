@@ -5,6 +5,7 @@ import { GetCommand, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { buildFullUserContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { FORMATTING_RULES } from "@/lib/prompt-templates";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Extend AWS/Vercel timeout limit to 60s
@@ -130,18 +131,7 @@ export async function POST(request: Request) {
 
         const contextString = buildFullUserContext(profile || {}, assetsList, latestCashflow);
 
-        const formattingRules = `
-FORMATTING RULES (CRITICAL):
-- ALWAYS use GitHub-flavored Markdown.
-- Break up large blocks of text. Use double newlines for generous spacing.
-- Use H2 (\`##\`) and H3 (\`###\`) headers to clearly separate sections.
-- Use bulleted lists (\`-\`) heavily for any multi-point analysis.
-- **Bold** key terms, tickers, and financial metrics (e.g., **$150.00**, **AAPL**, **Overweight**).
-- Use Blockquotes (\`>\`) to highlight the most important takeaway or conclusion.
-- Where appropriate (especially for comparisons or multi-factor analysis), use Markdown Tables for scannability.
-- Never write a paragraph longer than 3-4 sentences without breaking it up.
-- NEVER use raw HTML or <br> tags. Only use Markdown.
-`;
+        const formattingRules = FORMATTING_RULES;
 
         let prompt = "";
         switch (directiveId) {
