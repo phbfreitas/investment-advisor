@@ -12,7 +12,8 @@ import {
     Code,
     Zap,
     Info,
-    LineChart
+    LineChart,
+    Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -70,8 +71,17 @@ const sections = [
         ]
     },
     {
+        id: "global-radar",
+        title: "6. Global News Radar",
+        icon: Globe,
+        subsections: [
+            { id: "radar-logic", title: "The Intelligence Pipeline" },
+            { id: "radar-ripple", title: "The Deep Critique" },
+        ]
+    },
+    {
         id: "settings",
-        title: "6. Settings",
+        title: "7. Settings",
         icon: Settings,
         subsections: [
             { id: "set-logic", title: "Household Isolation" },
@@ -593,13 +603,78 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 6: Settings */}
+                    {/* Section 6: Global News Radar */}
+                    <section id="global-radar" ref={el => { contentRefs.current["global-radar"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Globe className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Global News Radar</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            The Global News Radar connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
+                        </p>
+
+                        <div id="radar-logic" ref={el => { contentRefs.current["radar-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Globe className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
+                            </h3>
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features five targeted analyses plus one master synthesis:</p>
+                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <span><strong>Net Worth Stress Test:</strong> Assesses total financial health (liquid + real estate) against this week&apos;s macro events.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <span><strong>Deep Buy Scanner:</strong> Finds panic-driven value opportunities using 3 criteria: non-fundamental price drops, selling exhaustion signals, and below-average valuations.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <span><strong>Opportunity Cost Evaluator:</strong> Identifies &quot;dead money&quot; sectors and suggests strategic rotations based on shifting macro regimes.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <span><strong>Cross-Sectional Impact Report:</strong> Maps weekly news (rates, conflicts, energy) to your Growth/Mix/Dividend allocation.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <span><strong>Full Strategy Critic:</strong> Compares your portfolio against global asset classes (S&P 500, TSX, Bonds, Commodities) and critiques exposure gaps.</span></li>
+                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <span><strong>Deep Critique:</strong> Runs all 5 analyses in parallel, then synthesizes them into a single executive report with Top 3 Actions, Top 3 Deep Buy Stocks, Single Biggest Risk, and Strategic Outlook.</span></li>
+                                </ul>
+                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4">
+                                    <div>
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Live News Integration:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">Headlines are fetched daily from NewsData.io covering interest rates, inflation, energy, commodities, geopolitical events, and central bank policy. News is cached globally (shared across all users) to conserve API quota.</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Intelligent Caching & Stale Warnings:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">Same smart caching as AI Guidance. Analyses are cached per-household and fingerprinted against your portfolio, strategy, <em>and</em> the news date. If any of these change, a Stale Data Warning appears with the report blurred until you refresh.</span>
+                                    </div>
+                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                                        <strong className="text-neutral-900 dark:text-white block mb-1">Deep Critique Progress Tracking:</strong>
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">When running the Deep Critique, a real-time checklist shows each of the 5 sub-analyses completing with checkmarks. Failed analyses are gracefully noted and excluded from synthesis. Once all complete, the unified executive report streams in.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="radar-ripple" ref={el => { contentRefs.current["radar-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-indigo-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-indigo-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: The Deep Critique</h3>
+                            </div>
+                            <p className="text-neutral-700 dark:text-neutral-300 mb-4">
+                                John clicks the <strong>Deep Critique</strong> card on a Monday morning after a turbulent week in global markets.
+                            </p>
+                            <ul className="space-y-3 text-neutral-600 dark:text-neutral-400 text-sm list-disc list-inside">
+                                <li>The system fires 5 parallel AI analyses, each examining a different dimension of John&apos;s portfolio against the latest headlines.</li>
+                                <li>A live checklist shows progress: <em>Net Worth Stress Test &#10003;, Deep Buy Scanner &#10003;, Opportunity Cost &#10003;...</em></li>
+                                <li>Once all 5 complete, the AI synthesizes everything into one executive report.</li>
+                                <li className="font-semibold text-neutral-900 dark:text-white mt-4">
+                                    The Result: <span className="text-teal-600 dark:text-teal-400 font-normal">A single-page report listing the Top 3 Immediate Actions, Top 3 Deep Buy Stocks of the Week, the Single Biggest Risk, and a Strategic Outlook &mdash; all grounded in real news and John&apos;s actual holdings.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 7: Settings */}
                     <section id="settings" ref={el => { contentRefs.current["settings"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Settings & Infrastructure</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">7. Settings & Infrastructure</h2>
                         </div>
 
                         <div id="set-logic" ref={el => { contentRefs.current["set-logic"] = el; }} className="space-y-6">
