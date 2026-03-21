@@ -87,15 +87,28 @@ export const personas: Record<PersonaId, Persona> = {
 /**
  * Helper to generate the full system prompt injected with the user's personal financial context.
  */
-export function generateSystemPrompt(personaId: PersonaId, userContextString: string, ragContext: string = ""): string {
+export function generateSystemPrompt(
+    personaId: PersonaId,
+    userContextString: string,
+    ragContext: string = "",
+    conversationSummary: string = ""
+): string {
     const persona = personas[personaId];
     if (!persona) throw new Error("Persona not found");
+
+    const memorySection = conversationSummary
+        ? `
+### YOUR MEMORY OF THIS USER (from prior conversations):
+${conversationSummary}
+Use this memory to maintain continuity. Reference past discussions naturally when relevant.
+`
+        : "";
 
     return `
 ${persona.systemPrompt}
 
 ${ragContext}
-
+${memorySection}
 ---
 
 IMPORTANT CONTEXT ABOUT THE USER YOU ARE ADVISING:

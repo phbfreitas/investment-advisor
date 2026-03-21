@@ -8,6 +8,15 @@ import { fetchStockData, fetchStockDataToolDefinition } from "@/lib/finance-tool
 import { buildFullUserContext } from "@/lib/portfolio-analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import {
+  getRecentExchanges,
+  getSummary,
+  saveExchange,
+  shouldSummarize,
+  updateSummary,
+  buildPersonaHistory,
+} from "@/lib/chat-memory";
+import type { ChatExchange, ChatSummary } from "@/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,15 +51,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "At least one persona must be selected." }, { status: 400 });
     }
 
-    // 1. Fetch User Context
-    let contextString = "User has not provided a financial profile yet. Give generalized advice.";
+    const householdId = session.user!.householdId!;
 
-    const { Item: profile } = await db.send(
+    // 1. Fetch User Context + Memory in parallel
+    let contextString = "User has not provided a financial profile yet. Give generalized advice.";
+    let recentExchanges: ChatExchange[] = [];
+    let memorySummary: ChatSummary | null = null;
+
+    const profilePromise = db.send(
       new GetCommand({
         TableName: TABLE_NAME,
         Key: { PK: PROFILE_KEY, SK: "META" },
       })
     );
+
+    // Memory fetch — graceful degradation on failure
+    const memoryPromise = Promise.all([
+      getRecentExchanges(householdId, 10),
+      getSummary(householdId),
+    ]).catch((err) => {
+      console.error("Memory fetch failed, falling back to stateless:", err);
+      return [[] as ChatExchange[], null as ChatSummary | null] as const;
+    });
+
+    const [{ Item: profile }, [exchanges, summary]] = await Promise.all([
+      profilePromise,
+      memoryPromise,
+    ]);
+
+    recentExchanges = exchanges;
+    memorySummary = summary;
 
     if (profile) {
       const { Items: assets } = await db.send(
@@ -72,38 +102,49 @@ export async function POST(request: Request) {
             ":pk": PROFILE_KEY,
             ":skPrefix": "CASHFLOW#",
           },
-          ScanIndexForward: false, // Descending sort (newest YYYY-MM string first)
+          ScanIndexForward: false,
         })
       );
 
       const latestCashflow = cashflows && cashflows.length > 0 ? cashflows[0] : null;
-      const currentCashReserves = latestCashflow?.cashReserves || 0;
 
       contextString = buildFullUserContext(profile, assets || [], latestCashflow);
     }
 
-    // 2. Prepare the Tool definition for Gemini
+    // 2. Threshold-based summarization (every 5th exchange, synchronous-on-read)
+    if (shouldSummarize(memorySummary, recentExchanges)) {
+      try {
+        memorySummary = await updateSummary(householdId, memorySummary, recentExchanges);
+      } catch (err) {
+        console.error("Summarization failed, continuing with existing summary:", err);
+      }
+    }
+
+    const summaryText = memorySummary?.summary || "";
+
+    // 3. Prepare the Tool definition for Gemini
     const tools = [
       {
         functionDeclarations: [fetchStockDataToolDefinition],
       },
     ];
 
-    // 3. Orchestrate Parallel LLM Calls
-    // With a paid tier, we can process all selected personas concurrently.
+    // 4. Orchestrate Parallel LLM Calls with per-persona history
     const fetchPersonaResponse = async (personaId: string) => {
       try {
         const personaConfig = personas[personaId as keyof typeof personas];
         const ragContext = personaConfig?.hasRag ? await getRagContext(personaId, message) : "";
 
-        // Initialize model with specific system instruction
         const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash", // Reverted to the latest capable Flash model for fast multi-persona chat
-          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext),
+          model: "gemini-2.5-flash",
+          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext, summaryText),
           tools: tools,
         });
 
-        const chat = model.startChat({});
+        // Build per-persona conversation history (last 5 exchanges with this persona)
+        const history = buildPersonaHistory(recentExchanges, personaId, 5);
+
+        const chat = model.startChat({ history });
         let result = await chat.sendMessage(message);
         let responseText = result.response.text();
 
@@ -129,7 +170,7 @@ export async function POST(request: Request) {
 
         return {
           personaId,
-          status: "success",
+          status: "success" as const,
           content: responseText,
         };
       } catch (err) {
@@ -138,7 +179,7 @@ export async function POST(request: Request) {
         const isRateLimit = e.status === 429 || (e.message && e.message.includes('429'));
         return {
           personaId,
-          status: "error",
+          status: "error" as const,
           content: isRateLimit
             ? "I am currently rate-limited by the API. Please try asking again in a moment."
             : "Sorry, I am currently unavailable to provide advice.",
@@ -147,6 +188,11 @@ export async function POST(request: Request) {
     };
 
     const allResponses = await Promise.all(selectedPersonas.map(fetchPersonaResponse));
+
+    // 5. Save exchange to DynamoDB (fire-and-forget)
+    saveExchange(householdId, message, selectedPersonas, allResponses).catch((err) =>
+      console.error("Failed to save exchange:", err)
+    );
 
     return NextResponse.json({ responses: allResponses });
   } catch (error) {

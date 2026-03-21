@@ -29,6 +29,7 @@ const sections = [
         icon: Users,
         subsections: [
             { id: "ab-logic", title: "Logic Mapping" },
+            { id: "ab-memory", title: "EA Memory" },
             { id: "ab-ripple", title: " Ripple Effect" },
         ]
     },
@@ -231,6 +232,43 @@ export default function UserGuideClient() {
                                     Only <em>then</em> does it give the AI the question, along with a hidden tool to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.
                                 </li>
                             </ul>
+                        </div>
+
+                        <div id="ab-memory" ref={el => { contentRefs.current["ab-memory"] = el; }} className="space-y-4">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> EA Memory (Advisor Memory)
+                            </h3>
+                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                Your advisors now remember past conversations. The system uses a <strong className="text-neutral-900 dark:text-white">Hybrid Memory</strong> approach combining short-term chat history with a long-term memory summary, so the Gurus retain context across sessions without the &quot;amnesia&quot; effect of a stateless chat.
+                            </p>
+                            <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Short-Term History</strong>
+                                    Each advisor remembers the last 5 exchanges you&apos;ve had with them specifically. When you ask Buffett a follow-up question, he recalls what he told you before — but he doesn&apos;t see what Housel said. Each guru maintains its own independent conversation thread.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Long-Term Memory Ledger</strong>
+                                    Every 5 exchanges, the system generates a concise summary of what it has learned about you — investment decisions, preferences, stocks discussed, and goals mentioned. This summary is injected into every advisor&apos;s instructions, giving them long-term awareness of your evolving profile.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Previous Session History</strong>
+                                    When you return to the Advisory Board, your past exchanges are loaded in a compact, collapsed format. Click any past exchange to expand the full advisor responses. New conversations appear below a &quot;Today&quot; divider.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Memory Transparency & Control</strong>
+                                    A memory indicator in the header shows when your advisors have active memory. Click it to see exactly what the AI remembers about you. You can <strong>Clear Chat</strong> (remove visible history but keep the summary) or <strong>Reset All Memory</strong> (full amnesia — your advisors forget everything). Chat history is automatically cleaned up after 90 days.
+                                </li>
+                            </ul>
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Graceful Degradation</h4>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                    If the memory system encounters any issue (network error, database timeout), the Advisory Board automatically falls back to its original stateless behavior — your question is still answered, just without historical context. Memory is a seamless enhancement, never a blocker.
+                                </p>
+                            </div>
                         </div>
 
                         <div id="ab-ripple" ref={el => { contentRefs.current["ab-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">

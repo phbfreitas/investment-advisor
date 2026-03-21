@@ -58,6 +58,26 @@ export interface PersonaResponse {
     content: string;
 }
 
+export interface ChatExchange {
+    PK: string;
+    SK: string;
+    userMessage: string;
+    selectedPersonas: string[];
+    responses: PersonaResponse[];
+    ttl: number;
+    entityType: "CHAT";
+}
+
+export interface ChatSummary {
+    PK: string;
+    SK: string;
+    summary: string;
+    lastExchangeTimestamp: string;
+    exchangeCount: number;
+    updatedAt: string;
+    entityType: "CHAT_SUMMARY";
+}
+
 export interface HouseholdUser {
     PK: string;
     SK: string;

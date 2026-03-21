@@ -48,11 +48,21 @@ Each advisor card displays four built-in prompt templates as pill buttons in the
 - **Portfolio Rebalancing** — asks the advisor to identify drift and recommend rebalancing moves.
 - **Financial Health Audit** — prompts a comprehensive audit of income, expenses, savings, and net worth.
 
+### EA Memory (Advisor Memory)
+Your advisors now remember past conversations using a **Hybrid Memory** approach:
+
+- **Short-Term History:** Each advisor remembers the last 5 exchanges you've had with them specifically. Follow-up questions carry full context — but each guru maintains its own independent conversation thread (Buffett doesn't see what Housel said).
+- **Long-Term Memory Ledger:** Every 5 exchanges, the system generates a concise summary of what it has learned about you — investment decisions, preferences, stocks discussed, and goals. This summary is injected into every advisor's instructions, giving them long-term awareness across sessions.
+- **Previous Session History:** When you return, past exchanges load in a compact, collapsed format. Click any to expand. New conversations appear below a "Today" divider.
+- **Memory Transparency & Control:** A memory indicator in the header shows when advisors have active memory. Click it to see exactly what the AI remembers. You can **Clear Chat** (remove visible history, keep summary) or **Reset All Memory** (full amnesia). Chat history auto-cleans after 90 days.
+- **Graceful Degradation:** If the memory system encounters any issue, the Advisory Board falls back to stateless behavior — your question is still answered, just without historical context.
+
 ### Key Features You Can Ask About
 - **Analyze my current Portfolio:** The selected advisors will evaluate your asset allocation based on your exact holdings — and you'll get multi-perspective commentary if you select more than one.
 - **Critique my investment strategy:** Each advisor will compare your current strategy setting against your portfolio and goals through their own philosophical lens.
 - **How much cash do I have?** The AI instantly checks your liquid reserves.
 - **Get live stock quotes:** It will fetch real-time market data during your conversation.
+- **What did I decide last time?** With EA Memory active, the advisor will recall your prior conversations and decisions.
 
 ---
 
