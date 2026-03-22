@@ -26,7 +26,7 @@ const sections = [
     },
     {
         id: "advisory-board",
-        title: "1. Advisory Board",
+        title: "1. Expert Guidance",
         icon: Users,
         subsections: [
             { id: "ab-logic", title: "Logic Mapping" },
@@ -40,6 +40,7 @@ const sections = [
         icon: LayoutDashboard,
         subsections: [
             { id: "port-logic", title: "Mathematical Logic" },
+            { id: "port-dividends", title: "Dividend Summary" },
             { id: "port-ripple", title: "Cascading Effects" },
         ]
     },
@@ -72,7 +73,7 @@ const sections = [
     },
     {
         id: "global-radar",
-        title: "6. Global News Radar",
+        title: "6. Global News Guidance",
         icon: Globe,
         subsections: [
             { id: "radar-logic", title: "The Intelligence Pipeline" },
@@ -181,13 +182,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 1: Advisory Board */}
+                    {/* Section 1: Expert Guidance */}
                     <section id="advisory-board" ref={el => { contentRefs.current["advisory-board"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Investment Advisory Board (Chat Engine)</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Expert Guidance (Chat Engine)</h2>
                         </div>
 
 
@@ -265,7 +266,7 @@ export default function UserGuideClient() {
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
                                     <strong className="text-neutral-900 dark:text-white block mb-1">Previous Session History</strong>
-                                    When you return to the Advisory Board, your past exchanges are loaded in a compact, collapsed format. Click any past exchange to expand the full advisor responses. New conversations appear below a &quot;Today&quot; divider.
+                                    When you return to Expert Guidance, your past exchanges are loaded in a compact, collapsed format. Click any past exchange to expand the full advisor responses. New conversations appear below a &quot;Today&quot; divider.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
@@ -276,7 +277,7 @@ export default function UserGuideClient() {
                             <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                                 <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Graceful Degradation</h4>
                                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                    If the memory system encounters any issue (network error, database timeout), the Advisory Board automatically falls back to its original stateless behavior — your question is still answered, just without historical context. Memory is a seamless enhancement, never a blocker.
+                                    If the memory system encounters any issue (network error, database timeout), Expert Guidance automatically falls back to its original stateless behavior — your question is still answered, just without historical context. Memory is a seamless enhancement, never a blocker.
                                 </p>
                             </div>
                         </div>
@@ -338,6 +339,9 @@ export default function UserGuideClient() {
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Sorting & Filtering:</strong> Click column headers to sort; type in filter boxes to isolate specific rows.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Editable Inline Rows:</strong> Click the blue pencil icon to edit asset details inline.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Live Ticker Price:</strong> Auto-fetches live prices from Yahoo Finance when editing a ticker symbol.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Frozen Columns:</strong> Account, Acct Type, Acct #, and Ticker columns stay pinned on the left as you scroll horizontally through the table.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Sticky Header:</strong> Column headers and filter row remain visible as you scroll vertically through your holdings.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Unavailable Data Indicator:</strong> Fields that cannot be auto-calculated from market data (e.g., 3YR Return for individual stocks, Analyst ratings for small-caps) display a muted dash (—) with a tooltip explaining the limitation.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
                                     </ul>
                                 </div>
@@ -354,6 +358,19 @@ export default function UserGuideClient() {
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Auto-Calculated Fields:</strong> Weight % (position size relative to total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> The table footer auto-sums market value, book cost, and expected dividends across all entries.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">CSV Export:</strong> Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.</li>
+                                    </ul>
+                                </div>
+                                <div id="port-dividends" ref={el => { contentRefs.current["port-dividends"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2 scroll-m-8">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
+                                        <LineChart className="h-4 w-4 mr-2 text-emerald-500" /> Dividend Summary
+                                    </h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                                        Below the Holdings Breakdown table, a dedicated Dividend Summary section provides income projections:
+                                    </p>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Period Selector:</strong> Toggle between Next Month, 3 Months, 6 Months, or 12 Months to project expected dividend income.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Three KPI Cards:</strong> Shows the expected dividends for the selected period, monthly average, and annual total.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Strategy Breakdown:</strong> Dividends are broken down by Strategy Type (Growth, Dividend, Mix/Hybrid) so you can see which part of your portfolio generates the most income.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -603,17 +620,17 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 6: Global News Radar */}
+                    {/* Section 6: Global News Guidance */}
                     <section id="global-radar" ref={el => { contentRefs.current["global-radar"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Globe className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Global News Radar</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Global News Guidance</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The Global News Radar connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
+                            The Global News Guidance connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
                         </p>
 
                         <div id="radar-logic" ref={el => { contentRefs.current["radar-logic"] = el; }} className="space-y-6">
@@ -705,7 +722,7 @@ export default function UserGuideClient() {
                             <div className="p-4 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950 border border-neutral-200 dark:border-neutral-800 relative">
                                 <Zap className="h-6 w-6 text-yellow-500 absolute top-4 right-4 animate-pulse opacity-50" />
                                 <p className="text-neutral-700 dark:text-neutral-300 italic text-sm leading-relaxed max-w-2xl">
-                                    "John links his wife Mary to his Household ID. Because they share the cryptographic partition, the moment John hits 'Save' on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks a question on the Advisory Board, the AI immediately knows about the new money John just added. Zero lag. One interconnected entity."
+                                    "John links his wife Mary to his Household ID. Because they share the cryptographic partition, the moment John hits 'Save' on his iPad in the Portfolio page, Mary's laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks a question on Expert Guidance, the AI immediately knows about the new money John just added. Zero lag. One interconnected entity."
                                 </p>
                             </div>
                         </div>

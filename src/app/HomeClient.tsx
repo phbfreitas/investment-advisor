@@ -221,7 +221,7 @@ export default function Home() {
       {/* Header */}
       <header className="flex-none border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
         <div className="flex items-center justify-between h-14 md:h-16 px-4 md:px-8">
-          <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Investment Advisory Board</h1>
+          <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Expert Guidance</h1>
 
           {/* Memory Status Indicator */}
           {memoryInfo && (
@@ -293,7 +293,7 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome to your Advisory Board</h2>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome to Expert Guidance</h2>
                   <p className="text-neutral-600 dark:text-neutral-400 max-w-lg text-base md:text-lg">
                     Consult your panel of legendary investors for guidance, market analysis, or strategy reviews tailored to your financial context.
                   </p>
@@ -403,6 +403,22 @@ export default function Home() {
 
       {/* Input Area */}
       <div className="flex-none p-4 md:p-6 bg-gradient-to-t from-neutral-50 via-neutral-50 dark:from-[#050505] dark:via-[#050505] to-transparent transition-colors duration-300">
+        <div className="max-w-4xl mx-auto">
+          {/* Quick Prompts above input */}
+          {!isLoadingHistory && !isLoading && (
+            <div className="flex flex-wrap gap-2 justify-center mb-3">
+              {PROMPT_TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  onClick={() => setInputValue(tmpl.prompt)}
+                  className="px-3 py-1.5 rounded-full text-xs bg-white/5 border border-white/10 hover:bg-white/10 hover:border-teal-500/30 transition-colors"
+                >
+                  {tmpl.emoji} {tmpl.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="glass-panel p-2 flex items-end relative shadow-xl dark:shadow-2xl shadow-teal-900/5 dark:shadow-teal-900/10 focus-within:ring-1 focus-within:ring-teal-500/50 transition-all">
             <textarea

@@ -157,7 +157,7 @@ export default function GlobalRadarClient() {
     return (
         <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
             <header className="flex-none h-16 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 transition-colors duration-300">
-                <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Global News Radar</h1>
+                <h1 className="text-lg md:text-xl font-medium text-neutral-900 dark:text-neutral-200">Global News Guidance</h1>
             </header>
 
             <div className="w-full p-4 md:p-8">
@@ -168,7 +168,7 @@ export default function GlobalRadarClient() {
                             <Globe className="h-8 w-8 text-teal-600 dark:text-teal-400" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Global News Radar</h2>
+                            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Global News Guidance</h2>
                             <p className="text-neutral-600 dark:text-neutral-400">
                                 Geopolitical intelligence mapped to your portfolio.
                             </p>

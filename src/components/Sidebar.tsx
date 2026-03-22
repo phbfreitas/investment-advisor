@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
 const navigation = [
-    { name: "Advisory Board", href: "/", icon: Users },
+    { name: "Expert Guidance", href: "/", icon: Users },
     { name: "My Investment Portfolio", href: "/dashboard", icon: LayoutDashboard },
     { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
     { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },
     { name: "AI Guidance", href: "/profile/guidance", icon: Target },
-    { name: "Global News Radar", href: "/global-radar", icon: Globe },
+    { name: "Global News Guidance", href: "/global-radar", icon: Globe },
     { name: "User Guide", href: "/user-guide", icon: BookOpen },
     { name: "Settings", href: "/settings", icon: Settings },
 ];

@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const [sortConfig, setSortConfig] = useState<{ key: keyof Asset; direction: 'asc' | 'desc' } | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
+  // Dividend summary period
+  const [dividendPeriod, setDividendPeriod] = useState<number>(12);
+
   // Option lists derived from existing data
   const accounts = useMemo(() => Array.from(new Set(assets.map(a => a.account).filter(Boolean))), [assets]);
   const securityTypes = useMemo(() => Array.from(new Set(assets.map(a => a.securityType).filter(Boolean))), [assets]);
@@ -184,7 +187,6 @@ export default function DashboardPage() {
       accountNumber: "",
       accountType: "",
       risk: "",
-      volatility: 0,
       expectedAnnualDividends: 0
     });
   };
@@ -274,7 +276,6 @@ export default function DashboardPage() {
           threeYearReturn: data.threeYearReturn || 0,
           analystConsensus: data.analystConsensus || "",
           externalRating: data.externalRating || "",
-          volatility: data.volatility || 0,
           beta: data.beta || 0,
           riskFlag: data.riskFlag || "",
           marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
@@ -326,10 +327,10 @@ export default function DashboardPage() {
     URL.revokeObjectURL(url);
   };
 
-  const renderSortableHeader = (label: string, sortKey: keyof Asset) => (
+  const renderSortableHeader = (label: string, sortKey: keyof Asset, extraClassName = "") => (
     <th
       key={sortKey}
-      className="px-3 py-3 font-semibold text-neutral-900 dark:text-neutral-100 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group select-none whitespace-nowrap"
+      className={`px-3 py-3 font-semibold text-neutral-900 dark:text-neutral-100 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group select-none whitespace-nowrap ${extraClassName}`}
       onClick={() => handleSort(sortKey)}
     >
       <div className="flex items-center space-x-1">
@@ -345,8 +346,19 @@ export default function DashboardPage() {
     </th>
   );
 
-  const renderFilterInput = (filterKey: string, widthClass = "w-20") => (
-    <td key={filterKey} className="px-2 py-2">
+  // Sticky classes for frozen columns (first 4)
+  const stickyCol1 = "sticky left-0 z-10 bg-neutral-50 dark:bg-neutral-900/50";
+  const stickyCol2 = "sticky left-[120px] z-10 bg-neutral-50 dark:bg-neutral-900/50";
+  const stickyCol3 = "sticky left-[210px] z-10 bg-neutral-50 dark:bg-neutral-900/50";
+  const stickyCol4 = "sticky left-[290px] z-10 bg-neutral-50 dark:bg-neutral-900/50 border-r-2 border-neutral-300 dark:border-neutral-600";
+  const stickyBodyCol1 = "sticky left-0 z-10 bg-white dark:bg-[#0a0a0a]";
+  const stickyBodyCol2 = "sticky left-[120px] z-10 bg-white dark:bg-[#0a0a0a]";
+  const stickyBodyCol3 = "sticky left-[210px] z-10 bg-white dark:bg-[#0a0a0a]";
+  const stickyBodyCol4 = "sticky left-[290px] z-10 bg-white dark:bg-[#0a0a0a] border-r-2 border-neutral-300 dark:border-neutral-600";
+  const stickyTotalsCol1 = "sticky left-0 z-10 bg-neutral-100 dark:bg-neutral-800/50";
+
+  const renderFilterInput = (filterKey: string, widthClass = "w-20", extraClassName = "") => (
+    <td key={filterKey} className={`px-2 py-2 ${extraClassName}`}>
       <input
         type="text"
         placeholder="Filter..."
@@ -426,7 +438,7 @@ export default function DashboardPage() {
       </header>
 
       <div className="w-full p-4 md:p-8">
-        <div className="max-w-[1400px] mx-auto space-y-8">
+        <div className="mx-auto space-y-8">
 
           {message.text && (
             <div className={`p-4 rounded-lg flex items-center space-x-3 ${message.type === 'success' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
@@ -440,7 +452,7 @@ export default function DashboardPage() {
             <div className="glass-panel p-6 flex flex-col justify-center">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Market Value</span>
               <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
-                \${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
             </div>
@@ -474,43 +486,43 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[75vh]">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-0 z-20">
                   <tr>
-                    {renderSortableHeader("Account", "account")}
-                    {renderSortableHeader("Ticker", "ticker")}
-                    {renderSortableHeader("Security type", "securityType")}
+                    {renderSortableHeader("Account", "account", `${stickyCol1} min-w-[120px]`)}
+                    {renderSortableHeader("Acct Type", "accountType", `${stickyCol2} min-w-[90px]`)}
+                    {renderSortableHeader("Acct #", "accountNumber", `${stickyCol3} min-w-[80px]`)}
+                    {renderSortableHeader("Ticker", "ticker", `${stickyCol4} min-w-[90px]`)}
+                    {renderSortableHeader("Security Type", "securityType")}
                     {renderSortableHeader("Strategy Type", "strategyType")}
                     {renderSortableHeader("Call", "call")}
                     {renderSortableHeader("Sector", "sector")}
                     {renderSortableHeader("Market", "market")}
                     {renderSortableHeader("Currency", "currency")}
                     {renderSortableHeader("Mgt Style", "managementStyle")}
-                    {renderSortableHeader("Mgt Fee", "managementFee")}
+                    {renderSortableHeader("Mgt Fee %", "managementFee")}
                     {renderSortableHeader("# Tickers", "quantity")}
-                    {renderSortableHeader("Live $ ticker", "liveTickerPrice")}
-                    {renderSortableHeader("Book cost", "bookCost")}
+                    {renderSortableHeader("Live $", "liveTickerPrice")}
+                    {renderSortableHeader("Book Cost", "bookCost")}
                     {renderSortableHeader("Market Value", "marketValue")}
-                    {renderSortableHeader("Profit/loss", "profitLoss")}
-                    {renderSortableHeader("Yield", "yield")}
-                    {renderSortableHeader("1 YR Return", "oneYearReturn")}
-                    {renderSortableHeader("3 YR Return", "threeYearReturn")}
+                    {renderSortableHeader("Profit/Loss", "profitLoss")}
+                    {renderSortableHeader("Yield %", "yield")}
+                    {renderSortableHeader("1YR Return %", "oneYearReturn")}
+                    {renderSortableHeader("3YR Return %", "threeYearReturn")}
                     {renderSortableHeader("Risk", "risk")}
-                    {renderSortableHeader("Volatility", "volatility")}
                     {renderSortableHeader("Expected Div", "expectedAnnualDividends")}
                     {renderSortableHeader("Ext. Rating", "externalRating")}
-                    {renderSortableHeader("Strategy", "strategyType")}
                     {renderSortableHeader("Ex-Div Date", "exDividendDate")}
                     {renderSortableHeader("Analyst", "analystConsensus")}
                     {renderSortableHeader("Beta", "beta")}
-                    {renderSortableHeader("Acct #", "accountNumber")}
-                    {renderSortableHeader("Acct Type", "accountType")}
                     <th className="px-3 py-3 text-right">Actions</th>
                   </tr>
                   <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
-                    {renderFilterInput("account")}
-                    {renderFilterInput("ticker")}
+                    {renderFilterInput("account", "w-20", stickyCol1)}
+                    {renderFilterInput("accountType", "w-20", stickyCol2)}
+                    {renderFilterInput("accountNumber", "w-20", stickyCol3)}
+                    {renderFilterInput("ticker", "w-20", stickyCol4)}
                     {renderFilterInput("securityType", "w-24")}
                     {renderFilterInput("strategyType", "w-28")}
                     {renderFilterInput("call", "w-16")}
@@ -528,15 +540,11 @@ export default function DashboardPage() {
                     {renderFilterInput("oneYearReturn")}
                     {renderFilterInput("threeYearReturn")}
                     {renderFilterInput("risk", "w-16")}
-                    {renderFilterInput("volatility")}
                     {renderFilterInput("expectedAnnualDividends")}
                     {renderFilterInput("externalRating")}
-                    {renderFilterInput("strategyType", "w-24")}
                     {renderFilterInput("exDividendDate", "w-24")}
                     {renderFilterInput("analystConsensus", "w-20")}
                     {renderFilterInput("beta", "w-16")}
-                    {renderFilterInput("accountNumber", "w-20")}
-                    {renderFilterInput("accountType", "w-20")}
                     <td className="px-3 py-2 text-right">
                       {Object.keys(filters).length > 0 && (
                         <button onClick={clearFilters} className="text-neutral-400 hover:text-red-500 transition-colors" title="Clear Filters">
@@ -591,63 +599,66 @@ export default function DashboardPage() {
                         return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue}</span>;
                       };
 
+                      // Visual indicator for fields that couldn't be auto-calculated
+                      const naIndicator = (value: string | number | null | undefined, suffix = "") => {
+                        if (value === null || value === undefined || value === "" || value === 0) {
+                          return <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>;
+                        }
+                        return <span>{typeof value === 'number' ? value.toLocaleString() : value}{suffix}</span>;
+                      };
+
                       return (
                         <tr key={asset.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors">
-                          <td className="px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200">
+                          {/* 1. Account */}
+                          <td className={`px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200 ${stickyBodyCol1} min-w-[120px]`}>
                             {isEditing ? (
                               <>
-                                <input
-                                  type="text"
-                                  list="account-suggestions"
-                                  className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                  value={(editForm.account as string) ?? ""}
-                                  onChange={(e) => handleEditChange("account", e.target.value)}
-                                />
-                                <datalist id="account-suggestions">
-                                  {accounts.map(a => <option key={a} value={a} />)}
-                                </datalist>
+                                <input type="text" list="account-suggestions" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.account as string) ?? ""} onChange={(e) => handleEditChange("account", e.target.value)} />
+                                <datalist id="account-suggestions">{accounts.map(a => <option key={a} value={a} />)}</datalist>
                               </>
                             ) : (
                               <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.account}</span>
                             )}
                           </td>
-                          <td className="px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100">
+                          {/* 2. Acct Type */}
+                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 ${stickyBodyCol2} min-w-[90px]`}>
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
+                          </td>
+                          {/* 3. Acct # */}
+                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 ${stickyBodyCol3} min-w-[80px]`}>
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
+                          </td>
+                          {/* 4. Ticker */}
+                          <td className={`px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100 ${stickyBodyCol4} min-w-[90px]`}>
                             {isEditing ? (
-                              <input
-                                type="text"
-                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.ticker as string) || ""}
-                                onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())}
-                                onBlur={() => handleTickerLookup(editForm.ticker || "")}
-                              />
+                              <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.ticker as string) || ""} onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())} onBlur={() => handleTickerLookup(editForm.ticker || "")} />
                             ) : (
                               <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.ticker}</span>
                             )}
                           </td>
+                          {/* 5. Security Type */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 6. Strategy Type */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 7. Call */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 8. Sector */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 9. Market */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 10. Currency */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 11. Mgt Style — N/A if missing */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : <span>{asset.managementStyle || "N/A"}</span>}
                           </td>
+                          {/* 12. Mgt Fee % — N/A if missing */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("managementFee", false, [], "number") : <span>{asset.managementFee != null && asset.managementFee !== 0 ? `${Number(asset.managementFee).toFixed(2)}%` : "N/A"}</span>}
                           </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("sector", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("managementFee", false, [], "number")}</td>
+                          {/* 13. Quantity */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
-                          {/* Live Ticker: Readonly when not editing, automatically updated based on ticker input */}
+                          {/* 14. Live $ — backslash fix */}
                           <td className="px-3 py-3 text-emerald-600 dark:text-emerald-400 font-medium">
                             {isEditing ? (
                               <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={editForm.liveTickerPrice ?? 0} onChange={e => handleEditChange('liveTickerPrice', parseFloat(e.target.value) || 0)} />
@@ -655,99 +666,51 @@ export default function DashboardPage() {
                               (() => {
                                 const price = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
                                 const numPrice = Number(price);
-                                return isNaN(numPrice) ? "N/A" : `\$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                return isNaN(numPrice) ? "N/A" : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                               })()
                             )}
                           </td>
+                          {/* 15. Book Cost */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("bookCost", false, [], "number")}</td>
+                          {/* 16. Market Value */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("marketValue", false, [], "number")}</td>
+                          {/* 17. Profit/Loss */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("yield", false, [], "number")}</td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("oneYearReturn", false, [], "number")}</td>
+                          {/* 18. Yield % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.threeYearReturn as number) ?? 0}
-                                onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)}
-                              />
-                            ) : (
-                              <span>{Number(asset.threeYearReturn || asset.fiveYearReturn || 0).toLocaleString()}</span>
-                            )}
+                            {isEditing ? renderField("yield", false, [], "number") : <span>{Number(asset.yield || 0).toFixed(2)}%</span>}
                           </td>
+                          {/* 19. 1YR Return % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("oneYearReturn", false, [], "number") : <span>{Number(asset.oneYearReturn || 0).toFixed(2)}%</span>}
                           </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("volatility", false, [], "number")}</td>
+                          {/* 20. 3YR Return % */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number) ?? 0} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : naIndicator(Number(asset.threeYearReturn || asset.fiveYearReturn || 0) || null, "%")}
+                          </td>
+                          {/* 21. Risk */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 22. Expected Div */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("externalRating", false, [], "text")}</td>
+                          {/* 23. Ext. Rating */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("externalRating", false, [], "text") : naIndicator(asset.externalRating)}
                           </td>
+                          {/* 24. Ex-Div Date */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.exDividendDate as string) ?? ""}
-                                onChange={(e) => handleEditChange("exDividendDate", e.target.value)}
-                              />
-                            ) : (
-                              <span>{asset.exDividendDate}</span>
+                            {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : naIndicator(asset.exDividendDate)}
+                          </td>
+                          {/* 25. Analyst */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : naIndicator(asset.analystConsensus)}
+                          </td>
+                          {/* 26. Beta */}
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? <input type="number" className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.beta as number) ?? 0} onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)} /> : (
+                              asset.beta ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(asset.beta).toLocaleString()}</span> : naIndicator(null)
                             )}
                           </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.analystConsensus as string) ?? ""}
-                                onChange={(e) => handleEditChange("analystConsensus", e.target.value)}
-                              />
-                            ) : (
-                              <span>{asset.analystConsensus}</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="number"
-                                className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.beta as number) ?? 0}
-                                onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)}
-                              />
-                            ) : (
-                              <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>
-                                {Number(asset.beta || 0).toLocaleString()}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.accountNumber as string) ?? ""}
-                                onChange={(e) => handleEditChange("accountNumber", e.target.value)}
-                              />
-                            ) : (
-                              <span>{asset.accountNumber}</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
-                                value={(editForm.accountType as string) ?? ""}
-                                onChange={(e) => handleEditChange("accountType", e.target.value)}
-                              />
-                            ) : (
-                              <span>{asset.accountType}</span>
-                            )}
-                          </td>
-
+                          {/* Actions */}
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               {isEditing ? (
@@ -756,12 +719,8 @@ export default function DashboardPage() {
                                 </button>
                               ) : (
                                 <>
-                                  <button onClick={() => startEdit(asset)} className="text-blue-500 hover:text-blue-700 p-1">
-                                    <Edit2 className="h-4 w-4" />
-                                  </button>
-                                  <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1">
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
+                                  <button onClick={() => startEdit(asset)} className="text-blue-500 hover:text-blue-700 p-1"><Edit2 className="h-4 w-4" /></button>
+                                  <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1"><Trash2 className="h-4 w-4" /></button>
                                 </>
                               )}
                             </div>
@@ -773,11 +732,15 @@ export default function DashboardPage() {
                   {/* Totals Row */}
                   {(assets.length > 0 || editingId === "NEW") && (
                     <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
-                      <td colSpan={13} className="px-3 py-4 text-right">TOTAL:</td>
-                      <td className="px-3 py-4">\${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td colSpan={6}></td>
-                      <td className="px-3 py-4">\${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td colSpan={8}></td>
+                      <td className={`px-3 py-4 ${stickyTotalsCol1}`}></td>
+                      <td></td>
+                      <td></td>
+                      <td className={`${stickyBodyCol4} bg-neutral-100 dark:bg-neutral-800/50`}></td>
+                      <td colSpan={11} className="px-3 py-4 text-right">TOTAL:</td>
+                      <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td colSpan={5}></td>
+                      <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                      <td colSpan={5}></td>
                     </tr>
                   )}
                 </tbody>
@@ -794,6 +757,73 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Dividend Summary Section */}
+          {assets.length > 0 && (
+            <div className="glass-panel overflow-hidden">
+              <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between transition-colors duration-300">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 flex items-center">
+                  <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-500 mr-2" />
+                  Dividend Summary
+                </h3>
+                <select
+                  value={dividendPeriod}
+                  onChange={(e) => setDividendPeriod(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  <option value={1}>Next Month</option>
+                  <option value={3}>Next 3 Months</option>
+                  <option value={6}>Next 6 Months</option>
+                  <option value={12}>Next 12 Months</option>
+                </select>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">
+                      Expected Dividends ({dividendPeriod === 1 ? "1 Month" : `${dividendPeriod} Months`})
+                    </span>
+                    <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                      ${(totalExpectedDividends / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Monthly Average</span>
+                    <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+                      ${(totalExpectedDividends / 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Annual Total</span>
+                    <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                      ${totalExpectedDividends.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+                {/* Breakdown by Strategy Type */}
+                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800">
+                  <h4 className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 mb-3 uppercase tracking-wider">By Strategy Type</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {Object.entries(
+                      assets.reduce<Record<string, number>>((acc, a) => {
+                        const key = a.strategyType || "Unclassified";
+                        acc[key] = (acc[key] || 0) + (Number(a.expectedAnnualDividends) || 0);
+                        return acc;
+                      }, {})
+                    ).sort((a, b) => b[1] - a[1]).map(([type, annual]) => (
+                      <div key={type} className="bg-neutral-50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50 rounded-lg p-3">
+                        <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-1">{type}</span>
+                        <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                          ${(annual / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-xs text-neutral-400 ml-1">/ {dividendPeriod}mo</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
