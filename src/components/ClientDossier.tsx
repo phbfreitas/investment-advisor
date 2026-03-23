@@ -40,12 +40,12 @@ function parseSections(text: string): Record<string, string> {
 }
 
 export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobileDrawer, onClose }: ClientDossierProps) {
-    const [activePersona, setActivePersona] = useState<PersonaId>(PERSONA_IDS[0]);
+    const [activePersona, setActivePersona] = useState<PersonaId | null>(null);
     const [confirmReset, setConfirmReset] = useState<string | null>(null);
 
-    const activeSummary = summaries[activePersona];
+    const activeSummary = activePersona ? summaries[activePersona] : null;
     const parsedSections = activeSummary?.text ? parseSections(activeSummary.text) : null;
-    const persona = personas[activePersona];
+    const persona = activePersona ? personas[activePersona] : null;
 
     const hasAnyMemory = Object.values(summaries).some((s) => s !== null);
 
@@ -68,43 +68,57 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                 )}
             </div>
 
-            {/* Advisor Tabs */}
-            <div className="flex gap-1.5 p-3 border-b border-neutral-200 dark:border-neutral-800 overflow-x-auto custom-scrollbar">
-                {PERSONA_IDS.map((pid) => {
-                    const p = personas[pid];
-                    const hasSummary = summaries[pid] !== null;
-                    return (
-                        <button
-                            key={pid}
-                            onClick={() => { setActivePersona(pid); setConfirmReset(null); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${activePersona === pid
-                                ? "bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 ring-1 ring-teal-500/30"
-                                : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                }`}
-                        >
-                            <span className="text-sm">{p.avatar}</span>
-                            <span className="hidden sm:inline">{p.name.split(" ")[0]}</span>
-                            {hasSummary && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                            )}
-                        </button>
-                    );
-                })}
+            {/* Advisor Selector */}
+            <div className="p-3 border-b border-neutral-200 dark:border-neutral-800">
+                <div className="relative">
+                    <select
+                        value={activePersona ?? ""}
+                        onChange={(e) => { setActivePersona((e.target.value || null) as PersonaId | null); setConfirmReset(null); }}
+                        className="w-full appearance-none bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors cursor-pointer"
+                    >
+                        <option value="">Select an Advisor</option>
+                        {PERSONA_IDS.map((pid) => {
+                            const p = personas[pid];
+                            const hasSummary = summaries[pid] !== null;
+                            return (
+                                <option key={pid} value={pid}>
+                                    {p.avatar} {p.name}{hasSummary ? " \u2022" : ""}
+                                </option>
+                            );
+                        })}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
+                        <svg className="h-4 w-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                </div>
             </div>
 
             {/* Dossier Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
-                {!parsedSections ? (
-                    /* Empty state */
+                {!activePersona ? (
+                    /* No advisor selected */
+                    <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
+                        <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
+                            <BrainCircuit className="h-6 w-6 text-neutral-400" />
+                        </div>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium mb-1">
+                            Select an advisor
+                        </p>
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 max-w-[200px]">
+                            Choose an advisor above to view their memory dossier of your investment profile.
+                        </p>
+                    </div>
+                ) : !parsedSections ? (
+                    /* Advisor selected but no memory */
                     <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
                         <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl mb-4">
-                            {persona.avatar}
+                            {persona!.avatar}
                         </div>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium mb-1">
                             No memory yet
                         </p>
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 max-w-[200px]">
-                            Chat with {persona.name} to build their understanding of your investment profile.
+                            Chat with {persona!.name} to build their understanding of your investment profile.
                         </p>
                     </div>
                 ) : (
@@ -122,7 +136,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                                     ? "text-neutral-400 dark:text-neutral-600 italic"
                                     : "text-neutral-700 dark:text-neutral-300"
                                     }`}>
-                                    {isEmpty ? `Not yet discussed with ${persona.name.split(" ")[0]}` : content}
+                                    {isEmpty ? `Not yet discussed with ${persona!.name.split(" ")[0]}` : content}
                                 </p>
                             </div>
                         );
@@ -148,7 +162,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium text-neutral-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
                             >
                                 <Trash2 className="h-3 w-3" />
-                                Reset {persona.name.split(" ")[0]}
+                                Reset {persona!.name.split(" ")[0]}
                             </button>
                         )}
                         {hasAnyMemory && (
@@ -166,7 +180,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                         <p className="text-xs text-red-700 dark:text-red-400">
                             {confirmReset === "all"
                                 ? "All advisors will forget everything about you."
-                                : `${persona.name} will forget all prior conversations with you.`}
+                                : `${persona!.name} will forget all prior conversations with you.`}
                         </p>
                         <div className="flex gap-2">
                             <button
