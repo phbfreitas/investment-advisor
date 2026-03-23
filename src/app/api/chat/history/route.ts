@@ -24,8 +24,8 @@ export async function GET(request: Request) {
       getAllSummaries(householdId),
     ]);
 
-    // Backfill: if exchanges exist but per-advisor summaries are missing, trigger summarization
-    if (exchanges.length >= 5) {
+    // Backfill: regenerate summaries that are missing or lack the "Our Journey So Far" section
+    if (exchanges.length >= 3) {
       const personasWithExchanges = new Set<string>();
       for (const ex of exchanges) {
         for (const pid of ex.selectedPersonas) {
@@ -35,13 +35,19 @@ export async function GET(request: Request) {
 
       const backfillPromises: Promise<void>[] = [];
       for (const pid of personasWithExchanges) {
-        if (summaries[pid] === null) {
+        const needsBackfill =
+          summaries[pid] === null ||
+          (summaries[pid]?.text && !summaries[pid]!.text.includes("### Our Journey So Far"));
+
+        if (needsBackfill) {
           backfillPromises.push(
             (async () => {
               try {
                 const personaSummary = await getSummary(householdId, pid);
-                if (shouldSummarize(personaSummary, exchanges, pid)) {
-                  const updated = await updateSummary(householdId, pid, personaSummary, exchanges);
+                // For format migration, force regeneration even if threshold not met
+                const needsFormatMigration = personaSummary?.summary && !personaSummary.summary.includes("### Our Journey So Far");
+                if (needsFormatMigration || shouldSummarize(personaSummary, exchanges, pid)) {
+                  const updated = await updateSummary(householdId, pid, needsFormatMigration ? null : personaSummary, exchanges);
                   summaries[pid] = {
                     text: updated.summary,
                     exchangeCount: updated.exchangeCount,

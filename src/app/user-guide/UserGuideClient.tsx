@@ -30,7 +30,7 @@ const sections = [
         icon: Users,
         subsections: [
             { id: "ab-logic", title: "Logic Mapping" },
-            { id: "ab-memory", title: "Client Dossier" },
+            { id: "ab-memory", title: "Advisor Notebook" },
             { id: "ab-ripple", title: " Ripple Effect" },
         ]
     },
@@ -247,31 +247,41 @@ export default function UserGuideClient() {
 
                         <div id="ab-memory" ref={el => { contentRefs.current["ab-memory"] = el; }} className="space-y-4">
                             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> Client Dossier (Advisor Memory)
+                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> Advisor Notebook (EA Memory)
                             </h3>
                             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                Your advisors build <strong className="text-neutral-900 dark:text-white">per-advisor structured memory</strong>, surfaced as a persistent <strong className="text-neutral-900 dark:text-white">Client Dossier</strong> sidebar. Each guru develops their own independent understanding of your investment profile — Buffett doesn&apos;t see what Housel discussed.
+                                Your advisors build <strong className="text-neutral-900 dark:text-white">per-advisor structured memory</strong>, surfaced as a persistent <strong className="text-neutral-900 dark:text-white">Advisor Notebook</strong> sidebar. Each guru develops their own independent understanding of your investment profile — Buffett doesn&apos;t see what Housel discussed.
                             </p>
                             <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Structured Dossier Cards</strong>
-                                    Each advisor&apos;s memory is organized into 5 sections: <em>Investment Thesis</em>, <em>Current Asset Focus</em>, <em>Risk Parameters</em>, <em>Active Dilemmas</em>, and <em>Key Decisions</em>. These display as glassmorphic cards in the sidebar, giving you instant visibility into what each guru knows about you.
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Our Journey So Far</strong>
+                                    The centerpiece of each advisor&apos;s notebook is a warm, narrative summary of your conversations together — covering key topics discussed, how your thinking has evolved, and the trajectory of your investment journey with that advisor. It reads like an advisor recounting their relationship with you.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Structured Section Cards</strong>
+                                    Below the narrative, each advisor&apos;s memory is organized into 5 sections: <em>Investment Thesis</em>, <em>Current Asset Focus</em>, <em>Risk Parameters</em>, <em>Active Dilemmas</em>, and <em>Key Decisions</em>. These display as glassmorphic cards in the sidebar, giving you instant visibility into what each guru knows about you.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
                                     <strong className="text-neutral-900 dark:text-white block mb-1">Two-Column Executive Board</strong>
-                                    On desktop, the Advisory Board uses a two-column layout — the Client Dossier on the left (300px), your active conversation on the right. On mobile, the Dossier opens as a slide-out drawer via the &quot;Dossier&quot; button in the header.
+                                    On desktop, the Advisory Board uses a two-column layout — the Advisor Notebook on the left (300px), your active conversation on the right. On mobile, the Notebook opens as a slide-out drawer via the &quot;Notebook&quot; button in the header.
+                                </li>
+                                <li className="relative">
+                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Progress Indicator</strong>
+                                    For advisors you&apos;ve started chatting with but haven&apos;t reached the memory threshold yet (3 exchanges), a progress bar shows how close you are to generating their first notebook entry.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
                                     <strong className="text-neutral-900 dark:text-white block mb-1">Transcript Archive</strong>
-                                    A &quot;View Transcript Archive&quot; link in the Dossier opens a date-grouped modal showing all past exchanges. Each day&apos;s conversations are expandable to see the full advisor responses — keeping the main board clean while preserving full audit capability.
+                                    A &quot;View Transcript Archive&quot; link in the Notebook opens a date-grouped modal showing all past exchanges. Each day&apos;s conversations are expandable to see the full advisor responses — keeping the main board clean while preserving full audit capability.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
                                     <strong className="text-neutral-900 dark:text-white block mb-1">Memory Control</strong>
-                                    Reset a single advisor&apos;s memory independently, or reset all advisors at once from the Dossier footer. Chat history auto-cleans after 180 days. Advisors naturally reference past decisions when relevant, but never force references on unrelated questions.
+                                    Reset a single advisor&apos;s memory independently, or reset all advisors at once from the Notebook footer. Chat history auto-cleans after 180 days. Advisors naturally reference past decisions when relevant, but never force references on unrelated questions.
                                 </li>
                             </ul>
                             <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">

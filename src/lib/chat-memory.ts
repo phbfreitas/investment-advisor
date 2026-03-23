@@ -9,9 +9,9 @@ import {
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ChatExchange, ChatSummary, PersonaResponse, PersonaSummaryMap } from "@/types";
 
-const SUMMARY_THRESHOLD = 5;
+const SUMMARY_THRESHOLD = 3;
 const TTL_DAYS = 180;
-const MAX_SUMMARY_WORDS = 500;
+const MAX_SUMMARY_WORDS = 600;
 
 const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki", "ramsey"];
 
@@ -162,7 +162,10 @@ export async function updateSummary(
 ${existingSummary?.summary ? `EXISTING MEMORY:\n${existingSummary.summary}\n\n` : ""}NEW CONVERSATIONS:\n${exchangeText}
 
 INSTRUCTIONS:
-- Produce an updated summary (max ${MAX_SUMMARY_WORDS} words) using EXACTLY these 5 sections with ### headers:
+- Produce an updated summary (max ${MAX_SUMMARY_WORDS} words) using EXACTLY these 6 sections with ### headers:
+
+### Our Journey So Far
+A warm, engaging narrative summary of the conversations so far — written as if the advisor is recounting their relationship with this client. Cover key topics discussed, how the user's thinking has evolved, and the overall trajectory of their investment journey together. Write in a flowing, enjoyable-to-read style (half a page in length). This is the centerpiece of the advisor's notebook.
 
 ### Investment Thesis
 The user's overarching investment philosophy as understood from conversations with this advisor.
@@ -180,9 +183,10 @@ Decisions the user is currently weighing or debating.
 Concrete commitments or actions the user has made (e.g., "Decided to sell 50 shares of TSLA", "Plans to invest $5K/month into VFV").
 
 RULES:
-- Always output ALL 5 sections, even if a section has no content (write "None discussed yet." for empty sections)
+- Always output ALL 6 sections, even if a section has no content (write "None discussed yet." for empty sections)
+- The "Our Journey So Far" section should ALWAYS have meaningful content — even after a single conversation, write a warm narrative about what was discussed
 - Merge new information with existing memory, removing outdated details
-- Be factual and concise — no opinions or advice
+- Be factual and concise for the 5 structured sections — no opinions or advice
 - If the new conversations contain no meaningful information (e.g., "thanks", "ok"), return the existing memory unchanged
 - Do NOT include any text before the first ### header`;
 

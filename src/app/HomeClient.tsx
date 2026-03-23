@@ -163,7 +163,7 @@ export default function Home() {
               className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/30 hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
             >
               <Brain className="h-3.5 w-3.5" />
-              <span>Dossier</span>
+              <span>Notebook</span>
               {hasAnyMemory && <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />}
             </button>
           </div>
@@ -204,6 +204,7 @@ export default function Home() {
         <div className="hidden md:block overflow-y-auto">
           <ClientDossier
             summaries={summaries}
+            personaExchangeCounts={personaHistoryCounts}
             onOpenArchive={() => setShowArchive(true)}
             onResetMemory={handleResetMemory}
           />
@@ -233,7 +234,7 @@ export default function Home() {
                     <>
                       <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Welcome back</h2>
                       <p className="text-neutral-600 dark:text-neutral-400 max-w-lg text-base md:text-lg">
-                        Your advisors remember your previous conversations. Check the Dossier to see what they know, or start a new conversation.
+                        Your advisors remember your previous conversations. Check the Advisor Notebook to see what they know, or start a new conversation.
                       </p>
                     </>
                   ) : (
@@ -349,6 +350,7 @@ export default function Home() {
           <div className="absolute inset-y-0 left-0 w-[85%] max-w-[340px] animate-in slide-in-from-left duration-300">
             <ClientDossier
               summaries={summaries}
+              personaExchangeCounts={personaHistoryCounts}
               onOpenArchive={() => { setShowMobileDossier(false); setShowArchive(true); }}
               onResetMemory={handleResetMemory}
               isMobileDrawer

@@ -48,15 +48,17 @@ Each advisor card displays four built-in prompt templates as pill buttons in the
 - **Portfolio Rebalancing** — asks the advisor to identify drift and recommend rebalancing moves.
 - **Financial Health Audit** — prompts a comprehensive audit of income, expenses, savings, and net worth.
 
-### EA Memory — Client Dossier (Advisor Memory)
-Your advisors now remember past conversations using a **Per-Advisor Structured Memory** system, surfaced as a persistent **Client Dossier** sidebar:
+### EA Memory — Advisor Notebook
+Your advisors now remember past conversations using a **Per-Advisor Structured Memory** system, surfaced as a persistent **Advisor Notebook** sidebar:
 
-- **Per-Advisor Memory:** Each advisor builds their own independent understanding of you. Buffett's dossier reflects only conversations you've had with Buffett — he doesn't see what Housel discussed. This means each guru develops a unique perspective on your investment profile.
-- **Structured Dossier:** Instead of a raw text blob, each advisor's memory is organized into 5 structured sections: **Investment Thesis**, **Current Asset Focus**, **Risk Parameters**, **Active Dilemmas**, and **Key Decisions**. These are displayed as glassmorphic cards in the Client Dossier sidebar.
-- **Two-Column Layout:** On desktop, the Advisory Board uses a two-column layout — the Client Dossier occupies the left 300px showing what your selected advisor knows, while the right column is your active conversation. On mobile, the Dossier opens as a slide-out drawer via the "Dossier" button.
-- **Advisor Tabs:** Switch between advisors in the Dossier to see each one's independent memory. A teal dot indicates advisors who have active memory.
-- **Transcript Archive:** A "View Transcript Archive" link in the Dossier opens a date-grouped modal showing all past exchanges, expandable to see full advisor responses.
-- **Memory Control:** Reset a single advisor's memory or reset all advisors at once from the Dossier footer. Chat history auto-cleans after 180 days.
+- **Per-Advisor Memory:** Each advisor builds their own independent understanding of you. Buffett's notebook reflects only conversations you've had with Buffett — he doesn't see what Housel discussed. This means each guru develops a unique perspective on your investment profile.
+- **Our Journey So Far:** The centerpiece of each advisor's notebook is a warm, narrative summary of your conversations together — covering key topics, how your thinking has evolved, and the trajectory of your investment journey. This reads like an advisor recounting their relationship with you.
+- **Structured Sections:** Below the narrative, each advisor's memory is organized into 5 structured sections: **Investment Thesis**, **Current Asset Focus**, **Risk Parameters**, **Active Dilemmas**, and **Key Decisions**. These are displayed as glassmorphic cards in the Advisor Notebook sidebar.
+- **Two-Column Layout:** On desktop, the Advisory Board uses a two-column layout — the Advisor Notebook occupies the left 300px showing what your selected advisor knows, while the right column is your active conversation. On mobile, the Notebook opens as a slide-out drawer via the "Notebook" button.
+- **Advisor Selector:** Choose an advisor from the dropdown to see their independent memory. A bullet indicator marks advisors who have active memory.
+- **Progress Indicator:** For advisors you've started chatting with but haven't reached the memory threshold yet (3 exchanges), a progress bar shows how close you are to generating their first notebook entry.
+- **Transcript Archive:** A "View Transcript Archive" link in the Notebook opens a date-grouped modal showing all past exchanges, expandable to see full advisor responses.
+- **Memory Control:** Reset a single advisor's memory or reset all advisors at once from the Notebook footer. Chat history auto-cleans after 180 days.
 - **Contextual References:** Advisors naturally reference your past decisions and preferences when relevant, but don't force references on unrelated questions. If you contradict a past decision, they'll flag it diplomatically.
 - **Graceful Degradation:** If the memory system encounters any issue, the Advisory Board falls back to stateless behavior — your question is still answered, just without historical context.
 

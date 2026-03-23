@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BrainCircuit, Target, TrendingUp, AlertTriangle, CheckCircle2, FileText, Trash2, X, RotateCcw } from "lucide-react";
+import { BrainCircuit, Target, TrendingUp, AlertTriangle, CheckCircle2, FileText, Trash2, X, RotateCcw, BookOpen } from "lucide-react";
 import { personas, PersonaId } from "@/lib/personas";
 import type { PersonaSummaryInfo } from "@/types";
 
@@ -15,8 +15,11 @@ const SECTION_CONFIG = [
     { key: "Key Decisions", icon: CheckCircle2, color: "text-emerald-500" },
 ];
 
+const SUMMARY_THRESHOLD = 3;
+
 interface ClientDossierProps {
     summaries: Record<string, PersonaSummaryInfo>;
+    personaExchangeCounts: Record<string, number>;
     onOpenArchive: () => void;
     onResetMemory: (personaId?: string) => void;
     isMobileDrawer?: boolean;
@@ -39,7 +42,7 @@ function parseSections(text: string): Record<string, string> {
     return sections;
 }
 
-export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobileDrawer, onClose }: ClientDossierProps) {
+export function ClientDossier({ summaries, personaExchangeCounts, onOpenArchive, onResetMemory, isMobileDrawer, onClose }: ClientDossierProps) {
     const [activePersona, setActivePersona] = useState<PersonaId | null>(null);
     const [confirmReset, setConfirmReset] = useState<string | null>(null);
 
@@ -54,7 +57,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
             {/* Header */}
             <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
                 <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Client Dossier</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Advisor Notebook</h2>
                     {activeSummary && (
                         <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
                             {activeSummary.exchangeCount} exchanges &bull; Updated {new Date(activeSummary.lastUpdated).toLocaleDateString()}
@@ -93,7 +96,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                 </div>
             </div>
 
-            {/* Dossier Content */}
+            {/* Notebook Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
                 {!activePersona ? (
                     /* No advisor selected */
@@ -105,7 +108,7 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                             Select an advisor
                         </p>
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 max-w-[200px]">
-                            Choose an advisor above to view their memory dossier of your investment profile.
+                            Choose an advisor above to view their notebook about your investment profile.
                         </p>
                     </div>
                 ) : !parsedSections ? (
@@ -120,27 +123,61 @@ export function ClientDossier({ summaries, onOpenArchive, onResetMemory, isMobil
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 max-w-[200px]">
                             Chat with {persona!.name} to build their understanding of your investment profile.
                         </p>
+                        {/* Progress indicator toward first summary */}
+                        {(() => {
+                            const count = personaExchangeCounts[activePersona] || 0;
+                            if (count === 0) return null;
+                            return (
+                                <div className="mt-4 w-full max-w-[220px]">
+                                    <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500 mb-1.5">
+                                        <span>{count} of {SUMMARY_THRESHOLD} exchanges</span>
+                                        <span>until first notebook entry</span>
+                                    </div>
+                                    <div className="h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.min(100, (count / SUMMARY_THRESHOLD) * 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 ) : (
-                    /* Structured section cards */
-                    SECTION_CONFIG.map(({ key, icon: Icon, color }) => {
-                        const content = parsedSections[key];
-                        const isEmpty = !content || content === "None discussed yet.";
-                        return (
-                            <div key={key} className="glass-panel p-3.5 space-y-1.5">
+                    <>
+                        {/* Our Journey So Far — narrative centerpiece */}
+                        {parsedSections["Our Journey So Far"] && parsedSections["Our Journey So Far"] !== "None discussed yet." && (
+                            <div className="glass-panel p-4 space-y-2 bg-gradient-to-br from-indigo-50/30 via-white to-teal-50/30 dark:from-indigo-950/10 dark:via-neutral-900/50 dark:to-teal-900/10 border-indigo-200/50 dark:border-indigo-800/30">
                                 <div className="flex items-center gap-2">
-                                    <Icon className={`h-3.5 w-3.5 ${color}`} />
-                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-300">{key}</h4>
+                                    <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Our Journey So Far</h4>
                                 </div>
-                                <p className={`text-sm leading-relaxed ${isEmpty
-                                    ? "text-neutral-400 dark:text-neutral-600 italic"
-                                    : "text-neutral-700 dark:text-neutral-300"
-                                    }`}>
-                                    {isEmpty ? `Not yet discussed with ${persona!.name.split(" ")[0]}` : content}
+                                <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
+                                    {parsedSections["Our Journey So Far"]}
                                 </p>
                             </div>
-                        );
-                    })
+                        )}
+
+                        {/* Structured section cards */}
+                        {SECTION_CONFIG.map(({ key, icon: Icon, color }) => {
+                            const content = parsedSections[key];
+                            const isEmpty = !content || content === "None discussed yet.";
+                            return (
+                                <div key={key} className="glass-panel p-3.5 space-y-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <Icon className={`h-3.5 w-3.5 ${color}`} />
+                                        <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-300">{key}</h4>
+                                    </div>
+                                    <p className={`text-sm leading-relaxed ${isEmpty
+                                        ? "text-neutral-400 dark:text-neutral-600 italic"
+                                        : "text-neutral-700 dark:text-neutral-300"
+                                        }`}>
+                                        {isEmpty ? `Not yet discussed with ${persona!.name.split(" ")[0]}` : content}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </>
                 )}
             </div>
 
