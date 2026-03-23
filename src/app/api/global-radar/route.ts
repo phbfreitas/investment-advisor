@@ -41,6 +41,8 @@ function buildPrompt(directiveId: number, newsContext: string, portfolioContext:
             return `Analyze the key geopolitical and global macroeconomic news from the digest (focusing on interest rates, conflicts, and energy). Based on my strategy of 40% Growth, 40% Mix (Hybrids), and 20% Dividends, explain how these events altered the risk profile of each category. Do not just list news; specify how the current scenario favors or harms my goal of passive income vs. capital appreciation.\n\n${contextBlock}`;
         case 5:
             return `Compare my complete 40/40/20 strategy with the current performance of major global asset classes (S&P 500, TSX, Bonds, Commodities). Critique my portfolio: where am I overexposed? Where am I missing protection opportunities? Suggest rebalancing shifts based on macro trends from the news digest (e.g., persistent inflation or interest rate shifts) to ensure my monthly income and long-term growth remain protected.\n\n${contextBlock}`;
+        case 7:
+            return `Act as a Senior Investment Manager. Based on My Strategy and the Assets in My Portfolio (specific ETFs and Stocks), analyze the day's news in Economics, Business, and Politics. Use the following format for EACH major news item:\n\n**The Fact:** A direct 2-sentence summary.\n**The 'So What?':** Relevance to the macro scenario or sector.\n**Impact on My Portfolio:** Identify which specific assets from my list are affected by this news.\n**Connection to Strategy:** Explain if this event requires a rebalancing between the Dividend and Growth portions to maintain balance, or suggest buying/selling specific tickers.\n\nAfter covering all major news items, close with a **Daily Verdict** section that synthesizes all findings into 2-3 priority actions.\n\n${contextBlock}`;
         default:
             return "";
     }
@@ -74,8 +76,8 @@ export async function POST(request: Request) {
         const PROFILE_KEY = `HOUSEHOLD#${session.user!.householdId!}`;
         const { directiveId, forceRefresh } = await request.json();
 
-        if (!directiveId || directiveId < 1 || directiveId > 6) {
-            return NextResponse.json({ error: "Invalid directive ID (1-6)" }, { status: 400 });
+        if (!directiveId || directiveId < 1 || directiveId > 7) {
+            return NextResponse.json({ error: "Invalid directive ID (1-7)" }, { status: 400 });
         }
 
         // Fetch user data

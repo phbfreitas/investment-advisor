@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
     Globe, Loader2, Shield, Search, ArrowLeftRight, Newspaper,
-    Scale, Zap, X, ChevronRight, RefreshCw, Clock, AlertTriangle, CheckCircle2, Circle
+    Scale, Zap, X, ChevronRight, RefreshCw, Clock, AlertTriangle, CheckCircle2, Circle, Layers
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -23,6 +23,7 @@ const DIRECTIVES = [
     { id: 4, title: "Cross-Sectional Impact Report", desc: "Map weekly news to your 40/40/20 allocation.", icon: Newspaper },
     { id: 5, title: "Full Strategy Critic", desc: "Compare your portfolio against global asset classes.", icon: Scale },
     { id: 6, title: "Deep Critique", desc: "Run all 5 analyses and get a unified executive report.", icon: Zap },
+    { id: 7, title: "Total Integration", desc: "News + Strategy + Portfolio: full impact analysis with rebalancing signals.", icon: Layers },
 ];
 
 export default function GlobalRadarClient() {
@@ -181,9 +182,9 @@ export default function GlobalRadarClient() {
                             <button
                                 key={item.id}
                                 onClick={() => handleCardClick(item.id)}
-                                className={`text-left glass-panel p-5 hover:border-teal-500/30 transition-all flex items-start space-x-4 group ${item.id === 6 ? "md:col-span-2 border-teal-500/20 bg-gradient-to-r from-teal-50/50 to-cyan-50/50 dark:from-teal-900/10 dark:to-cyan-900/10" : ""}`}
+                                className={`text-left glass-panel p-5 hover:border-teal-500/30 transition-all flex items-start space-x-4 group ${item.id >= 6 ? "md:col-span-2 border-teal-500/20 bg-gradient-to-r from-teal-50/50 to-cyan-50/50 dark:from-teal-900/10 dark:to-cyan-900/10" : ""}`}
                             >
-                                <div className={`p-2.5 rounded-lg group-hover:scale-110 transition-transform ${item.id === 6 ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400"}`}>
+                                <div className={`p-2.5 rounded-lg group-hover:scale-110 transition-transform ${item.id >= 6 ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400"}`}>
                                     <item.icon className="h-5 w-5" />
                                 </div>
                                 <div className="flex-1">
