@@ -28,7 +28,7 @@ const DIRECTIVE_NAMES: Record<number, string> = {
 };
 
 function buildPrompt(directiveId: number, newsContext: string, portfolioContext: string): string {
-    const contextBlock = `${FORMATTING_RULES}\nNEWS DIGEST:\n${newsContext}\n\nUSER PORTFOLIO & STRATEGY:\n${portfolioContext}`;
+    const contextBlock = `${FORMATTING_RULES}\nNEWS DIGEST:\n${newsContext}\n\nIMPORTANT: Always combine the news digest above with your own high-conviction assessment of prevailing global macro trends (interest rates, inflation, geopolitical tensions, commodity cycles, currency dynamics). The news digest provides real-time signals; layer your macro expertise on top to deliver a complete analysis.\n\nUSER PORTFOLIO & STRATEGY:\n${portfolioContext}`;
 
     switch (directiveId) {
         case 1:

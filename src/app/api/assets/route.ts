@@ -55,7 +55,7 @@ export async function POST(request: Request) {
             liveTickerPrice: parseFloat(data.liveTickerPrice) || 0,
             bookCost: parseFloat(data.bookCost) || 0,
             marketValue: parseFloat(data.marketValue) || (parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0),
-            profitLoss: parseFloat(data.profitLoss) || ((parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0)) - ((parseFloat(data.bookCost) || 0) * (parseFloat(data.quantity) || 0)),
+            profitLoss: parseFloat(data.profitLoss) || ((parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0)) - (parseFloat(data.bookCost) || 0),
             yield: parseFloat(data.yield) || 0,
             oneYearReturn: parseFloat(data.oneYearReturn) || 0,
             fiveYearReturn: parseFloat(data.fiveYearReturn) || 0,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             accountType: data.accountType || "",
             risk: data.risk || "",
             volatility: parseFloat(data.volatility) || 0,
-            expectedAnnualDividends: parseFloat(data.expectedAnnualDividends) || (parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0) * ((parseFloat(data.yield) || 0) / 100),
+            expectedAnnualDividends: parseFloat(data.expectedAnnualDividends) || (parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0) * (parseFloat(data.yield) || 0),
 
             updatedAt: new Date().toISOString(),
         };

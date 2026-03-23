@@ -279,8 +279,8 @@ export default function DashboardPage() {
           beta: data.beta || 0,
           riskFlag: data.riskFlag || "",
           marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
-          profitLoss: qty > 0 && price > 0 ? (qty * price) - (bookCostNum * qty) : prev.profitLoss,
-          expectedAnnualDividends: qty > 0 && price > 0 && yieldPct > 0 ? qty * price * (yieldPct / 100) : 0,
+          profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
+          expectedAnnualDividends: qty > 0 && price > 0 && yieldPct > 0 ? qty * price * yieldPct : 0,
         }));
       }
     } catch (err) {
@@ -304,14 +304,14 @@ export default function DashboardPage() {
     const rows = assets.map(a => [
       a.account, a.ticker, a.securityType, a.strategyType, a.call,
       a.sector, a.market, a.currency, a.managementStyle, a.managementFee,
-      a.quantity, a.liveTickerPrice, (a.bookCost || 0) * (a.quantity || 0),
+      a.quantity, a.liveTickerPrice, (a.bookCost || 0),
       a.marketValue, totalMV > 0 ? ((a.marketValue || 0) / totalMV * 100).toFixed(1) + '%' : '0%',
       a.profitLoss, a.yield, a.oneYearReturn, a.threeYearReturn || a.fiveYearReturn || 0,
       a.exDividendDate, a.analystConsensus, a.externalRating,
       a.beta, a.riskFlag, a.volatility, a.expectedAnnualDividends,
       a.accountNumber, a.accountType,
     ].map(escapeCSV));
-    const totalBK = assets.reduce((s, a) => s + (a.bookCost || 0) * (a.quantity || 0), 0);
+    const totalBK = assets.reduce((s, a) => s + (a.bookCost || 0), 0);
     const totalPL = assets.reduce((s, a) => s + (a.profitLoss || 0), 0);
     const totalsRow = ['Totals', '', '', '', '', '', '', '', '', '', '',
       '', totalBK.toFixed(2), totalMV.toFixed(2), '100%', totalPL.toFixed(2),

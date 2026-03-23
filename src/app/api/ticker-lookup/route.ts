@@ -11,9 +11,9 @@ const PASSIVE_FAMILIES = [
   'invesco', 'schwab', 'fidelity index',
 ];
 
-function classifyStrategyType(yieldPct: number): string {
-  if (yieldPct < 4) return 'Pure Growth';
-  if (yieldPct < 8) return 'Pure Dividend';
+function classifyStrategyType(yieldDecimal: number): string {
+  if (yieldDecimal < 0.04) return 'Pure Growth';
+  if (yieldDecimal < 0.08) return 'Pure Dividend';
   return 'Mix/Hybrid';
 }
 
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
 
     // Basic fields (existing)
     const dividendYield = summaryDetail?.dividendYield
-      ? (summaryDetail.dividendYield as number) * 100
+      ? (summaryDetail.dividendYield as number)
       : 0;
     const quoteType = (quote.quoteType as string) || '';
 

@@ -101,12 +101,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const qty = updatedAsset.quantity || 0;
         const price = updatedAsset.liveTickerPrice || 0;
         const yieldPct = updatedAsset.yield || 0;
-        const bookCostPerShare = updatedAsset.bookCost || 0;
+        const totalBookCost = updatedAsset.bookCost || 0;
         if (qty > 0 && price > 0) {
             updatedAsset.marketValue = qty * price;
-            updatedAsset.profitLoss = updatedAsset.marketValue - (bookCostPerShare * qty);
+            updatedAsset.profitLoss = updatedAsset.marketValue - totalBookCost;
             if (yieldPct > 0) {
-                updatedAsset.expectedAnnualDividends = qty * price * (yieldPct / 100);
+                updatedAsset.expectedAnnualDividends = qty * price * yieldPct;
             }
         }
 

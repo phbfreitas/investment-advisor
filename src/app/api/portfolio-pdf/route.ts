@@ -165,7 +165,6 @@ export async function POST(request: Request) {
         type WriteRequest = { PutRequest: { Item: Record<string, unknown> } };
         const writeRequests: WriteRequest[] = holdings.map(h => {
             const assetId = uuidv4();
-            const bookCostPerShare = h.quantity > 0 ? h.bookCost / h.quantity : 0;
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
 
             return {
@@ -189,7 +188,7 @@ export async function POST(request: Request) {
                         managementFee: 0,
                         quantity: h.quantity,
                         liveTickerPrice: pricePerShare,
-                        bookCost: bookCostPerShare,
+                        bookCost: h.bookCost,
                         marketValue: h.marketValue,
                         profitLoss: h.marketValue - h.bookCost,
                         yield: 0,

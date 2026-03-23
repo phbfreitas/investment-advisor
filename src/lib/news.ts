@@ -93,7 +93,7 @@ export async function getCachedOrFreshNews(): Promise<{ articles: NewsArticle[];
  */
 export function formatNewsContext(articles: NewsArticle[]): string {
     if (articles.length === 0) {
-        return "No recent financial news available. Analyze based on your knowledge of current macro trends and the user's portfolio context.";
+        return "No real-time news articles were fetched for today. Use your deep knowledge of current global macro trends, recent central bank actions, geopolitical developments, and commodity/currency dynamics to provide a high-conviction macro assessment as the foundation for your analysis.";
     }
 
     const lines = articles.slice(0, 15).map((a, i) => {
