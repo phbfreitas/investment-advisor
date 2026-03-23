@@ -5,7 +5,7 @@ import { BrainCircuit, Target, TrendingUp, AlertTriangle, CheckCircle2, FileText
 import { personas, PersonaId } from "@/lib/personas";
 import type { PersonaSummaryInfo } from "@/types";
 
-const PERSONA_IDS: PersonaId[] = ["buffett", "barsi", "gunther", "housel", "ramsey"];
+const PERSONA_IDS: PersonaId[] = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki", "ramsey"];
 
 const SECTION_CONFIG = [
     { key: "Investment Thesis", icon: BrainCircuit, color: "text-indigo-500" },

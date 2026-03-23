@@ -30,5 +30,22 @@
     "sources": [
       { "type": "file", "path": "books/The Total Money Makeover_ A Proven Plan for Financial -- Dave Ramsey -- 2009 -- Thomas Nelson -- 2bcbf6fabf53249f5cbe6c4488e67084 -- Anna\u2019s Archive.pdf", "label": "The Total Money Makeover" }
     ]
+  },
+  "bogle": {
+    "sources": [
+      { "type": "file", "path": "books/annas-arch-68938b88ae2a.pdf", "label": "The Little Book of Common Sense Investing" }
+    ]
+  },
+  "kiyosaki": {
+    "sources": [
+      { "type": "file", "path": "books/annas-arch-10a00f175afa.pdf", "label": "Cashflow: The Way to Invest in Real Estate" },
+      { "type": "file", "path": "books/annas-arch-23868c893255.pdf", "label": "5 Ways to Make Your Real Estate Returns Skyrocket" },
+      { "type": "file", "path": "books/annas-arch-8436f39d786c.pdf", "label": "The Real Book of Real Estate" }
+    ]
+  },
+  "graham": {
+    "sources": [
+      { "type": "file", "path": "books/annas-arch-ed4c3cf39a7f (1).pdf", "label": "The Intelligent Investor, Revised Edition" }
+    ]
   }
 }
