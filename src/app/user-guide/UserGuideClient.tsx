@@ -138,36 +138,79 @@ export default function UserGuideClient() {
                 <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
                     <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Logic Manual</h2>
                 </div>
-                <nav className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-                    {sections.map((section) => (
-                        <div key={section.id} className="space-y-1">
-                            <button
-                                onClick={() => scrollToSection(section.id)}
-                                className={cn(
-                                    "flex items-center space-x-2 w-full text-left px-2 py-2 rounded-lg transition-colors font-medium text-sm",
-                                    activeSection === section.id
-                                        ? "bg-teal-50 dark:bg-teal-900/10 text-teal-700 dark:text-teal-400"
-                                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-                                )}
-                            >
-                                <section.icon className={cn("h-4 w-4", activeSection === section.id ? "text-teal-600" : "text-neutral-500")} />
-                                <span>{section.title}</span>
-                            </button>
-                            {section.subsections.length > 0 && (
-                                <div className="space-y-0.5 ml-6 border-l border-neutral-200 dark:border-neutral-800 mt-1">
-                                    {section.subsections.map((sub) => (
-                                        <button
-                                            key={sub.id}
-                                            onClick={() => scrollToSection(sub.id, section.id)}
-                                            className="w-full text-left px-4 py-1.5 text-sm transition-colors block border-l -ml-px border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-700"
-                                        >
-                                            {sub.title}
-                                        </button>
+                <nav className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    {sectionGroups.map((group) => {
+                        if ("pillar" in group) {
+                            const PillarIcon = group.pillarIcon;
+                            return (
+                                <div key={group.pillar} className="space-y-1">
+                                    <div className={cn("flex items-center space-x-2 px-2 pt-3 pb-1 text-xs font-bold uppercase tracking-wider", group.pillarAccent)}>
+                                        <PillarIcon className="h-3.5 w-3.5" />
+                                        <span>{group.pillar}</span>
+                                    </div>
+                                    {group.items.map((section) => (
+                                        <div key={section.id} className="space-y-1">
+                                            <button
+                                                onClick={() => scrollToSection(section.id)}
+                                                className={cn(
+                                                    "flex items-center space-x-2 w-full text-left px-2 py-2 rounded-lg transition-colors font-medium text-sm",
+                                                    activeSection === section.id
+                                                        ? "bg-teal-50 dark:bg-teal-900/10 text-teal-700 dark:text-teal-400"
+                                                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                                                )}
+                                            >
+                                                <section.icon className={cn("h-4 w-4", activeSection === section.id ? "text-teal-600" : "text-neutral-500")} />
+                                                <span>{section.title}</span>
+                                            </button>
+                                            {section.subsections.length > 0 && (
+                                                <div className="space-y-0.5 ml-6 border-l border-neutral-200 dark:border-neutral-800 mt-1">
+                                                    {section.subsections.map((sub) => (
+                                                        <button
+                                                            key={sub.id}
+                                                            onClick={() => scrollToSection(sub.id, section.id)}
+                                                            className="w-full text-left px-4 py-1.5 text-sm transition-colors block border-l -ml-px border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-700"
+                                                        >
+                                                            {sub.title}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            );
+                        }
+                        const section = group as SectionItem;
+                        return (
+                            <div key={section.id} className="space-y-1">
+                                <button
+                                    onClick={() => scrollToSection(section.id)}
+                                    className={cn(
+                                        "flex items-center space-x-2 w-full text-left px-2 py-2 rounded-lg transition-colors font-medium text-sm",
+                                        activeSection === section.id
+                                            ? "bg-teal-50 dark:bg-teal-900/10 text-teal-700 dark:text-teal-400"
+                                            : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                                    )}
+                                >
+                                    <section.icon className={cn("h-4 w-4", activeSection === section.id ? "text-teal-600" : "text-neutral-500")} />
+                                    <span>{section.title}</span>
+                                </button>
+                                {section.subsections.length > 0 && (
+                                    <div className="space-y-0.5 ml-6 border-l border-neutral-200 dark:border-neutral-800 mt-1">
+                                        {section.subsections.map((sub) => (
+                                            <button
+                                                key={sub.id}
+                                                onClick={() => scrollToSection(sub.id, section.id)}
+                                                className="w-full text-left px-4 py-1.5 text-sm transition-colors block border-l -ml-px border-transparent text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-700"
+                                            >
+                                                {sub.title}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </nav>
             </aside>
 
