@@ -30,7 +30,7 @@ const sections = [
         icon: Users,
         subsections: [
             { id: "ab-logic", title: "Logic Mapping" },
-            { id: "ab-memory", title: "EA Memory" },
+            { id: "ab-memory", title: "Client Dossier" },
             { id: "ab-ripple", title: " Ripple Effect" },
         ]
     },
@@ -247,31 +247,31 @@ export default function UserGuideClient() {
 
                         <div id="ab-memory" ref={el => { contentRefs.current["ab-memory"] = el; }} className="space-y-4">
                             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> EA Memory (Advisor Memory)
+                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> Client Dossier (Advisor Memory)
                             </h3>
                             <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                Your advisors now remember past conversations. The system uses a <strong className="text-neutral-900 dark:text-white">Hybrid Memory</strong> approach combining short-term chat history with a long-term memory summary, so the Gurus retain context across sessions without the &quot;amnesia&quot; effect of a stateless chat.
+                                Your advisors build <strong className="text-neutral-900 dark:text-white">per-advisor structured memory</strong>, surfaced as a persistent <strong className="text-neutral-900 dark:text-white">Client Dossier</strong> sidebar. Each guru develops their own independent understanding of your investment profile — Buffett doesn&apos;t see what Housel discussed.
                             </p>
                             <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Short-Term History</strong>
-                                    Each advisor remembers the last 5 exchanges you&apos;ve had with them specifically. When you ask Buffett a follow-up question, he recalls what he told you before — but he doesn&apos;t see what Housel said. Each guru maintains its own independent conversation thread.
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Structured Dossier Cards</strong>
+                                    Each advisor&apos;s memory is organized into 5 sections: <em>Investment Thesis</em>, <em>Current Asset Focus</em>, <em>Risk Parameters</em>, <em>Active Dilemmas</em>, and <em>Key Decisions</em>. These display as glassmorphic cards in the sidebar, giving you instant visibility into what each guru knows about you.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Long-Term Memory Ledger</strong>
-                                    Every 5 exchanges, the system generates a concise summary of what it has learned about you — investment decisions, preferences, stocks discussed, and goals mentioned. This summary is injected into every advisor&apos;s instructions, giving them long-term awareness of your evolving profile.
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Two-Column Executive Board</strong>
+                                    On desktop, the Advisory Board uses a two-column layout — the Client Dossier on the left (300px), your active conversation on the right. On mobile, the Dossier opens as a slide-out drawer via the &quot;Dossier&quot; button in the header.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Previous Session History</strong>
-                                    When you return to Expert Guidance, your past exchanges are loaded in a compact, collapsed format. Click any past exchange to expand the full advisor responses. New conversations appear below a &quot;Today&quot; divider.
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Transcript Archive</strong>
+                                    A &quot;View Transcript Archive&quot; link in the Dossier opens a date-grouped modal showing all past exchanges. Each day&apos;s conversations are expandable to see the full advisor responses — keeping the main board clean while preserving full audit capability.
                                 </li>
                                 <li className="relative">
                                     <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Memory Transparency & Control</strong>
-                                    A memory indicator in the header shows when your advisors have active memory. Click it to see exactly what the AI remembers about you. You can <strong>Clear Chat</strong> (remove visible history but keep the summary) or <strong>Reset All Memory</strong> (full amnesia — your advisors forget everything). Chat history is automatically cleaned up after 90 days.
+                                    <strong className="text-neutral-900 dark:text-white block mb-1">Memory Control</strong>
+                                    Reset a single advisor&apos;s memory independently, or reset all advisors at once from the Dossier footer. Chat history auto-cleans after 180 days. Advisors naturally reference past decisions when relevant, but never force references on unrelated questions.
                                 </li>
                             </ul>
                             <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">

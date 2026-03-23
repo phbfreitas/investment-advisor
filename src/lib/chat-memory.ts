@@ -7,11 +7,13 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ChatExchange, ChatSummary, PersonaResponse } from "@/types";
+import type { ChatExchange, ChatSummary, PersonaResponse, PersonaSummaryMap } from "@/types";
 
 const SUMMARY_THRESHOLD = 5;
-const TTL_DAYS = 90;
-const MAX_SUMMARY_WORDS = 300;
+const TTL_DAYS = 180;
+const MAX_SUMMARY_WORDS = 500;
+
+const PERSONA_IDS = ["buffett", "barsi", "gunther", "housel", "ramsey"];
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -65,17 +67,18 @@ export async function getRecentExchanges(
   return (Items as ChatExchange[]) || [];
 }
 
-// ── Fetch the long-term memory summary ──
+// ── Fetch a single advisor's long-term memory summary ──
 
 export async function getSummary(
-  householdId: string
+  householdId: string,
+  personaId: string
 ): Promise<ChatSummary | null> {
   const { Item } = await db.send(
     new GetCommand({
       TableName: TABLE_NAME,
       Key: {
         PK: `HOUSEHOLD#${householdId}`,
-        SK: "CHAT_SUMMARY",
+        SK: `CHAT_SUMMARY#${personaId}`,
       },
     })
   );
@@ -83,18 +86,39 @@ export async function getSummary(
   return (Item as ChatSummary) || null;
 }
 
-// ── Check if summarization is needed ──
+// ── Fetch all advisor summaries (for Client Dossier) ──
+
+export async function getAllSummaries(
+  householdId: string
+): Promise<PersonaSummaryMap> {
+  const results = await Promise.all(
+    PERSONA_IDS.map(async (personaId) => {
+      const summary = await getSummary(householdId, personaId);
+      return [personaId, summary ? {
+        text: summary.summary,
+        exchangeCount: summary.exchangeCount,
+        lastUpdated: summary.updatedAt,
+      } : null] as const;
+    })
+  );
+
+  return Object.fromEntries(results);
+}
+
+// ── Check if summarization is needed for a specific persona ──
 
 export function shouldSummarize(
   summary: ChatSummary | null,
-  recentExchanges: ChatExchange[]
+  recentExchanges: ChatExchange[],
+  personaId: string
 ): boolean {
-  if (recentExchanges.length === 0) return false;
+  const personaExchanges = recentExchanges.filter(
+    (ex) => ex.selectedPersonas.includes(personaId)
+  );
+  if (personaExchanges.length === 0) return false;
 
-  const lastSummarizedCount = summary?.exchangeCount ?? 0;
-  const currentCount = lastSummarizedCount + countUnsummarized(summary, recentExchanges);
-
-  return currentCount - lastSummarizedCount >= SUMMARY_THRESHOLD;
+  const unsummarizedCount = countUnsummarized(summary, personaExchanges);
+  return unsummarizedCount >= SUMMARY_THRESHOLD;
 }
 
 function countUnsummarized(
@@ -106,42 +130,61 @@ function countUnsummarized(
   return exchanges.filter((ex) => ex.SK > `CHAT#${summary.lastExchangeTimestamp}`).length;
 }
 
-// ── Update the long-term memory summary via Gemini ──
+// ── Update a specific advisor's long-term memory summary via Gemini ──
 
 export async function updateSummary(
   householdId: string,
+  personaId: string,
   existingSummary: ChatSummary | null,
   recentExchanges: ChatExchange[]
 ): Promise<ChatSummary> {
+  // Filter to only exchanges where this persona participated
+  const personaExchanges = recentExchanges.filter(
+    (ex) => ex.selectedPersonas.includes(personaId)
+  );
+
   const unsummarized = existingSummary?.lastExchangeTimestamp
-    ? recentExchanges.filter((ex) => ex.SK > `CHAT#${existingSummary.lastExchangeTimestamp}`)
-    : recentExchanges;
+    ? personaExchanges.filter((ex) => ex.SK > `CHAT#${existingSummary.lastExchangeTimestamp}`)
+    : personaExchanges;
 
   const exchangeText = unsummarized
     .map((ex) => {
-      const responseSnippets = ex.responses
-        .filter((r) => r.status === "success")
-        .map((r) => `  ${r.personaId}: ${r.content.slice(0, 500)}`)
-        .join("\n");
-      return `User: ${ex.userMessage}\n${responseSnippets}`;
+      const personaResponse = ex.responses.find(
+        (r) => r.personaId === personaId && r.status === "success"
+      );
+      const snippet = personaResponse ? personaResponse.content.slice(0, 500) : "";
+      return `User: ${ex.userMessage}\n  ${personaId}: ${snippet}`;
     })
     .join("\n---\n");
 
-  const prompt = `You are a memory summarizer for an investment advisory AI system. Your job is to maintain a concise, running profile of the user based on their conversations with AI investment advisors.
+  const prompt = `You are a memory summarizer for an investment advisory AI system. Your job is to maintain a structured, running profile of the user based on their conversations with the "${personaId}" advisor.
 
 ${existingSummary?.summary ? `EXISTING MEMORY:\n${existingSummary.summary}\n\n` : ""}NEW CONVERSATIONS:\n${exchangeText}
 
 INSTRUCTIONS:
-- Produce an updated summary (max ${MAX_SUMMARY_WORDS} words) capturing:
-  - Investment decisions the user has made or is considering
-  - Specific stocks, ETFs, or assets discussed
-  - Risk preferences or changes in strategy expressed
-  - Financial goals or life events mentioned
-  - Any explicit preferences or instructions the user gave
-- Merge new information with the existing memory, removing outdated details
-- Write in third person ("The user...")
+- Produce an updated summary (max ${MAX_SUMMARY_WORDS} words) using EXACTLY these 5 sections with ### headers:
+
+### Investment Thesis
+The user's overarching investment philosophy as understood from conversations with this advisor.
+
+### Current Asset Focus
+Specific tickers, sectors, ETFs, or asset classes actively discussed or held.
+
+### Risk Parameters
+Risk tolerance signals, comfort zones, and red lines expressed by the user.
+
+### Active Dilemmas
+Decisions the user is currently weighing or debating.
+
+### Key Decisions
+Concrete commitments or actions the user has made (e.g., "Decided to sell 50 shares of TSLA", "Plans to invest $5K/month into VFV").
+
+RULES:
+- Always output ALL 5 sections, even if a section has no content (write "None discussed yet." for empty sections)
+- Merge new information with existing memory, removing outdated details
 - Be factual and concise — no opinions or advice
-- If the new conversations contain no meaningful information (e.g., "thanks", "ok"), return the existing memory unchanged`;
+- If the new conversations contain no meaningful information (e.g., "thanks", "ok"), return the existing memory unchanged
+- Do NOT include any text before the first ### header`;
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   const result = await model.generateContent(prompt);
@@ -152,8 +195,9 @@ INSTRUCTIONS:
 
   const updatedSummary: ChatSummary = {
     PK: `HOUSEHOLD#${householdId}`,
-    SK: "CHAT_SUMMARY",
+    SK: `CHAT_SUMMARY#${personaId}`,
     summary: newSummaryText,
+    personaId,
     lastExchangeTimestamp: newestExchange?.SK.replace("CHAT#", "") ?? new Date().toISOString(),
     exchangeCount: newExchangeCount,
     updatedAt: new Date().toISOString(),
@@ -194,49 +238,75 @@ export function buildPersonaHistory(
   });
 }
 
-// ── Clear all chat history and summary for a household ──
+// ── Clear chat history and/or summaries ──
 
 export async function clearHistory(
   householdId: string,
-  mode: "chat" | "all" = "all"
+  mode: "chat" | "all" | "summary" = "all",
+  personaId?: string
 ): Promise<void> {
   const pk = `HOUSEHOLD#${householdId}`;
 
-  // Fetch all CHAT# items
-  const { Items: chatItems } = await db.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-      ExpressionAttributeValues: {
-        ":pk": pk,
-        ":skPrefix": "CHAT#",
-      },
-      ProjectionExpression: "PK, SK",
-    })
-  );
-
-  // Delete CHAT# items in batches of 25
-  const deleteRequests = (chatItems || []).map((item) => ({
-    DeleteRequest: { Key: { PK: item.PK, SK: item.SK } },
-  }));
-
-  const chunkSize = 25;
-  for (let i = 0; i < deleteRequests.length; i += chunkSize) {
-    const chunk = deleteRequests.slice(i, i + chunkSize);
+  if (mode === "summary" && personaId) {
+    // Delete a single advisor's summary
     await db.send(
-      new BatchWriteCommand({
-        RequestItems: { [TABLE_NAME]: chunk },
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: pk, SK: `CHAT_SUMMARY#${personaId}` },
       })
     );
+    return;
   }
 
-  // Delete the summary if full reset
+  // Fetch and delete all CHAT# items
+  if (mode === "chat" || mode === "all") {
+    const { Items: chatItems } = await db.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+        ExpressionAttributeValues: {
+          ":pk": pk,
+          ":skPrefix": "CHAT#",
+        },
+        ProjectionExpression: "PK, SK",
+      })
+    );
+
+    const deleteRequests = (chatItems || []).map((item) => ({
+      DeleteRequest: { Key: { PK: item.PK, SK: item.SK } },
+    }));
+
+    const chunkSize = 25;
+    for (let i = 0; i < deleteRequests.length; i += chunkSize) {
+      const chunk = deleteRequests.slice(i, i + chunkSize);
+      await db.send(
+        new BatchWriteCommand({
+          RequestItems: { [TABLE_NAME]: chunk },
+        })
+      );
+    }
+  }
+
+  // Delete all summaries if full reset
   if (mode === "all") {
+    // Delete per-advisor summaries
+    await Promise.all(
+      PERSONA_IDS.map((pid) =>
+        db.send(
+          new DeleteCommand({
+            TableName: TABLE_NAME,
+            Key: { PK: pk, SK: `CHAT_SUMMARY#${pid}` },
+          })
+        )
+      )
+    );
+
+    // Clean up legacy singleton summary (migration)
     await db.send(
       new DeleteCommand({
         TableName: TABLE_NAME,
         Key: { PK: pk, SK: "CHAT_SUMMARY" },
       })
-    );
+    ).catch(() => {}); // ignore if doesn't exist
   }
 }

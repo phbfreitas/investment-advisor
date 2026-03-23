@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getRecentExchanges, getSummary, clearHistory } from "@/lib/chat-memory";
+import { getRecentExchanges, getAllSummaries, clearHistory } from "@/lib/chat-memory";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,20 +19,14 @@ export async function GET(request: Request) {
 
     const householdId = session.user.householdId;
 
-    const [exchanges, summary] = await Promise.all([
+    const [exchanges, summaries] = await Promise.all([
       getRecentExchanges(householdId, limit),
-      getSummary(householdId),
+      getAllSummaries(householdId),
     ]);
 
     return NextResponse.json({
       exchanges,
-      summary: summary
-        ? {
-            text: summary.summary,
-            exchangeCount: summary.exchangeCount,
-            lastUpdated: summary.updatedAt,
-          }
-        : null,
+      summaries,
     });
   } catch (error) {
     console.error("Chat history GET error:", error);
@@ -43,7 +37,7 @@ export async function GET(request: Request) {
   }
 }
 
-// DELETE /api/chat/history?mode=chat|all
+// DELETE /api/chat/history?mode=chat|all|summary&persona=buffett
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,11 +46,12 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const mode = (searchParams.get("mode") || "all") as "chat" | "all";
+    const mode = (searchParams.get("mode") || "all") as "chat" | "all" | "summary";
+    const persona = searchParams.get("persona") || undefined;
 
-    await clearHistory(session.user.householdId, mode);
+    await clearHistory(session.user.householdId, mode, persona);
 
-    return NextResponse.json({ success: true, mode });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Chat history DELETE error:", error);
     return NextResponse.json(

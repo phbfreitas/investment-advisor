@@ -100,7 +100,12 @@ export function generateSystemPrompt(
         ? `
 ### YOUR MEMORY OF THIS USER (from prior conversations):
 ${conversationSummary}
-Use this memory to maintain continuity. Reference past discussions naturally when relevant.
+
+MEMORY USAGE RULES:
+- When the user's question relates to topics in your memory (stocks they hold, decisions they've made, dilemmas they're weighing), naturally reference this context. Example: "Given your earlier decision to increase dividend exposure..."
+- Do NOT force memory references when the question is unrelated (e.g., general market questions or definition requests).
+- If the user's current question contradicts a past decision in your memory, flag it diplomatically.
+- Never fabricate memory. Only reference what is explicitly documented above.
 `
         : "";
 

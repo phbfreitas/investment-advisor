@@ -18,6 +18,8 @@ import {
 } from "@/lib/chat-memory";
 import type { ChatExchange, ChatSummary } from "@/types";
 
+type PersonaSummaries = Record<string, ChatSummary | null>;
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
     // 1. Fetch User Context + Memory in parallel
     let contextString = "User has not provided a financial profile yet. Give generalized advice.";
     let recentExchanges: ChatExchange[] = [];
-    let memorySummary: ChatSummary | null = null;
+    let personaSummaries: PersonaSummaries = {};
 
     const profilePromise = db.send(
       new GetCommand({
@@ -68,19 +70,25 @@ export async function POST(request: Request) {
     // Memory fetch — graceful degradation on failure
     const memoryPromise = Promise.all([
       getRecentExchanges(householdId, 10),
-      getSummary(householdId),
+      // Fetch summaries for each selected persona
+      Promise.all(
+        selectedPersonas.map(async (pid: string) => {
+          const s = await getSummary(householdId, pid);
+          return [pid, s] as const;
+        })
+      ),
     ]).catch((err) => {
       console.error("Memory fetch failed, falling back to stateless:", err);
-      return [[] as ChatExchange[], null as ChatSummary | null] as const;
+      return [[] as ChatExchange[], [] as (readonly [string, ChatSummary | null])[]] as const;
     });
 
-    const [{ Item: profile }, [exchanges, summary]] = await Promise.all([
+    const [{ Item: profile }, [exchanges, summaryEntries]] = await Promise.all([
       profilePromise,
       memoryPromise,
     ]);
 
     recentExchanges = exchanges;
-    memorySummary = summary;
+    personaSummaries = Object.fromEntries(summaryEntries);
 
     if (profile) {
       const { Items: assets } = await db.send(
@@ -111,16 +119,16 @@ export async function POST(request: Request) {
       contextString = buildFullUserContext(profile, assets || [], latestCashflow);
     }
 
-    // 2. Threshold-based summarization (every 5th exchange, synchronous-on-read)
-    if (shouldSummarize(memorySummary, recentExchanges)) {
-      try {
-        memorySummary = await updateSummary(householdId, memorySummary, recentExchanges);
-      } catch (err) {
-        console.error("Summarization failed, continuing with existing summary:", err);
+    // 2. Per-advisor threshold-based summarization (every 5th exchange, synchronous-on-read)
+    for (const pid of selectedPersonas) {
+      if (shouldSummarize(personaSummaries[pid] ?? null, recentExchanges, pid)) {
+        try {
+          personaSummaries[pid] = await updateSummary(householdId, pid, personaSummaries[pid] ?? null, recentExchanges);
+        } catch (err) {
+          console.error(`Summarization failed for ${pid}, continuing with existing:`, err);
+        }
       }
     }
-
-    const summaryText = memorySummary?.summary || "";
 
     // 3. Prepare the Tool definition for Gemini
     const tools = [
@@ -134,10 +142,11 @@ export async function POST(request: Request) {
       try {
         const personaConfig = personas[personaId as keyof typeof personas];
         const ragContext = personaConfig?.hasRag ? await getRagContext(personaId, message) : "";
+        const personaSummaryText = personaSummaries[personaId]?.summary || "";
 
         const model = genAI.getGenerativeModel({
           model: "gemini-2.5-flash",
-          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext, summaryText),
+          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext, personaSummaryText),
           tools: tools,
         });
 

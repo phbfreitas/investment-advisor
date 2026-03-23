@@ -48,13 +48,16 @@ Each advisor card displays four built-in prompt templates as pill buttons in the
 - **Portfolio Rebalancing** — asks the advisor to identify drift and recommend rebalancing moves.
 - **Financial Health Audit** — prompts a comprehensive audit of income, expenses, savings, and net worth.
 
-### EA Memory (Advisor Memory)
-Your advisors now remember past conversations using a **Hybrid Memory** approach:
+### EA Memory — Client Dossier (Advisor Memory)
+Your advisors now remember past conversations using a **Per-Advisor Structured Memory** system, surfaced as a persistent **Client Dossier** sidebar:
 
-- **Short-Term History:** Each advisor remembers the last 5 exchanges you've had with them specifically. Follow-up questions carry full context — but each guru maintains its own independent conversation thread (Buffett doesn't see what Housel said).
-- **Long-Term Memory Ledger:** Every 5 exchanges, the system generates a concise summary of what it has learned about you — investment decisions, preferences, stocks discussed, and goals. This summary is injected into every advisor's instructions, giving them long-term awareness across sessions.
-- **Previous Session History:** When you return, past exchanges load in a compact, collapsed format. Click any to expand. New conversations appear below a "Today" divider.
-- **Memory Transparency & Control:** A memory indicator in the header shows when advisors have active memory. Click it to see exactly what the AI remembers. You can **Clear Chat** (remove visible history, keep summary) or **Reset All Memory** (full amnesia). Chat history auto-cleans after 90 days.
+- **Per-Advisor Memory:** Each advisor builds their own independent understanding of you. Buffett's dossier reflects only conversations you've had with Buffett — he doesn't see what Housel discussed. This means each guru develops a unique perspective on your investment profile.
+- **Structured Dossier:** Instead of a raw text blob, each advisor's memory is organized into 5 structured sections: **Investment Thesis**, **Current Asset Focus**, **Risk Parameters**, **Active Dilemmas**, and **Key Decisions**. These are displayed as glassmorphic cards in the Client Dossier sidebar.
+- **Two-Column Layout:** On desktop, the Advisory Board uses a two-column layout — the Client Dossier occupies the left 300px showing what your selected advisor knows, while the right column is your active conversation. On mobile, the Dossier opens as a slide-out drawer via the "Dossier" button.
+- **Advisor Tabs:** Switch between advisors in the Dossier to see each one's independent memory. A teal dot indicates advisors who have active memory.
+- **Transcript Archive:** A "View Transcript Archive" link in the Dossier opens a date-grouped modal showing all past exchanges, expandable to see full advisor responses.
+- **Memory Control:** Reset a single advisor's memory or reset all advisors at once from the Dossier footer. Chat history auto-cleans after 180 days.
+- **Contextual References:** Advisors naturally reference your past decisions and preferences when relevant, but don't force references on unrelated questions. If you contradict a past decision, they'll flag it diplomatically.
 - **Graceful Degradation:** If the memory system encounters any issue, the Advisory Board falls back to stateless behavior — your question is still answered, just without historical context.
 
 ### Key Features You Can Ask About

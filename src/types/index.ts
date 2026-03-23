@@ -72,11 +72,20 @@ export interface ChatSummary {
     PK: string;
     SK: string;
     summary: string;
+    personaId: string;
     lastExchangeTimestamp: string;
     exchangeCount: number;
     updatedAt: string;
     entityType: "CHAT_SUMMARY";
 }
+
+export type PersonaSummaryInfo = {
+    text: string;
+    exchangeCount: number;
+    lastUpdated: string;
+} | null;
+
+export type PersonaSummaryMap = Record<string, PersonaSummaryInfo>;
 
 export interface HouseholdUser {
     PK: string;
