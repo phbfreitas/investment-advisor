@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getRecentExchanges, getAllSummaries, clearHistory } from "@/lib/chat-memory";
+import { getRecentExchanges, getAllSummaries, clearHistory, shouldSummarize, getSummary, updateSummary } from "@/lib/chat-memory";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,6 +23,43 @@ export async function GET(request: Request) {
       getRecentExchanges(householdId, limit),
       getAllSummaries(householdId),
     ]);
+
+    // Backfill: if exchanges exist but per-advisor summaries are missing, trigger summarization
+    if (exchanges.length >= 5) {
+      const personasWithExchanges = new Set<string>();
+      for (const ex of exchanges) {
+        for (const pid of ex.selectedPersonas) {
+          personasWithExchanges.add(pid);
+        }
+      }
+
+      const backfillPromises: Promise<void>[] = [];
+      for (const pid of personasWithExchanges) {
+        if (summaries[pid] === null) {
+          backfillPromises.push(
+            (async () => {
+              try {
+                const personaSummary = await getSummary(householdId, pid);
+                if (shouldSummarize(personaSummary, exchanges, pid)) {
+                  const updated = await updateSummary(householdId, pid, personaSummary, exchanges);
+                  summaries[pid] = {
+                    text: updated.summary,
+                    exchangeCount: updated.exchangeCount,
+                    lastUpdated: updated.updatedAt,
+                  };
+                }
+              } catch (err) {
+                console.error(`Backfill summarization failed for ${pid}:`, err);
+              }
+            })()
+          );
+        }
+      }
+
+      if (backfillPromises.length > 0) {
+        await Promise.all(backfillPromises);
+      }
+    }
 
     return NextResponse.json({
       exchanges,
