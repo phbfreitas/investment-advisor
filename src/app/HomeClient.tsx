@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, RefreshCw, Users, Brain, ChevronDown, X as XIcon, Check } from "lucide-react";
+import { Send, Loader2, RefreshCw, Users, Brain, ChevronDown, Check } from "lucide-react";
 import { PanelResponse } from "@/components/PanelResponse";
 import { ClientDossier } from "@/components/ClientDossier";
 import { TranscriptArchive } from "@/components/TranscriptArchive";
@@ -183,45 +183,36 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Advisor Selector — Collapsible Chip Bar */}
+        {/* Advisor Selector — Single Trigger Button */}
         <div className="relative px-4 md:px-8 pb-3" ref={advisorPickerRef}>
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Selected advisor chips */}
-            {selectedPersonas.map(id => {
-              const persona = personas[id];
-              return (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/30"
-                >
-                  <span className="text-sm">{persona.avatar}</span>
-                  <span>{persona.name.split(" ")[0]}</span>
-                  {selectedPersonas.length > 1 && (
-                    <button
-                      onClick={() => togglePersona(id)}
-                      className="ml-0.5 hover:text-red-500 transition-colors"
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </button>
-                  )}
-                </span>
-              );
-            })}
-
-            {/* Change Advisors button */}
-            <button
-              onClick={() => setShowAdvisorPicker(prev => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
-            >
-              <Users className="h-3 w-3" />
-              <span>{showAdvisorPicker ? "Done" : "Change"}</span>
-              <ChevronDown className={`h-3 w-3 transition-transform ${showAdvisorPicker ? "rotate-180" : ""}`} />
-            </button>
-          </div>
+          <button
+            onClick={() => setShowAdvisorPicker(prev => !prev)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm"
+          >
+            <Users className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            <span className="text-neutral-700 dark:text-neutral-300">
+              {selectedPersonas.length === allPersonaIds.length
+                ? "All Advisors"
+                : `${selectedPersonas.length} Advisor${selectedPersonas.length !== 1 ? "s" : ""} Selected`}
+            </span>
+            <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${showAdvisorPicker ? "rotate-180" : ""}`} />
+          </button>
 
           {/* Advisor picker dropdown */}
           {showAdvisorPicker && (
-            <div className="absolute left-4 right-4 md:left-8 md:right-8 mt-2 z-20 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl p-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute left-4 right-4 md:left-8 md:right-auto md:w-[500px] lg:w-[600px] mt-2 z-20 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-100 dark:border-neutral-800">
+                <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{selectedPersonas.length} of {allPersonaIds.length} selected</span>
+                <button
+                  onClick={() => {
+                    setSelectedPersonas(selectedPersonas.length === allPersonaIds.length ? [allPersonaIds[0]] : allPersonaIds);
+                  }}
+                  className="text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+                >
+                  {selectedPersonas.length === allPersonaIds.length ? "Deselect All" : "Select All"}
+                </button>
+              </div>
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-1.5 max-h-[320px] overflow-y-auto custom-scrollbar">
               {allPersonaIds.map(id => {
                 const persona = personas[id];
                 const isSelected = selectedPersonas.includes(id);
@@ -230,25 +221,29 @@ export default function Home() {
                   <button
                     key={id}
                     onClick={() => togglePersona(id)}
-                    className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    className={`relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isSelected
-                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/30"
-                        : "bg-neutral-50 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400"
+                        : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     }`}
                   >
-                    <span className="text-base">{persona.avatar}</span>
-                    <span className="truncate">{persona.name}</span>
+                    <span className="text-lg">{persona.avatar}</span>
+                    <div className="flex flex-col items-start min-w-0">
+                      <span className="truncate">{persona.name}</span>
+                      <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">{persona.tagline}</span>
+                    </div>
                     {isSelected && (
-                      <Check className="h-3.5 w-3.5 ml-auto flex-shrink-0 text-teal-600 dark:text-teal-400" />
+                      <Check className="h-4 w-4 ml-auto flex-shrink-0 text-teal-600 dark:text-teal-400" />
                     )}
                     {historyCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-teal-500 text-[9px] font-bold text-white flex items-center justify-center">
+                      <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-teal-500 text-[9px] font-bold text-white flex items-center justify-center">
                         {historyCount > 9 ? "9+" : historyCount}
                       </span>
                     )}
                   </button>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
