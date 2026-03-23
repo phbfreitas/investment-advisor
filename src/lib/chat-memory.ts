@@ -147,7 +147,10 @@ export async function updateSummary(
     ? personaExchanges.filter((ex) => ex.SK > `CHAT#${existingSummary.lastExchangeTimestamp}`)
     : personaExchanges;
 
-  const exchangeText = unsummarized
+  // Sort chronologically (oldest first) so the narrative follows proper time order
+  const chronological = [...unsummarized].reverse();
+
+  const exchangeText = chronological
     .map((ex) => {
       const personaResponse = ex.responses.find(
         (r) => r.personaId === personaId && r.status === "success"
