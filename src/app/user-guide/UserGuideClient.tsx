@@ -13,11 +13,27 @@ import {
     Zap,
     Info,
     LineChart,
-    Globe
+    Globe,
+    Shield,
+    Radio
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const sections = [
+type SectionItem = {
+    id: string;
+    title: string;
+    icon: typeof Info;
+    subsections: { id: string; title: string }[];
+};
+
+type PillarGroup = {
+    pillar: string;
+    pillarIcon: typeof Shield;
+    pillarAccent: string;
+    items: SectionItem[];
+};
+
+const sectionGroups: (SectionItem | PillarGroup)[] = [
     {
         id: "intro-john",
         title: "Introduction",
@@ -25,59 +41,73 @@ const sections = [
         subsections: []
     },
     {
-        id: "advisory-board",
-        title: "1. Expert Guidance",
-        icon: Users,
-        subsections: [
-            { id: "ab-logic", title: "Logic Mapping" },
-            { id: "ab-memory", title: "Advisor Notebook" },
-            { id: "ab-ripple", title: " Ripple Effect" },
+        pillar: "My Blueprint",
+        pillarIcon: Shield,
+        pillarAccent: "text-teal-600 dark:text-teal-400",
+        items: [
+            {
+                id: "strategy-profile",
+                title: "1. My Investment Strategy",
+                icon: BrainCircuit,
+                subsections: [
+                    { id: "strat-logic", title: "The Steering Wheel" },
+                    { id: "strat-ripple", title: "Dynamic Rewiring" },
+                ]
+            },
+            {
+                id: "finance-summary",
+                title: "2. My Finance Summary",
+                icon: Wallet,
+                subsections: [
+                    { id: "fin-logic", title: "Cashflow Mathematics" },
+                    { id: "fin-ripple", title: "The Ultimate Metric" },
+                ]
+            },
+            {
+                id: "portfolio",
+                title: "3. My Investment Portfolio",
+                icon: LayoutDashboard,
+                subsections: [
+                    { id: "port-logic", title: "Mathematical Logic" },
+                    { id: "port-dividends", title: "Dividend Summary" },
+                    { id: "port-ripple", title: "Cascading Effects" },
+                ]
+            },
         ]
     },
     {
-        id: "portfolio",
-        title: "2. My Investment Portfolio",
-        icon: LayoutDashboard,
-        subsections: [
-            { id: "port-logic", title: "Mathematical Logic" },
-            { id: "port-dividends", title: "Dividend Summary" },
-            { id: "port-ripple", title: "Cascading Effects" },
-        ]
-    },
-    {
-        id: "finance-summary",
-        title: "3. My Finance Summary",
-        icon: Wallet,
-        subsections: [
-            { id: "fin-logic", title: "Cashflow Mathematics" },
-            { id: "fin-ripple", title: "The Ultimate Metric" },
-        ]
-    },
-    {
-        id: "strategy-profile",
-        title: "4. My Investment Strategy",
-        icon: BrainCircuit,
-        subsections: [
-            { id: "strat-logic", title: "The Steering Wheel" },
-            { id: "strat-ripple", title: "Dynamic Rewiring" },
-        ]
-    },
-    {
-        id: "ai-guidance",
-        title: "5. AI Guidance",
-        icon: Target,
-        subsections: [
-            { id: "ai-logic", title: "The Data Assembly Line" },
-            { id: "ai-ripple", title: "The 4-Pillar Test" },
-        ]
-    },
-    {
-        id: "global-radar",
-        title: "6. Global News Guidance",
-        icon: Globe,
-        subsections: [
-            { id: "radar-logic", title: "The Intelligence Pipeline" },
-            { id: "radar-ripple", title: "The Deep Critique" },
+        pillar: "Market Intelligence",
+        pillarIcon: Radio,
+        pillarAccent: "text-amber-600 dark:text-amber-400",
+        items: [
+            {
+                id: "advisory-board",
+                title: "4. Expert Guidance",
+                icon: Users,
+                subsections: [
+                    { id: "ab-logic", title: "Logic Mapping" },
+                    { id: "ab-memory", title: "Advisor Notebook" },
+                    { id: "ab-ripple", title: " Ripple Effect" },
+                ]
+            },
+            {
+                id: "ai-guidance",
+                title: "5. AI Guidance",
+                icon: Target,
+                subsections: [
+                    { id: "ai-logic", title: "The Data Assembly Line" },
+                    { id: "ai-ripple", title: "The 4-Pillar Test" },
+                ]
+            },
+            {
+                id: "global-radar",
+                title: "6. Global News Guidance",
+                icon: Globe,
+                subsections: [
+                    { id: "radar-logic", title: "The Intelligence Pipeline" },
+                    { id: "radar-ripple", title: "The Deep Critique" },
+                ]
+            },
         ]
     },
     {
@@ -194,7 +224,7 @@ export default function UserGuideClient() {
 
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the homepage of the app, featuring a panel of legendary investors — Warren Buffett, Luiz Barsi, Max Gunther, Morgan Housel, and Dave Ramsey. Select which advisors to consult per question. Each brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
+                            This is the homepage of the app, featuring a panel of legendary investors — John C. Bogle, Warren Buffett, Luiz Barsi, Benjamin Graham, Max Gunther, Morgan Housel, Robert Kiyosaki, and Dave Ramsey. Select which advisors to consult using the collapsible chip selector — your selected advisors appear as compact chips, and clicking &quot;Change&quot; opens a responsive grid to toggle advisors on or off. Each advisor brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
@@ -648,7 +678,7 @@ export default function UserGuideClient() {
                                 <Globe className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
                             </h3>
                             <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features five targeted analyses plus one master synthesis:</p>
+                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features five targeted analyses, one master synthesis, and one total integration view:</p>
                                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
                                     <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <span><strong>Net Worth Stress Test:</strong> Assesses total financial health (liquid + real estate) against this week&apos;s macro events.</span></li>
                                     <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <span><strong>Deep Buy Scanner:</strong> Finds panic-driven value opportunities using 3 criteria: non-fundamental price drops, selling exhaustion signals, and below-average valuations.</span></li>

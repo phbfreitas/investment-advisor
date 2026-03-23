@@ -16,12 +16,18 @@ To make assimilation easy, we will follow a single running example throughout th
 
 This is the homepage of the app, featuring a conversational AI with a panel of legendary investors. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. You select which advisors to consult per question — each brings a distinct investment philosophy and will respond in their own voice.
 
-The five available advisors are:
+The eight available advisors are:
+- **John C. Bogle** (The Index Fund Pioneer) — Low-cost index investing, anti-active management
 - **Warren Buffett** (The Oracle of Omaha) — Value investing, economic moats, long-term holding
 - **Luiz Barsi Filho** (The Dividend King) — Dividend-focused, long-term accumulation
+- **Benjamin Graham** (The Father of Value Investing) — Margin of safety, fundamental analysis, defensive investing
 - **Max Gunther** (The Zurich Speculator) — Calculated risk-taking, contrarian thinking
 - **Morgan Housel** (The Behavioral Analyst) — Behavioral finance, compounding patience
+- **Robert Kiyosaki** (The Rich Dad Mentor) — Real estate, passive income, financial literacy
 - **Dave Ramsey** (The Debt Destroyer) — Zero debt, emergency fund, disciplined budgeting
+
+### Advisor Selection
+Instead of a scrolling list of pills, the Advisory Board uses a **collapsible chip selector**. Your currently selected advisors appear as compact teal chips at the top. Click "Change" to open a responsive grid dropdown where you can toggle advisors on/off. Remove individual advisors by clicking the X on their chip. This design scales cleanly as more advisors are added.
 
 ### How it Thinks (Logic Mapping)
 Before the AI even sees your typed question, the system builds a comprehensive "Context String" in the background. It reaches into the database and grabs:
@@ -202,7 +208,32 @@ John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (Secti
 
 ---
 
-## 6. Settings (Household Infrastructure)
+## 6. Global News Guidance (Geopolitical Radar)
+**Code Location:** `src/app/global-radar/GlobalRadarClient.tsx` & `src/app/api/global-radar/route.ts`
+
+This page connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines daily and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
+
+### Detailed Features & Functionalities
+The page features five targeted analyses, one master synthesis, and one total integration view:
+
+1. **Net Worth Stress Test:** Assesses total financial health (liquid + real estate) against this week's macro events.
+2. **Deep Buy Scanner:** Finds panic-driven value opportunities using 3 criteria: non-fundamental price drops, selling exhaustion signals, and below-average valuations.
+3. **Opportunity Cost Evaluator:** Identifies "dead money" sectors and suggests strategic rotations based on shifting macro regimes.
+4. **Cross-Sectional Impact Report:** Maps weekly news (rates, conflicts, energy) to your Growth/Mix/Dividend allocation.
+5. **Full Strategy Critic:** Compares your portfolio against global asset classes (S&P 500, TSX, Bonds, Commodities) and critiques exposure gaps.
+6. **Deep Critique:** Runs all 5 analyses in parallel, then synthesizes them into a single executive report with Top 3 Actions, Top 3 Deep Buy Stocks, Single Biggest Risk, and Strategic Outlook.
+7. **Total Integration (News + Strategy + Portfolio):** Analyzes each major news item in Economics, Business, and Politics against your specific holdings. For every headline it delivers: *The Fact* (2-sentence summary), *The 'So What?'* (macro/sector relevance), *Impact on My Portfolio* (which of your ETFs and stocks are affected), and *Connection to Strategy* (whether to rebalance Dividend vs. Growth or buy/sell specific tickers). Closes with a *Daily Verdict* of priority actions.
+
+- **Live News Integration:** Headlines are fetched daily from NewsData.io covering interest rates, inflation, energy, commodities, geopolitical events, and central bank policy. News is cached globally (shared across all users) to conserve API quota.
+- **Intelligent Caching & Stale Warnings:** Analyses are cached per-household and fingerprinted against your portfolio, strategy, *and* the news date. If any of these change, a Stale Data Warning appears with the report blurred until you refresh.
+- **Deep Critique Progress Tracking:** When running the Deep Critique, a real-time checklist shows each of the 5 sub-analyses completing with checkmarks. Failed analyses are gracefully noted and excluded from synthesis. Once all complete, the unified executive report streams in.
+
+### The Ripple Effect Example: The Deep Critique
+John clicks the **Deep Critique** card on a Monday morning after a turbulent week in global markets. The system fires 5 parallel AI analyses, each examining a different dimension of John's portfolio against the latest headlines. A live checklist shows progress. Once all 5 complete, the AI synthesizes everything into a single-page report listing the Top 3 Immediate Actions, Top 3 Deep Buy Stocks of the Week, the Single Biggest Risk, and a Strategic Outlook — all grounded in real news and John's actual holdings.
+
+---
+
+## 7. Settings (Household Infrastructure)
 **Code Location:** `src/app/settings/SettingsClient.tsx`
 
 This section handles the app's multi-tenant architecture, security, and aesthetics.
