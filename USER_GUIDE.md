@@ -1,6 +1,6 @@
 # System Logic & Ripple Effect Manual: Investment Advisor Platform
 
-Welcome to the definitive backend-to-business translation manual for the Investment Advisor. 
+Welcome to the definitive backend-to-business translation manual for the Investment Advisor.
 
 This guide is built to help non-technical users and domain experts understand exactly **how the software thinks**. The platform is organized into two navigation pillars:
 
@@ -15,6 +15,116 @@ To make assimilation easy, we will follow a single running example throughout th
 > John is a 55-year-old preparing for retirement. He has a $100,000 stock portfolio and keeps $15,000 in cash reserves. He just logged into the app.
 
 ---
+
+# My Blueprint
+
+## 1. My Investment Strategy (Profile Page)
+**Code Location:** `src/app/profile/ProfileClient.tsx`
+
+This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine. It combines free-text narrative context with structured strategy configuration, giving the advisors both qualitative and quantitative understanding of your investment approach.
+
+### Detailed Features & Functionalities
+
+#### A. Narrative Context (Existing)
+- **Overall Investment Strategy:** A free-text area where you describe your narrative focus (e.g., "Dividend growth for passive income"). The box automatically resizes as you type.
+- **Financial Goals:** Define short term and long term milestones.
+- **Risk Tolerance Slider:** A 1–10 numeric slider replaces the old dropdown. A score of 1 is maximally conservative; 10 is fully speculative. The selected value is passed directly to the AI, allowing it to calibrate advice with finer precision than broad category labels.
+
+#### B. Strategy Configuration (Collapsible Sections)
+Eight new structured configuration sections, each collapsible:
+
+- **Asset Mix:** Define your target allocation between Growth, Income, and Mixed assets as percentages (must sum to 100%). A visual stacked bar chart updates in real-time as you adjust the values.
+- **Investment Philosophies:** Toggle-select from 11 philosophies grouped into three categories:
+  - *Value-Based:* Regular Value, Deep Value, Mispriced Special Situations, Fundamental Value
+  - *Strategy-Based:* Event-Driven, Indexing, Buy the Dip, Contrarian
+  - *Style-Based:* Technical Analysis, Socially Responsible, Long-term Growth
+- **Core Principles:** Select guiding principles — Diversification, Discipline/Rebalancing (triggers drift alerts), and Cost Minimization.
+- **Account Types:** Specify which account types you use — TFSA, RRSP, Non-Registered.
+- **Trading Methodology:** Select your trading approaches — Buy and Hold, Trend Following, Value Averaging, Sector Rotation, Swing Trading.
+- **Sector Allocation:** Set target percentages across 11 standard market sectors (IT, Financials, Healthcare, etc.) plus two additional options — **S&P 500** (for broad index exposure) and **Other** (for assets that don't fit a standard sector). Values must sum to 100%. The system compares your targets against your actual portfolio holdings and displays an inline **drift table** showing Target %, Actual %, and Drift % for each sector. Sectors drifting more than 5% from target are flagged with a warning.
+- **Geographic Exposure:** Set target percentages across geographic regions (must sum to 100%). Three new regions have been added — **USA Only**, **Canada Only**, and **Global Mix** — alongside existing options (North America, Europe, Asia, Emerging Markets, Frontier Markets). Same drift detection applies.
+- **Performance Targets:** Set your Expected Annual Return (%) and Target Monthly Dividend Income ($). The system calculates projections from your actual portfolio (weighted average 1-year return and sum of expected dividends) and compares them against your targets, flagging when targets exceed estimates.
+
+#### C. Validation
+- All percentage groups (Asset Mix, Sector Allocation, Geographic Exposure) must sum to exactly 100% before saving.
+- Real-time "Remaining: X%" indicators turn green when the sum is correct and red when it's off.
+- Server-side validation provides a second safety net.
+
+### The Ripple Effect Example: Risk Tolerance + Strategy Config
+Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, both the narrative fields AND the structured strategy config are stapled to the top of your request.
+- **If John sets his Risk Tolerance to `2` (near-conservative) and selects "Buy and Hold" + "Diversification":** The AI will ONLY recommend safe, established companies with strong dividends and broad portfolio diversification.
+- **If John sets Risk Tolerance to `9` (near-speculative) and selects "Swing Trading" + "Deep Value":** The AI will recommend distressed, highly volatile opportunities for short-term gains, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this page.
+- **Drift Alerts:** If John sets a 20% target for Financials but his actual portfolio only has 14% in financial stocks, the drift table shows a -6% warning — reminding him to rebalance before his next purchase.
+
+---
+
+## 2. My Finance Summary (Macroscopic Health Engine)
+**Code Location:** `src/app/finance-summary/FinanceSummaryClient.tsx`
+
+While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
+
+### Detailed Features & Functionalities
+
+#### A. Budget Monthly Cashflow
+Set your baseline income and expense goals to automatically calculate your target savings.
+- **Income & Expense Inputs:** Enter values for Paycheck, Dividends, Fixed Home, Discretionary, etc.
+- **Auto-Formatting:** Currency fields automatically add commas as you type for easy reading.
+- **Auto-Calculated Savings:** As you change any income or expense field, the "Savings" panel instantly updates (Income minus Expenses).
+
+#### B. Actual Monthly Cash Flow
+A historical ledger to track your observed financial health over time.
+- **Tabular Tracking:** Add rows for specific Years and Months. Enter actual Income, Expenses, and ending Cash Reserves.
+- **Row Management:** You can easily add new rows via "Add Row" or remove mistakes with the red trashcan icon.
+
+#### C. Rental Cashflow
+A dedicated module to isolate income and expenses specifically related to your rental properties, calculating an isolated Net Profit / Loss.
+
+#### D. Personal Wealth
+Track your overall Net Worth by keeping all assets and liabilities up to date over time.
+- **Asset Integrations:** Enter values for Real Estate, Cash, Cars, and **Other Assets** (a catch-all field for any asset not covered by other categories, such as collectibles, business interests, or personal property).
+- **Synced Investment Field:** The "Investment" field is strictly read-only. It automatically pulls the sum of your *Total Market Value* directly from the **My Investment Portfolio** page.
+- **Net Worth Calculation:** Total Assets minus Total Liabilities, instantly updated and saved with a timestamp.
+
+### The Ripple Effect Example (The Ultimate Metric)
+This is the master culmination of the entire app. If the stock market crashes (My Investment Portfolio) AND John buys a new car on credit (My Finance Summary expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of John's wealth.
+
+---
+
+## 3. My Investment Portfolio (Dashboard)
+**Code Location:** `src/app/dashboard/DashboardClient.tsx`
+
+This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
+
+### Detailed Features & Functionalities
+
+#### A. KPI Summary Cards
+At the top, three critical indicators give you an instant macroscopic view:
+- **Total Market Value:** Sums the real-time value of every asset you own. It pulls live market data (indicated by a spinning loader when refreshing).
+- **Total Return:** Calculates the percentage of profit or loss across your entire portfolio based on your initial Book Cost versus current Market Value.
+- **Avg Dividend Yield:** Computes a weighted average of your dividend yields, ensuring large positions accurately influence the total yield metric.
+
+#### B. The Holdings Breakdown Table
+This is the interactive nerve center where every asset is dissected in detail.
+- **Sorting & Filtering:** Every column header can be clicked to sort (ascending/descending). Below each header is a filter box—type a ticker like "AAPL" or a sector like "Tech" to instantly isolate specific rows.
+- **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account, Security Type, Strategy Type, etc.).
+- **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
+- **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
+- **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
+
+#### C. Profile Page: Investment Portfolio Table
+A dedicated portfolio entry table on the My Investment Strategy page provides a streamlined way to add and manage holdings:
+- **Ticker Auto-Lookup:** Type a ticker symbol and the system automatically fetches the current price from Yahoo Finance — no manual price entry required.
+- **Account Name Autofill:** The account name field auto-suggests based on previously used account names, speeding up data entry.
+- **Auto-Calculated Fields:** Weight % (position size relative to the total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.
+- **Totals Row:** The table footer auto-sums market value, book cost, and expected dividends across all entries.
+- **CSV Export:** Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.
+
+### The Ripple Effect Example
+John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *Total Market Value* in the Holdings Breakdown increases by $1,000. This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the **My Finance Summary** page, instantly increasing John's calculated `Net Worth` without him typing a single thing.
+
+---
+
+# Market Intelligence
 
 ## 4. Expert Guidance (Chat Engine)
 **Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts` & `src/lib/personas.ts`
@@ -78,112 +188,6 @@ Your advisors now remember past conversations using a **Per-Advisor Structured M
 - **How much cash do I have?** The AI instantly checks your liquid reserves.
 - **Get live stock quotes:** It will fetch real-time market data during your conversation.
 - **What did I decide last time?** With EA Memory active, the advisor will recall your prior conversations and decisions.
-
----
-
-## 3. My Investment Portfolio (Dashboard)
-**Code Location:** `src/app/dashboard/DashboardClient.tsx`
-
-This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
-
-### Detailed Features & Functionalities
-
-#### A. KPI Summary Cards
-At the top, three critical indicators give you an instant macroscopic view:
-- **Total Market Value:** Sums the real-time value of every asset you own. It pulls live market data (indicated by a spinning loader when refreshing).
-- **Total Return:** Calculates the percentage of profit or loss across your entire portfolio based on your initial Book Cost versus current Market Value.
-- **Avg Dividend Yield:** Computes a weighted average of your dividend yields, ensuring large positions accurately influence the total yield metric.
-
-#### B. The Holdings Breakdown Table
-This is the interactive nerve center where every asset is dissected in detail.
-- **Sorting & Filtering:** Every column header can be clicked to sort (ascending/descending). Below each header is a filter box—type a ticker like "AAPL" or a sector like "Tech" to instantly isolate specific rows.
-- **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account, Security Type, Strategy Type, etc.).
-- **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
-- **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
-- **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
-
-#### C. Profile Page: Investment Portfolio Table
-A dedicated portfolio entry table on the My Investment Strategy page provides a streamlined way to add and manage holdings:
-- **Ticker Auto-Lookup:** Type a ticker symbol and the system automatically fetches the current price from Yahoo Finance — no manual price entry required.
-- **Account Name Autofill:** The account name field auto-suggests based on previously used account names, speeding up data entry.
-- **Auto-Calculated Fields:** Weight % (position size relative to the total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.
-- **Totals Row:** The table footer auto-sums market value, book cost, and expected dividends across all entries.
-- **CSV Export:** Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.
-
-### The Ripple Effect Example
-John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *Total Market Value* in the Holdings Breakdown increases by $1,000. This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the **My Finance Summary** page, instantly increasing John's calculated `Net Worth` without him typing a single thing.
-
----
-
-## 2. My Finance Summary (Macroscopic Health Engine)
-**Code Location:** `src/app/finance-summary/FinanceSummaryClient.tsx`
-
-While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
-
-### Detailed Features & Functionalities
-
-#### A. Budget Monthly Cashflow
-Set your baseline income and expense goals to automatically calculate your target savings.
-- **Income & Expense Inputs:** Enter values for Paycheck, Dividends, Fixed Home, Discretionary, etc. 
-- **Auto-Formatting:** Currency fields automatically add commas as you type for easy reading.
-- **Auto-Calculated Savings:** As you change any income or expense field, the "Savings" panel instantly updates (Income minus Expenses).
-
-#### B. Actual Monthly Cash Flow
-A historical ledger to track your observed financial health over time.
-- **Tabular Tracking:** Add rows for specific Years and Months. Enter actual Income, Expenses, and ending Cash Reserves.
-- **Row Management:** You can easily add new rows via "Add Row" or remove mistakes with the red trashcan icon.
-
-#### C. Rental Cashflow
-A dedicated module to isolate income and expenses specifically related to your rental properties, calculating an isolated Net Profit / Loss.
-
-#### D. Personal Wealth
-Track your overall Net Worth by keeping all assets and liabilities up to date over time.
-- **Asset Integrations:** Enter values for Real Estate, Cash, Cars, and **Other Assets** (a catch-all field for any asset not covered by other categories, such as collectibles, business interests, or personal property).
-- **Synced Investment Field:** The "Investment" field is strictly read-only. It automatically pulls the sum of your *Total Market Value* directly from the **My Investment Portfolio** page.
-- **Net Worth Calculation:** Total Assets minus Total Liabilities, instantly updated and saved with a timestamp.
-
-### The Ripple Effect Example (The Ultimate Metric)
-This is the master culmination of the entire app. If the stock market crashes (My Investment Portfolio) AND John buys a new car on credit (My Finance Summary expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of John's wealth.
-
----
-
-## 1. My Investment Strategy (Profile Page)
-**Code Location:** `src/app/profile/ProfileClient.tsx`
-
-This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine. It combines free-text narrative context with structured strategy configuration, giving the advisors both qualitative and quantitative understanding of your investment approach.
-
-### Detailed Features & Functionalities
-
-#### A. Narrative Context (Existing)
-- **Overall Investment Strategy:** A free-text area where you describe your narrative focus (e.g., "Dividend growth for passive income"). The box automatically resizes as you type.
-- **Financial Goals:** Define short term and long term milestones.
-- **Risk Tolerance Slider:** A 1–10 numeric slider replaces the old dropdown. A score of 1 is maximally conservative; 10 is fully speculative. The selected value is passed directly to the AI, allowing it to calibrate advice with finer precision than broad category labels.
-
-#### B. Strategy Configuration (Collapsible Sections)
-Eight new structured configuration sections, each collapsible:
-
-- **Asset Mix:** Define your target allocation between Growth, Income, and Mixed assets as percentages (must sum to 100%). A visual stacked bar chart updates in real-time as you adjust the values.
-- **Investment Philosophies:** Toggle-select from 11 philosophies grouped into three categories:
-  - *Value-Based:* Regular Value, Deep Value, Mispriced Special Situations, Fundamental Value
-  - *Strategy-Based:* Event-Driven, Indexing, Buy the Dip, Contrarian
-  - *Style-Based:* Technical Analysis, Socially Responsible, Long-term Growth
-- **Core Principles:** Select guiding principles — Diversification, Discipline/Rebalancing (triggers drift alerts), and Cost Minimization.
-- **Account Types:** Specify which account types you use — TFSA, RRSP, Non-Registered.
-- **Trading Methodology:** Select your trading approaches — Buy and Hold, Trend Following, Value Averaging, Sector Rotation, Swing Trading.
-- **Sector Allocation:** Set target percentages across 11 standard market sectors (IT, Financials, Healthcare, etc.) plus two additional options — **S&P 500** (for broad index exposure) and **Other** (for assets that don't fit a standard sector). Values must sum to 100%. The system compares your targets against your actual portfolio holdings and displays an inline **drift table** showing Target %, Actual %, and Drift % for each sector. Sectors drifting more than 5% from target are flagged with a warning.
-- **Geographic Exposure:** Set target percentages across geographic regions (must sum to 100%). Three new regions have been added — **USA Only**, **Canada Only**, and **Global Mix** — alongside existing options (North America, Europe, Asia, Emerging Markets, Frontier Markets). Same drift detection applies.
-- **Performance Targets:** Set your Expected Annual Return (%) and Target Monthly Dividend Income ($). The system calculates projections from your actual portfolio (weighted average 1-year return and sum of expected dividends) and compares them against your targets, flagging when targets exceed estimates.
-
-#### C. Validation
-- All percentage groups (Asset Mix, Sector Allocation, Geographic Exposure) must sum to exactly 100% before saving.
-- Real-time "Remaining: X%" indicators turn green when the sum is correct and red when it's off.
-- Server-side validation provides a second safety net.
-
-### The Ripple Effect Example: Risk Tolerance + Strategy Config
-Every field you fill out here is saved to the database. Whenever you use the AI anywhere else in the app, both the narrative fields AND the structured strategy config are stapled to the top of your request.
-- **If John sets his Risk Tolerance to `2` (near-conservative) and selects "Buy and Hold" + "Diversification":** The AI will ONLY recommend safe, established companies with strong dividends and broad portfolio diversification.
-- **If John sets Risk Tolerance to `9` (near-speculative) and selects "Swing Trading" + "Deep Value":** The AI will recommend distressed, highly volatile opportunities for short-term gains, explicitly ignoring safe dividend stocks. It dynamically rewires its advice based entirely on this page.
-- **Drift Alerts:** If John sets a 20% target for Financials but his actual portfolio only has 14% in financial stocks, the drift table shows a -6% warning — reminding him to rebalance before his next purchase.
 
 ---
 
