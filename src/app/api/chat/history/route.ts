@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getRecentExchanges, getAllSummaries, clearHistory, shouldSummarize, getSummary, updateSummary } from "@/lib/chat-memory";
+import { getRecentExchanges, getAllSummaries, clearHistory, shouldSummarize, getSummary, updateSummary, SUMMARY_FORMAT_VERSION } from "@/lib/chat-memory";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,31 +35,26 @@ export async function GET(request: Request) {
 
       const backfillPromises: Promise<void>[] = [];
       for (const pid of personasWithExchanges) {
-        const needsBackfill =
-          summaries[pid] === null ||
-          (summaries[pid]?.text && !summaries[pid]!.text.includes("### Our Journey So Far"));
-
-        if (needsBackfill) {
-          backfillPromises.push(
-            (async () => {
-              try {
-                const personaSummary = await getSummary(householdId, pid);
-                // For format migration, force regeneration even if threshold not met
-                const needsFormatMigration = personaSummary?.summary && !personaSummary.summary.includes("### Our Journey So Far");
-                if (needsFormatMigration || shouldSummarize(personaSummary, exchanges, pid)) {
-                  const updated = await updateSummary(householdId, pid, needsFormatMigration ? null : personaSummary, exchanges);
-                  summaries[pid] = {
-                    text: updated.summary,
-                    exchangeCount: updated.exchangeCount,
-                    lastUpdated: updated.updatedAt,
-                  };
-                }
-              } catch (err) {
-                console.error(`Backfill summarization failed for ${pid}:`, err);
+        backfillPromises.push(
+          (async () => {
+            try {
+              const personaSummary = await getSummary(householdId, pid);
+              const needsFormatMigration = !personaSummary ||
+                !personaSummary.summary?.includes("### Our Journey So Far") ||
+                personaSummary.formatVersion !== SUMMARY_FORMAT_VERSION;
+              if (needsFormatMigration || shouldSummarize(personaSummary, exchanges, pid)) {
+                const updated = await updateSummary(householdId, pid, needsFormatMigration ? null : personaSummary, exchanges);
+                summaries[pid] = {
+                  text: updated.summary,
+                  exchangeCount: updated.exchangeCount,
+                  lastUpdated: updated.updatedAt,
+                };
               }
-            })()
-          );
-        }
+            } catch (err) {
+              console.error(`Backfill summarization failed for ${pid}:`, err);
+            }
+          })()
+        );
       }
 
       if (backfillPromises.length > 0) {

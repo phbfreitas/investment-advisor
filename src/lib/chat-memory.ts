@@ -12,6 +12,7 @@ import type { ChatExchange, ChatSummary, PersonaResponse, PersonaSummaryMap } fr
 const SUMMARY_THRESHOLD = 3;
 const TTL_DAYS = 180;
 const MAX_SUMMARY_WORDS = 600;
+export const SUMMARY_FORMAT_VERSION = "v2"; // bump to force regeneration of all summaries
 
 const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki"];
 
@@ -151,12 +152,13 @@ export async function updateSummary(
   const chronological = [...unsummarized].reverse();
 
   const exchangeText = chronological
-    .map((ex) => {
+    .map((ex, idx) => {
       const personaResponse = ex.responses.find(
         (r) => r.personaId === personaId && r.status === "success"
       );
       const snippet = personaResponse ? personaResponse.content.slice(0, 500) : "";
-      return `User: ${ex.userMessage}\n  ${personaId}: ${snippet}`;
+      const timestamp = ex.SK.replace("CHAT#", "").split("T")[0];
+      return `[Exchange ${idx + 1} — ${timestamp}]\nUser: ${ex.userMessage}\n  ${personaId}: ${snippet}`;
     })
     .join("\n---\n");
 
@@ -168,7 +170,7 @@ INSTRUCTIONS:
 - Produce an updated summary (max ${MAX_SUMMARY_WORDS} words) using EXACTLY these 6 sections with ### headers:
 
 ### Our Journey So Far
-A warm, engaging narrative summary of the conversations so far — written as if the advisor is recounting their relationship with this client. Cover key topics discussed, how the user's thinking has evolved, and the overall trajectory of their investment journey together. Write in a flowing, enjoyable-to-read style (half a page in length). This is the centerpiece of the advisor's notebook.
+A warm, engaging narrative summary of the conversations so far — written as if the advisor is recounting their relationship with this client. CRITICAL: Follow strict chronological order from the EARLIEST conversation (Exchange 1) to the MOST RECENT. The narrative should flow as a timeline: "We first discussed X... Later, you mentioned Y... Most recently, you brought up Z..." Cover key topics discussed, how the user's thinking has evolved, and the overall trajectory of their investment journey together. Write in a flowing, enjoyable-to-read style (half a page in length). This is the centerpiece of the advisor's notebook.
 
 ### Investment Thesis
 The user's overarching investment philosophy as understood from conversations with this advisor.
@@ -209,6 +211,7 @@ RULES:
     exchangeCount: newExchangeCount,
     updatedAt: new Date().toISOString(),
     entityType: "CHAT_SUMMARY",
+    formatVersion: SUMMARY_FORMAT_VERSION,
   };
 
   await db.send(

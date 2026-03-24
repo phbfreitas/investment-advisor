@@ -77,6 +77,7 @@ export interface ChatSummary {
     exchangeCount: number;
     updatedAt: string;
     entityType: "CHAT_SUMMARY";
+    formatVersion?: string;
 }
 
 export type PersonaSummaryInfo = {
