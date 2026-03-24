@@ -2,7 +2,12 @@
 
 Welcome to the definitive backend-to-business translation manual for the Investment Advisor. 
 
-This guide is built to help non-technical users and domain experts understand exactly **how the software thinks**. We will walk through the application exactly as it appears in the navigation sidebar. For each section, we will explain the mathematical logic and the "Ripple Effect"—how a number entered in one place triggers changes across the entire system.
+This guide is built to help non-technical users and domain experts understand exactly **how the software thinks**. The platform is organized into two navigation pillars:
+
+- **My Blueprint** — Your private vault housing all static and dynamic data about your financial situation (My Investment Strategy, My Finance Summary, My Investment Portfolio).
+- **Market Intelligence** — The live engine housing three distinct "voices" providing active guidance and external data (Expert Guidance, AI Guidance, Global News Guidance).
+
+For each section, we will explain the mathematical logic and the "Ripple Effect"—how a number entered in one place triggers changes across the entire system.
 
 To make assimilation easy, we will follow a single running example throughout this guide.
 
@@ -11,7 +16,7 @@ To make assimilation easy, we will follow a single running example throughout th
 
 ---
 
-## 1. Investment Advisory Board (Chat Engine)
+## 4. Expert Guidance (Chat Engine)
 **Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts` & `src/lib/personas.ts`
 
 This is the homepage of the app, featuring a conversational AI with a panel of legendary investors. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. You select which advisors to consult per question — each brings a distinct investment philosophy and will respond in their own voice.
@@ -27,7 +32,7 @@ The eight available advisors are:
 - **Dave Ramsey** (The Debt Destroyer) — Zero debt, emergency fund, disciplined budgeting
 
 ### Advisor Selection
-Instead of a scrolling list of pills, the Advisory Board uses a **collapsible chip selector**. Your currently selected advisors appear as compact teal chips at the top. Click "Change" to open a responsive grid dropdown where you can toggle advisors on/off. Remove individual advisors by clicking the X on their chip. This design scales cleanly as more advisors are added.
+The Advisory Board uses a compact **single trigger button** displaying the number of advisors currently selected (e.g., "8 Advisors Selected" or "All Advisors"). Clicking it opens a responsive grid dropdown showing all available advisors with their names, taglines, and checkmarks for selected ones. A "Select All / Deselect All" toggle sits at the top of the dropdown. This design eliminates horizontal scrolling entirely and scales cleanly as more advisors are added.
 
 ### How it Thinks (Logic Mapping)
 Before the AI even sees your typed question, the system builds a comprehensive "Context String" in the background. It reaches into the database and grabs:
@@ -77,7 +82,7 @@ Your advisors now remember past conversations using a **Per-Advisor Structured M
 
 ---
 
-## 2. My Investment Portfolio (Dashboard)
+## 3. My Investment Portfolio (Dashboard)
 **Code Location:** `src/app/dashboard/DashboardClient.tsx`
 
 This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
@@ -111,7 +116,7 @@ John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *To
 
 ---
 
-## 3. My Finance Summary (Macroscopic Health Engine)
+## 2. My Finance Summary (Macroscopic Health Engine)
 **Code Location:** `src/app/finance-summary/FinanceSummaryClient.tsx`
 
 While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
@@ -139,11 +144,11 @@ Track your overall Net Worth by keeping all assets and liabilities up to date ov
 - **Net Worth Calculation:** Total Assets minus Total Liabilities, instantly updated and saved with a timestamp.
 
 ### The Ripple Effect Example (The Ultimate Metric)
-This is the master culmination of the entire app. If the stock market crashes (Section 2) AND John buys a new car on credit (Section 3 expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of John's wealth.
+This is the master culmination of the entire app. If the stock market crashes (My Investment Portfolio) AND John buys a new car on credit (My Finance Summary expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of John's wealth.
 
 ---
 
-## 4. My Investment Strategy (Profile Page)
+## 1. My Investment Strategy (Profile Page)
 **Code Location:** `src/app/profile/ProfileClient.tsx`
 
 This page is the **Steering Wheel** for the AI. What you type here fundamentally changes the brain circuitry of the AI Guidance Engine. It combines free-text narrative context with structured strategy configuration, giving the advisors both qualitative and quantitative understanding of your investment approach.
@@ -186,7 +191,7 @@ Every field you fill out here is saved to the database. Whenever you use the AI 
 ## 5. AI Guidance (Reasoning & Directive Engine)
 **Code Location:** `src/app/profile/guidance/GuidanceClient.tsx`
 
-This page is the heavy-duty analytics engine. It triggers "Directives"—highly engineered prompts that force the AI to process your Portfolio (Section 2) using your Strategy rules (Section 4).
+This page is the heavy-duty analytics engine. It triggers "Directives"—highly engineered prompts that force the AI to process your Portfolio (My Investment Portfolio) using your Strategy rules (My Investment Strategy).
 
 ### Detailed Features & Functionalities
 The page features six targeted AI Directives, each acting as a distinct analytical report:
@@ -204,7 +209,7 @@ The page features six targeted AI Directives, each acting as a distinct analytic
 - **Content Blurring & On-Demand Refresh:** To prevent you from acting on outdated advice, the presence of a Stale Data Warning will dynamically blur the underlying report. You can either dismiss the warning or click the **"Refresh Analysis"** button to force the AI to generate a brand new, up-to-date report. A timestamp in the header always ensures you know exactly when the current analysis was generated.
 
 ### The Ripple Effect Example: The 4-Pillar Test (Directive 4)
-John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (Section 4), noting he is a **Conservative near-retiree**. It simulates different expert perspectives (like Cathie Wood vs. Warren Buffett), acts as Chairman, and concludes that while the asset might go up, it **violates John's strict profile rules**. The final output firmly rejects the purchase.
+John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (My Investment Strategy), noting he is a **Conservative near-retiree**. It simulates different expert perspectives (like Cathie Wood vs. Warren Buffett), acts as Chairman, and concludes that while the asset might go up, it **violates John's strict profile rules**. The final output firmly rejects the purchase.
 
 ---
 
