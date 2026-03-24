@@ -112,25 +112,27 @@ export function Sidebar() {
 
                 {/* Navigation items */}
                 <nav className="flex flex-row md:flex-col md:space-y-1 px-2 py-2 md:px-3 md:py-4 space-x-2 md:space-x-0">
-                    {currentPillar.items.map((item) => {
+                    {[...currentPillar.items, ...utilities].map((item) => {
                         const isActive = pathname === item.href;
+                        const isUtility = utilities.some(u => u.href === item.href);
                         return (
                             <Link
                                 key={item.name}
                                 href={item.href}
                                 className={cn(
                                     isActive
-                                        ? isAmber
+                                        ? isAmber && !isUtility
                                             ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
                                             : "bg-teal-50 dark:bg-neutral-900 text-teal-700 dark:text-teal-400"
                                         : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900/50 hover:text-neutral-900 dark:hover:text-white",
+                                    isUtility ? "md:hidden" : "",
                                     "group flex flex-col md:flex-row items-center justify-center md:justify-start rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0"
                                 )}
                             >
                                 <item.icon
                                     className={cn(
                                         isActive
-                                            ? isAmber
+                                            ? isAmber && !isUtility
                                                 ? "text-amber-600 dark:text-amber-400"
                                                 : "text-teal-600 dark:text-teal-400"
                                             : "text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300",
