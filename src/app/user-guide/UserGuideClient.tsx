@@ -134,7 +134,7 @@ export default function UserGuideClient() {
         <div className="flex flex-col md:flex-row h-full bg-white dark:bg-[#050505] transition-colors duration-300">
 
             {/* Internal Navigation Sidebar */}
-            <aside className="w-full md:w-72 border-r border-neutral-200 dark:border-neutral-800 flex flex-col bg-neutral-50/50 dark:bg-[#080808]">
+            <aside className="w-full md:w-72 max-h-[40vh] md:max-h-none border-r border-neutral-200 dark:border-neutral-800 flex flex-col bg-neutral-50/50 dark:bg-[#080808] shrink-0">
                 <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
                     <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Logic Manual</h2>
                 </div>
