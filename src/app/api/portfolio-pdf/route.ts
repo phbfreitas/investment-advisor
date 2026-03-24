@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PDFParse } from "pdf-parse";
+import { insertAuditLog } from "@/lib/auditLog";
+import { toSnapshot } from "@/lib/assetSnapshot";
+import type { AuditMutation } from "@/types/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -201,9 +204,10 @@ export async function POST(request: Request) {
             console.error("Failed to query existing assets:", e);
         }
 
-        // 4. Create or update asset records
+        // 4. Classify operations and build write requests + audit mutations
         type WriteRequest = { PutRequest?: { Item: Record<string, unknown> }, DeleteRequest?: { Key: Record<string, unknown> } };
         const writeRequests: WriteRequest[] = [];
+        const mutations: AuditMutation[] = [];
 
         for (const h of holdings) {
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
@@ -226,55 +230,71 @@ export async function POST(request: Request) {
             }
 
             const assetId = existing ? existing.id : uuidv4();
+            const assetSK = `ASSET#${assetId}`;
 
-            writeRequests.push({
-                PutRequest: {
-                    Item: {
-                        PK: PROFILE_KEY,
-                        SK: `ASSET#${assetId}`,
-                        id: assetId,
-                        profileId: PROFILE_KEY,
-                        type: "ASSET",
-                        ticker: h.ticker,
-                        currency: h.currency || "CAD",
-                        quantity: h.quantity,
-                        liveTickerPrice: pricePerShare,
-                        bookCost: h.bookCost,
-                        marketValue: h.marketValue,
-                        profitLoss: h.marketValue - h.bookCost,
-                        accountNumber: h.accountNumber || (existing?.accountNumber ?? ""),
-                        accountType: h.accountType || (existing?.accountType ?? "Registered"),
-                        importSource: "pdf-statement",
-                        updatedAt: new Date().toISOString(),
-                        createdAt: existing?.createdAt ?? new Date().toISOString(),
+            const newItem = {
+                PK: PROFILE_KEY,
+                SK: assetSK,
+                id: assetId,
+                profileId: PROFILE_KEY,
+                type: "ASSET",
+                ticker: h.ticker,
+                currency: h.currency || "CAD",
+                quantity: h.quantity,
+                liveTickerPrice: pricePerShare,
+                bookCost: h.bookCost,
+                marketValue: h.marketValue,
+                profitLoss: h.marketValue - h.bookCost,
+                accountNumber: h.accountNumber || (existing?.accountNumber ?? ""),
+                accountType: h.accountType || (existing?.accountType ?? "Registered"),
+                importSource: "pdf-statement",
+                updatedAt: new Date().toISOString(),
+                createdAt: existing?.createdAt ?? new Date().toISOString(),
+                account: existing?.account ?? "",
+                securityType: existing?.securityType ?? "",
+                strategyType: existing?.strategyType ?? "",
+                call: existing?.call ?? "",
+                sector: existing?.sector ?? "",
+                market: existing?.market ?? "",
+                managementStyle: existing?.managementStyle ?? "",
+                externalRating: existing?.externalRating ?? "",
+                managementFee: existing?.managementFee ?? 0,
+                yield: existing?.yield ?? 0,
+                oneYearReturn: existing?.oneYearReturn ?? 0,
+                fiveYearReturn: existing?.fiveYearReturn ?? 0,
+                threeYearReturn: existing?.threeYearReturn ?? 0,
+                exDividendDate: existing?.exDividendDate ?? "",
+                analystConsensus: existing?.analystConsensus ?? "",
+                beta: existing?.beta ?? 0,
+                riskFlag: existing?.riskFlag ?? "",
+                risk: existing?.risk ?? "",
+                volatility: existing?.volatility ?? 0,
+                expectedAnnualDividends: existing?.expectedAnnualDividends ?? 0,
+            };
 
-                        // Retain existing fields if updating
-                        account: existing?.account ?? "",
-                        securityType: existing?.securityType ?? "",
-                        strategyType: existing?.strategyType ?? "",
-                        call: existing?.call ?? "",
-                        sector: existing?.sector ?? "",
-                        market: existing?.market ?? "",
-                        managementStyle: existing?.managementStyle ?? "",
-                        externalRating: existing?.externalRating ?? "",
-                        managementFee: existing?.managementFee ?? 0,
-                        yield: existing?.yield ?? 0,
-                        oneYearReturn: existing?.oneYearReturn ?? 0,
-                        fiveYearReturn: existing?.fiveYearReturn ?? 0,
-                        threeYearReturn: existing?.threeYearReturn ?? 0,
-                        exDividendDate: existing?.exDividendDate ?? "",
-                        analystConsensus: existing?.analystConsensus ?? "",
-                        beta: existing?.beta ?? 0,
-                        riskFlag: existing?.riskFlag ?? "",
-                        risk: existing?.risk ?? "",
-                        volatility: existing?.volatility ?? 0,
-                        expectedAnnualDividends: existing?.expectedAnnualDividends ?? 0,
-                    }
-                }
-            });
+            writeRequests.push({ PutRequest: { Item: newItem } });
+
+            // Classify for audit
+            if (existing) {
+                mutations.push({
+                    action: 'UPDATE',
+                    ticker: h.ticker,
+                    assetSK,
+                    before: toSnapshot(existing),
+                    after: toSnapshot(newItem),
+                });
+            } else {
+                mutations.push({
+                    action: 'CREATE',
+                    ticker: h.ticker,
+                    assetSK,
+                    before: null,
+                    after: toSnapshot(newItem),
+                });
+            }
         }
 
-        // 5. Delete assets that belong to this account number but are no longer in the PDF
+        // 5. Classify and build delete requests for assets no longer in PDF
         const pdfAccountNumber = holdings.length > 0 ? holdings[0].accountNumber : extractAccountNumber(text);
         if (pdfAccountNumber && pdfAccountNumber.trim() !== '') {
             const existingAssetsForAccount = existingAssets.filter(a => a.accountNumber === pdfAccountNumber);
@@ -283,33 +303,67 @@ export async function POST(request: Request) {
                 if (!stillHoldsIt) {
                     writeRequests.push({
                         DeleteRequest: {
-                            Key: {
-                                PK: asset.PK,
-                                SK: asset.SK
-                            }
+                            Key: { PK: asset.PK, SK: asset.SK }
                         }
+                    });
+                    mutations.push({
+                        action: 'DELETE',
+                        ticker: asset.ticker,
+                        assetSK: asset.SK,
+                        before: toSnapshot(asset),
+                        after: null,
                     });
                 }
             }
         }
 
-        // 6. DynamoDB BatchWriteItem limit: 25 per request
+        // 6. DynamoDB BatchWriteItem with retry for unprocessed items
         const chunkSize = 25;
         for (let i = 0; i < writeRequests.length; i += chunkSize) {
             const chunk = writeRequests.slice(i, i + chunkSize);
-            await db.send(
-                new BatchWriteCommand({
-                    RequestItems: {
-                        [TABLE_NAME]: chunk,
-                    }
-                })
-            );
+            let unprocessed = chunk;
+            let retries = 0;
+            const maxRetries = 3;
+
+            while (unprocessed.length > 0 && retries < maxRetries) {
+                const result = await db.send(
+                    new BatchWriteCommand({
+                        RequestItems: {
+                            [TABLE_NAME]: unprocessed,
+                        }
+                    })
+                );
+
+                const remaining = result.UnprocessedItems?.[TABLE_NAME];
+                if (remaining && remaining.length > 0) {
+                    unprocessed = remaining as WriteRequest[];
+                    retries++;
+                    // Exponential backoff before retry
+                    await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retries)));
+                } else {
+                    unprocessed = [];
+                }
+            }
+
+            if (unprocessed.length > 0) {
+                console.error(`Failed to process ${unprocessed.length} items after ${maxRetries} retries`);
+                return NextResponse.json({
+                    error: `Import partially failed. ${unprocessed.length} items could not be written.`,
+                }, { status: 500 });
+            }
+        }
+
+        // 7. Write audit log only after ALL chunks succeed
+        const filename = (formData.get("file") as File)?.name || "unknown.pdf";
+        if (mutations.length > 0) {
+            await insertAuditLog(session.user.householdId, 'PDF_IMPORT', mutations, filename);
         }
 
         return NextResponse.json({
             message: "PDF statement imported successfully",
             count: holdings.length,
             holdings: holdings.map(h => ({ ticker: h.ticker, quantity: h.quantity, accountType: h.accountType })),
+            mutations: mutations.map(m => ({ action: m.action, ticker: m.ticker, assetSK: m.assetSK })),
         });
     } catch (error) {
         console.error("Failed to process PDF statement:", error);
