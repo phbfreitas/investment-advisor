@@ -24,6 +24,7 @@ interface ClientDossierProps {
     onResetMemory: (personaId?: string) => void;
     isMobileDrawer?: boolean;
     onClose?: () => void;
+    loading?: boolean;
 }
 
 function parseSections(text: string): Record<string, string> {
@@ -42,7 +43,7 @@ function parseSections(text: string): Record<string, string> {
     return sections;
 }
 
-export function ClientDossier({ summaries, personaExchangeCounts, onOpenArchive, onResetMemory, isMobileDrawer, onClose }: ClientDossierProps) {
+export function ClientDossier({ summaries, personaExchangeCounts, onOpenArchive, onResetMemory, isMobileDrawer, onClose, loading }: ClientDossierProps) {
     const [activePersona, setActivePersona] = useState<PersonaId | null>(null);
     const [confirmReset, setConfirmReset] = useState<string | null>(null);
 
@@ -98,7 +99,30 @@ export function ClientDossier({ summaries, personaExchangeCounts, onOpenArchive,
 
             {/* Notebook Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
-                {!activePersona ? (
+                {loading ? (
+                    /* Loading skeleton */
+                    <div className="space-y-4 animate-pulse py-4">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+                            <div className="space-y-2 flex-1">
+                                <div className="h-3 w-32 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                                <div className="h-2 w-20 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="h-3 w-3/4 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            <div className="h-3 w-full bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            <div className="h-3 w-5/6 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                            <div className="h-3 w-2/3 bg-neutral-200 dark:bg-neutral-800 rounded" />
+                        </div>
+                        <div className="pt-4 space-y-3">
+                            <div className="h-16 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                            <div className="h-16 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                            <div className="h-16 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
+                        </div>
+                        <p className="text-xs text-center text-neutral-400 dark:text-neutral-500 pt-2">Loading advisor notebook...</p>
+                    </div>
+                ) : !activePersona ? (
                     /* No advisor selected */
                     <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
                         <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">

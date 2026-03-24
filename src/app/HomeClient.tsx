@@ -258,6 +258,7 @@ export default function Home() {
             personaExchangeCounts={personaHistoryCounts}
             onOpenArchive={() => setShowArchive(true)}
             onResetMemory={handleResetMemory}
+            loading={isLoadingHistory}
           />
         </div>
 
@@ -406,6 +407,7 @@ export default function Home() {
               onResetMemory={handleResetMemory}
               isMobileDrawer
               onClose={() => setShowMobileDossier(false)}
+              loading={isLoadingHistory}
             />
           </div>
         </div>
