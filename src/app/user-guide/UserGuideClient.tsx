@@ -294,7 +294,7 @@ export default function UserGuideClient() {
 
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the homepage of the app, featuring a panel of legendary investors — John C. Bogle, Warren Buffett, Luiz Barsi, Benjamin Graham, Max Gunther, Morgan Housel, Robert Kiyosaki, and Dave Ramsey. Select which advisors to consult using the collapsible chip selector — your selected advisors appear as compact chips, and clicking &quot;Change&quot; opens a responsive grid to toggle advisors on or off. Each advisor brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
+                            This is the homepage of the app, featuring a panel of legendary investors — John C. Bogle, Warren Buffett, Luiz Barsi, Benjamin Graham, Max Gunther, Morgan Housel, and Robert Kiyosaki. Select which advisors to consult using the collapsible chip selector — your selected advisors appear as compact chips, and clicking &quot;Change&quot; opens a responsive grid to toggle advisors on or off. Each advisor brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">

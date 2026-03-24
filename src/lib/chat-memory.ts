@@ -13,7 +13,7 @@ const SUMMARY_THRESHOLD = 3;
 const TTL_DAYS = 180;
 const MAX_SUMMARY_WORDS = 600;
 
-const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki", "ramsey"];
+const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki"];
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);

@@ -21,7 +21,7 @@ To make assimilation easy, we will follow a single running example throughout th
 
 This is the homepage of the app, featuring a conversational AI with a panel of legendary investors. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. You select which advisors to consult per question — each brings a distinct investment philosophy and will respond in their own voice.
 
-The eight available advisors are:
+The seven available advisors are:
 - **John C. Bogle** (The Index Fund Pioneer) — Low-cost index investing, anti-active management
 - **Warren Buffett** (The Oracle of Omaha) — Value investing, economic moats, long-term holding
 - **Luiz Barsi Filho** (The Dividend King) — Dividend-focused, long-term accumulation
@@ -29,7 +29,6 @@ The eight available advisors are:
 - **Max Gunther** (The Zurich Speculator) — Calculated risk-taking, contrarian thinking
 - **Morgan Housel** (The Behavioral Analyst) — Behavioral finance, compounding patience
 - **Robert Kiyosaki** (The Rich Dad Mentor) — Real estate, passive income, financial literacy
-- **Dave Ramsey** (The Debt Destroyer) — Zero debt, emergency fund, disciplined budgeting
 
 ### Advisor Selection
 The Advisory Board uses a compact **single trigger button** displaying the number of advisors currently selected (e.g., "8 Advisors Selected" or "All Advisors"). Clicking it opens a responsive grid dropdown showing all available advisors with their names, taglines, and checkmarks for selected ones. A "Select All / Deselect All" toggle sits at the top of the dropdown. This design eliminates horizontal scrolling entirely and scales cleanly as more advisors are added.

@@ -26,11 +26,6 @@
       { "type": "file", "path": "books/The Psychology of Money_ Timeless lessons on wealth, greed, -- Morgan Housel -- United Kingdom, Sep 08, 2020 -- Harriman House -- 9780857197689 -- 27ef11c0c6cadc87941099f5b8c6177a -- Anna\u2019s Archive.pdf", "label": "The Psychology of Money" }
     ]
   },
-  "ramsey": {
-    "sources": [
-      { "type": "file", "path": "books/The Total Money Makeover_ A Proven Plan for Financial -- Dave Ramsey -- 2009 -- Thomas Nelson -- 2bcbf6fabf53249f5cbe6c4488e67084 -- Anna\u2019s Archive.pdf", "label": "The Total Money Makeover" }
-    ]
-  },
   "bogle": {
     "sources": [
       { "type": "file", "path": "books/annas-arch-68938b88ae2a.pdf", "label": "The Little Book of Common Sense Investing" }
