@@ -4,6 +4,8 @@ import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { insertAuditLog } from "@/lib/auditLog";
+import { toSnapshot } from "@/lib/assetSnapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +81,15 @@ export async function POST(request: Request) {
                 Item: asset,
             })
         );
+
+        // Audit log: record creation
+        await insertAuditLog(session.user.householdId, 'MANUAL_EDIT', [{
+            action: 'CREATE',
+            ticker: asset.ticker,
+            assetSK: asset.SK,
+            before: null,
+            after: toSnapshot(asset),
+        }], asset.ticker);
 
         return NextResponse.json({ message: "Asset added successfully", asset });
     } catch (error) {
