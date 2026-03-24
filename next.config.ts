@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", "prisma", "pdf-parse"],
   images: { unoptimized: true },
   async headers() {
     return [

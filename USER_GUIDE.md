@@ -109,6 +109,7 @@ This is the interactive nerve center where every asset is dissected in detail.
 - **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account, Security Type, Strategy Type, etc.).
 - **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
 - **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
+- **PDF Statement Import:** Upload standard brokerage statements (including native support for Wealthsimple PDFs) to automatically extract your holdings. The system intelligently matches existing assets by Ticker and Account Number, updating the `# Tickers` (Quantity), Market Value, and Book Cost, while automatically deleting old or sold tickers to perfectly sync with your statement.
 - **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
 
 #### C. Profile Page: Investment Portfolio Table

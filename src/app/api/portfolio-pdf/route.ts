@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, TABLE_NAME } from "@/lib/db";
-import { BatchWriteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -30,18 +30,22 @@ function classifyAccountType(text: string): string {
 function extractAccountNumber(text: string): string {
     // Common patterns: "Account: 12345", "Account #: ABC123", "Acct# 12345"
     const patterns = [
-        /Account\s*(?:#|Number|No\.?)?\s*:?\s*([A-Z0-9]{4,})/i,
-        /Acct\s*#?\s*:?\s*([A-Z0-9]{4,})/i,
-        /(?:^|\n)\s*#?\s*([A-Z0-9]{6,12})\s*(?:TFSA|RRSP|Non|Margin|Cash)/im,
+        /Account No\.[^\n]*\n\s*((?=[A-Z0-9]*[0-9])[A-Z0-9]{6,15})\b/i,
+        /(?:^|\n)\s*#?\s*((?=[A-Z0-9]*[0-9])[A-Z0-9]{6,15})\s*(?:TFSA|RRSP|Non|Margin|Cash)/im,
+        /Account\s*(?:#|Number|No\.?)?\s*:?\s*((?=[A-Z0-9]*[0-9])[A-Z0-9]{4,15})/i,
+        /Acct\s*#?\s*:?\s*:?\s*((?=[A-Z0-9]*[0-9])[A-Z0-9]{4,15})/i,
     ];
     for (const pattern of patterns) {
         const match = text.match(pattern);
-        if (match) return match[1];
+        if (match) {
+            console.log("EXTRACTED ACCOUNT NUMBER: ", match[1], "using pattern:", pattern);
+            return match[1];
+        }
     }
+    console.log("NO ACCOUNT NUMBER EXTRACTED FROM PDF!");
     return "";
 }
 
-// Parse holdings from PDF text — supports common Canadian brokerage formats
 function parseHoldings(text: string): ParsedHolding[] {
     const holdings: ParsedHolding[] = [];
     const accountNumber = extractAccountNumber(text);
@@ -53,12 +57,17 @@ function parseHoldings(text: string): ParsedHolding[] {
     // Split into lines for row-by-row parsing
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-    // Pattern: TICKER.TO or TICKER followed by numbers (qty, cost, value)
-    // Matches lines like: "XQQ.TO 100 5,432.10 6,100.00"
-    // or "RY 250 $12,500.00 $14,200.00"
+    // Standard Pattern: TICKER.TO or TICKER followed by numbers (qty, cost, value)
+    // Safe generic holding pattern (Ticker Qty Price Value)
     const holdingPattern = /^([A-Z]{1,5}(?:\.[A-Z]{1,3})?)\s+(\d[\d,]*(?:\.\d+)?)\s+\$?([\d,]+(?:\.\d{2})?)\s+\$?([\d,]+(?:\.\d{2})?)/;
+    
+    // Wealthsimple holdings line pattern (Ticker followed by at least 3 numeric quantities)
+    const wsQtyPattern = /(?:^|\s)([A-Z]{1,5}(?:\.[A-Z]{1,3})?)\s+(\d[\d,]*(?:\.\d+)?)\s+(\d[\d,]*(?:\.\d+)?)\s+(\d[\d,]*(?:\.\d+)?)(?:\s|$)/;
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // 1. Try generic safe pattern
         const match = line.match(holdingPattern);
         if (match) {
             const ticker = match[1];
@@ -67,33 +76,46 @@ function parseHoldings(text: string): ParsedHolding[] {
             const marketValue = parseFloat(match[4].replace(/,/g, ''));
 
             if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
-                holdings.push({
-                    ticker,
-                    quantity,
-                    bookCost,
-                    marketValue,
-                    accountNumber,
-                    accountType,
-                    currency,
-                });
+                if (!holdings.some(h => h.ticker === ticker)) {
+                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
+                }
             }
+            continue;
         }
-    }
 
-    // If regex didn't match, try a more lenient approach for table-like structures
-    if (holdings.length === 0) {
-        // Look for known ticker symbols in the text followed by numeric data
-        const tickerPattern = /([A-Z]{1,5}(?:\.[A-Z]{1,3})?)\s.*?(\d[\d,]*(?:\.\d+)?)\s.*?\$?([\d,]+(?:\.\d{2})?)\s.*?\$?([\d,]+(?:\.\d{2})?)/g;
-        let tickerMatch;
-        while ((tickerMatch = tickerPattern.exec(text)) !== null) {
-            const ticker = tickerMatch[1];
-            const quantity = parseFloat(tickerMatch[2].replace(/,/g, ''));
-            const bookCost = parseFloat(tickerMatch[3].replace(/,/g, ''));
-            const marketValue = parseFloat(tickerMatch[4].replace(/,/g, ''));
+        // 2. Try Wealthsimple specific pattern
+        const wsMatch = line.match(wsQtyPattern);
+        if (wsMatch) {
+            if (line.includes("RECALL") || line.includes("LOAN") || line.includes("terminated")) continue;
 
-            // Sanity check: reasonable values
-            if (quantity > 0 && quantity < 1_000_000 && bookCost > 0 && marketValue > 0) {
-                // Avoid duplicates
+            const ticker = wsMatch[1];
+            const quantity = parseFloat(wsMatch[2].replace(/,/g, ''));
+            const dollarAmounts: number[] = [];
+            const dollarPattern = /\$([\d,]+(?:\.\d{2})?)/g;
+
+            let execMatch;
+            while ((execMatch = dollarPattern.exec(line)) !== null) {
+                dollarAmounts.push(parseFloat(execMatch[1].replace(/,/g, '')));
+            }
+
+            for (let j = 1; j <= 6 && (i + j) < lines.length; j++) {
+                if (lines[i+j].match(wsQtyPattern) && !lines[i+j].includes("RECALL") && !lines[i+j].includes("LOAN")) break;
+                let nextMatch;
+                while ((nextMatch = dollarPattern.exec(lines[i+j])) !== null) {
+                    dollarAmounts.push(parseFloat(nextMatch[1].replace(/,/g, '')));
+                }
+            }
+
+            if (dollarAmounts.length >= 3) {
+                const price = dollarAmounts[0]; // Assuming first dollar is price
+                const marketValue = dollarAmounts[1]; // Assuming second dollar is market value
+                const bookCost = dollarAmounts[2]; // Assuming third dollar is book cost
+
+                if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
+                    if (!holdings.some(h => h.ticker === ticker)) {
+                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
+                    }
+                }
                 if (!holdings.some(h => h.ticker === ticker)) {
                     holdings.push({
                         ticker,
@@ -161,13 +183,51 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Please setup your profile first" }, { status: 400 });
         }
 
-        // Create asset records
-        type WriteRequest = { PutRequest: { Item: Record<string, unknown> } };
-        const writeRequests: WriteRequest[] = holdings.map(h => {
-            const assetId = uuidv4();
-            const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
+        // Fetch existing assets to update them instead of duplicating
+        let existingAssets: any[] = [];
+        try {
+            const { Items } = await db.send(
+                new QueryCommand({
+                    TableName: TABLE_NAME,
+                    KeyConditionExpression: "PK = :pk AND begins_with(SK, :assetPrefix)",
+                    ExpressionAttributeValues: {
+                        ":pk": PROFILE_KEY,
+                        ":assetPrefix": "ASSET#"
+                    }
+                })
+            );
+            existingAssets = Items || [];
+        } catch (e) {
+            console.error("Failed to query existing assets:", e);
+        }
 
-            return {
+        // 4. Create or update asset records
+        type WriteRequest = { PutRequest?: { Item: Record<string, unknown> }, DeleteRequest?: { Key: Record<string, unknown> } };
+        const writeRequests: WriteRequest[] = [];
+
+        for (const h of holdings) {
+            const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
+            const allMatches = existingAssets.filter(a => a.ticker === h.ticker);
+            let existing;
+
+            if (h.accountNumber) {
+                existing = allMatches.find(a => a.accountNumber === h.accountNumber);
+                if (!existing) {
+                    const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
+                    if (naMatches.length === 1) existing = naMatches[0];
+                }
+            } else {
+                if (allMatches.length === 1 && !allMatches[0].accountNumber) {
+                    existing = allMatches[0];
+                } else {
+                    const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
+                    if (naMatches.length === 1) existing = naMatches[0];
+                }
+            }
+
+            const assetId = existing ? existing.id : uuidv4();
+
+            writeRequests.push({
                 PutRequest: {
                     Item: {
                         PK: PROFILE_KEY,
@@ -175,43 +235,65 @@ export async function POST(request: Request) {
                         id: assetId,
                         profileId: PROFILE_KEY,
                         type: "ASSET",
-                        account: "",
                         ticker: h.ticker,
-                        securityType: "",
-                        strategyType: "",
-                        call: "",
-                        sector: "",
-                        market: "",
-                        currency: h.currency,
-                        managementStyle: "",
-                        externalRating: "",
-                        managementFee: 0,
+                        currency: h.currency || "CAD",
                         quantity: h.quantity,
                         liveTickerPrice: pricePerShare,
                         bookCost: h.bookCost,
                         marketValue: h.marketValue,
                         profitLoss: h.marketValue - h.bookCost,
-                        yield: 0,
-                        oneYearReturn: 0,
-                        fiveYearReturn: 0,
-                        threeYearReturn: 0,
-                        exDividendDate: "",
-                        analystConsensus: "",
-                        beta: 0,
-                        riskFlag: "",
-                        accountNumber: h.accountNumber,
-                        accountType: h.accountType,
-                        risk: "",
-                        volatility: 0,
-                        expectedAnnualDividends: 0,
+                        accountNumber: h.accountNumber || (existing?.accountNumber ?? ""),
+                        accountType: h.accountType || (existing?.accountType ?? "Registered"),
                         importSource: "pdf-statement",
                         updatedAt: new Date().toISOString(),
+                        createdAt: existing?.createdAt ?? new Date().toISOString(),
+
+                        // Retain existing fields if updating
+                        account: existing?.account ?? "",
+                        securityType: existing?.securityType ?? "",
+                        strategyType: existing?.strategyType ?? "",
+                        call: existing?.call ?? "",
+                        sector: existing?.sector ?? "",
+                        market: existing?.market ?? "",
+                        managementStyle: existing?.managementStyle ?? "",
+                        externalRating: existing?.externalRating ?? "",
+                        managementFee: existing?.managementFee ?? 0,
+                        yield: existing?.yield ?? 0,
+                        oneYearReturn: existing?.oneYearReturn ?? 0,
+                        fiveYearReturn: existing?.fiveYearReturn ?? 0,
+                        threeYearReturn: existing?.threeYearReturn ?? 0,
+                        exDividendDate: existing?.exDividendDate ?? "",
+                        analystConsensus: existing?.analystConsensus ?? "",
+                        beta: existing?.beta ?? 0,
+                        riskFlag: existing?.riskFlag ?? "",
+                        risk: existing?.risk ?? "",
+                        volatility: existing?.volatility ?? 0,
+                        expectedAnnualDividends: existing?.expectedAnnualDividends ?? 0,
                     }
                 }
-            };
-        });
+            });
+        }
 
-        // DynamoDB BatchWriteItem limit: 25 per request
+        // 5. Delete assets that belong to this account number but are no longer in the PDF
+        const pdfAccountNumber = holdings.length > 0 ? holdings[0].accountNumber : extractAccountNumber(text);
+        if (pdfAccountNumber && pdfAccountNumber.trim() !== '') {
+            const existingAssetsForAccount = existingAssets.filter(a => a.accountNumber === pdfAccountNumber);
+            for (const asset of existingAssetsForAccount) {
+                const stillHoldsIt = holdings.some(h => h.ticker === asset.ticker);
+                if (!stillHoldsIt) {
+                    writeRequests.push({
+                        DeleteRequest: {
+                            Key: {
+                                PK: asset.PK,
+                                SK: asset.SK
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // 6. DynamoDB BatchWriteItem limit: 25 per request
         const chunkSize = 25;
         for (let i = 0; i < writeRequests.length; i += chunkSize) {
             const chunk = writeRequests.slice(i, i + chunkSize);
