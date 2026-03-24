@@ -225,7 +225,7 @@ export default function UserGuideClient() {
                                 System Logic & Ripple Effect Manual
                             </h1>
                             <p className="text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-3xl">
-                                A definitive backend-to-business translation manual. Understand exactly how the AI engine processes your inputs and triggers cascading effects across the platform.
+                                A definitive backend-to-business translation manual. The platform is organized into two pillars: <strong className="text-teal-700 dark:text-teal-400">My Blueprint</strong> (your private financial vault) and <strong className="text-amber-700 dark:text-amber-400">Market Intelligence</strong> (AI-driven guidance and live data).
                             </p>
                         </div>
 
@@ -251,17 +251,44 @@ export default function UserGuideClient() {
                                 </div>
                             </div>
                         </div>
+                        {/* Navigation Pillars Overview */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div className="rounded-xl border border-teal-200 dark:border-teal-800/50 bg-teal-50/50 dark:bg-teal-900/10 p-6">
+                                <div className="flex items-center space-x-2 mb-3">
+                                    <Shield className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                                    <h3 className="font-bold text-teal-900 dark:text-teal-400">My Blueprint</h3>
+                                </div>
+                                <p className="text-sm text-teal-800 dark:text-teal-300/80 mb-3">Your private vault — all static and dynamic data about your financial situation.</p>
+                                <ul className="text-sm text-teal-700 dark:text-teal-300/70 space-y-1">
+                                    <li>1. My Investment Strategy</li>
+                                    <li>2. My Finance Summary</li>
+                                    <li>3. My Investment Portfolio</li>
+                                </ul>
+                            </div>
+                            <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-6">
+                                <div className="flex items-center space-x-2 mb-3">
+                                    <Radio className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                    <h3 className="font-bold text-amber-900 dark:text-amber-400">Market Intelligence</h3>
+                                </div>
+                                <p className="text-sm text-amber-800 dark:text-amber-300/80 mb-3">The live engine — three distinct voices providing active guidance and external data.</p>
+                                <ul className="text-sm text-amber-700 dark:text-amber-300/70 space-y-1">
+                                    <li>4. Expert Guidance</li>
+                                    <li>5. AI Guidance</li>
+                                    <li>6. Global News Guidance</li>
+                                </ul>
+                            </div>
+                        </div>
                     </section>
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 1: Expert Guidance */}
+                    {/* Section 4: Expert Guidance */}
                     <section id="advisory-board" ref={el => { contentRefs.current["advisory-board"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. Expert Guidance (Chat Engine)</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. Expert Guidance (Chat Engine)</h2>
                         </div>
 
 
@@ -385,13 +412,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 2: Portfolio */}
+                    {/* Section 3: Portfolio */}
                     <section id="portfolio" ref={el => { contentRefs.current["portfolio"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <LayoutDashboard className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">2. My Investment Portfolio</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">3. My Investment Portfolio</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -477,13 +504,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 3: Finance Summary */}
+                    {/* Section 2: Finance Summary */}
                     <section id="finance-summary" ref={el => { contentRefs.current["finance-summary"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Wallet className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">3. My Finance Summary</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">2. My Finance Summary</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -534,7 +561,7 @@ export default function UserGuideClient() {
                             </div>
                             <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
                                 <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed italic">
-                                    "If the stock market crashes (Section 2) AND John buys a new car on credit (Section 3 expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of wealth."
+                                    "If the stock market crashes (My Investment Portfolio) AND John buys a new car on credit (My Finance Summary expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of wealth."
                                 </p>
                             </div>
                         </div>
@@ -542,13 +569,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 4: Strategy */}
+                    {/* Section 1: Strategy */}
                     <section id="strategy-profile" ref={el => { contentRefs.current["strategy-profile"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <BrainCircuit className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. My Investment Strategy</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. My Investment Strategy</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
