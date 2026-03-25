@@ -110,25 +110,13 @@ function parseHoldings(text: string): ParsedHolding[] {
             }
 
             if (dollarAmounts.length >= 3) {
-                const price = dollarAmounts[0]; // Assuming first dollar is price
-                const marketValue = dollarAmounts[1]; // Assuming second dollar is market value
-                const bookCost = dollarAmounts[2]; // Assuming third dollar is book cost
+                const marketValue = dollarAmounts[1];
+                const bookCost = dollarAmounts[2];
 
                 if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
                     if (!holdings.some(h => h.ticker === ticker)) {
                         holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
                     }
-                }
-                if (!holdings.some(h => h.ticker === ticker)) {
-                    holdings.push({
-                        ticker,
-                        quantity,
-                        bookCost,
-                        marketValue,
-                        accountNumber,
-                        accountType,
-                        currency,
-                    });
                 }
             }
         }

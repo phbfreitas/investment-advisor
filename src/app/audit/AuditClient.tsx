@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Pencil, RotateCcw, ChevronDown, ChevronRight, AlertTriangle, Loader2, Clock } from "lucide-react";
+import { FileText, Pencil, RotateCcw, ChevronDown, ChevronRight, AlertTriangle, CheckCircle2, Loader2, Clock } from "lucide-react";
 import type { AuditLog, AuditMutation } from "@/types/audit";
+
+function RewindOverlay() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-4">
+        <RotateCcw className="h-16 w-16 text-amber-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "0.8s" }} />
+        <p className="text-lg font-medium text-white">Reverting changes...</p>
+      </div>
+    </div>
+  );
+}
 
 export default function AuditClient() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -126,15 +137,6 @@ export default function AuditClient() {
     return parts.join(", ") || "No changes";
   };
 
-  const RewindOverlay = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-4">
-        <RotateCcw className="h-16 w-16 text-amber-400 animate-spin" style={{ animationDirection: "reverse", animationDuration: "0.8s" }} />
-        <p className="text-lg font-medium text-white">Reverting changes...</p>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col min-h-screen bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
       {isRollingBack && <RewindOverlay />}
@@ -160,7 +162,7 @@ export default function AuditClient() {
               ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
               : "bg-red-500/10 text-red-400 border border-red-500/20"
           }`}>
-            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+            {message.type === "error" ? <AlertTriangle className="h-5 w-5 flex-shrink-0" /> : <CheckCircle2 className="h-5 w-5 flex-shrink-0" />}
             <span className="text-sm">{message.text}</span>
             <button onClick={() => setMessage(null)} className="ml-auto text-xs opacity-60 hover:opacity-100">Dismiss</button>
           </div>

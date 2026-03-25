@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
@@ -32,9 +32,9 @@ export default function DashboardPage() {
   const [highlightedRows, setHighlightedRows] = useState<Record<string, 'CREATE' | 'UPDATE' | 'DELETE'>>({});
   const [ghostAssets, setGhostAssets] = useState<Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }>>([]);
 
-  const dismissToast = (id: string) => {
+  const dismissToast = useCallback((id: string) => {
     setAuditToasts(prev => prev.filter(t => t.id !== id));
-  };
+  }, []);
 
   const showAuditToast = (message: string, ticker?: string) => {
     const id = `${Date.now()}-${Math.random()}`;
