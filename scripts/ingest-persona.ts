@@ -1,7 +1,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as cheerio from "cheerio";
-import { PDFParse } from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as dotenv from "dotenv";
 
@@ -47,11 +47,9 @@ async function fetchUrl(url: string): Promise<string> {
 
     if (url.endsWith(".pdf")) {
         const buffer = await response.arrayBuffer();
-        const parser = new PDFParse({ data: Buffer.from(buffer) });
-        const result = await parser.getText();
-        const text = result.text.replace(/\s+/g, " ").trim();
-        await parser.destroy();
-        return text;
+        const pdf = await getDocumentProxy(new Uint8Array(buffer));
+        const { text } = await extractText(pdf, { mergePages: true });
+        return (text as string).replace(/\s+/g, " ").trim();
     } else {
         const html = await response.text();
         const $ = cheerio.load(html);
@@ -63,11 +61,9 @@ async function fetchUrl(url: string): Promise<string> {
 async function readLocalPdf(filePath: string): Promise<string> {
     const absolutePath = path.join(process.cwd(), filePath);
     const buffer = await fs.readFile(absolutePath);
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
-    const text = result.text.replace(/\s+/g, " ").trim();
-    await parser.destroy();
-    return text;
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await extractText(pdf, { mergePages: true });
+    return (text as string).replace(/\s+/g, " ").trim();
 }
 
 function chunkText(text: string, maxChunkSize: number = 1000): string[] {

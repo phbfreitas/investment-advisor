@@ -4,7 +4,7 @@ import { BatchWriteCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamo
 import { v4 as uuidv4 } from "uuid";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PDFParse } from "pdf-parse";
+import { extractText, getDocumentProxy } from "unpdf";
 import { insertAuditLog } from "@/lib/auditLog";
 import { toSnapshot } from "@/lib/assetSnapshot";
 import type { AuditMutation } from "@/types/audit";
@@ -143,10 +143,9 @@ export async function POST(request: Request) {
 
         // Parse PDF
         const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const parser = new PDFParse({ data: buffer });
-        const pdfData = await parser.getText();
-        const text = pdfData.text;
+        const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+        const result = await extractText(pdf, { mergePages: false });
+        const text = (result.text as string[]).join("\n");
 
         if (!text || text.trim().length === 0) {
             return NextResponse.json({ error: "Could not extract text from PDF" }, { status: 400 });
