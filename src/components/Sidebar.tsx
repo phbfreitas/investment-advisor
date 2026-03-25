@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target, BookOpen, Globe, Shield, Radio } from "lucide-react";
+import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target, BookOpen, Globe, Shield, Radio, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
@@ -18,6 +18,7 @@ const pillars = [
             { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },
             { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
             { name: "My Investment Portfolio", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Time Machine", href: "/audit", icon: RotateCcw },
         ],
     },
     {
