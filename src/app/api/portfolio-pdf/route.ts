@@ -341,10 +341,14 @@ export async function POST(request: Request) {
             }
         }
 
-        // 7. Write audit log only after ALL chunks succeed
+        // 7. Write audit log only after ALL chunks succeed (non-blocking)
         const filename = (formData.get("file") as File)?.name || "unknown.pdf";
         if (mutations.length > 0) {
-            await insertAuditLog(session.user.householdId, 'PDF_IMPORT', mutations, filename);
+            try {
+                await insertAuditLog(session.user.householdId, 'PDF_IMPORT', mutations, filename);
+            } catch (auditErr) {
+                console.error("Failed to write audit log (import still succeeded):", auditErr);
+            }
         }
 
         return NextResponse.json({
@@ -360,6 +364,7 @@ export async function POST(request: Request) {
         });
     } catch (error) {
         console.error("Failed to process PDF statement:", error);
-        return NextResponse.json({ error: "Failed to process PDF file" }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Failed to process PDF file";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
