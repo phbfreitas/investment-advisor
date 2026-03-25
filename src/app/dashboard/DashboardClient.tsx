@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
+import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 
 export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -25,6 +26,20 @@ export default function DashboardPage() {
 
   // Dividend summary period
   const [dividendPeriod, setDividendPeriod] = useState<number>(12);
+
+  // Audit feedback state
+  const [auditToasts, setAuditToasts] = useState<AuditToastData[]>([]);
+  const [highlightedRows, setHighlightedRows] = useState<Record<string, 'CREATE' | 'UPDATE' | 'DELETE'>>({});
+  const [ghostAssets, setGhostAssets] = useState<Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }>>([]);
+
+  const dismissToast = (id: string) => {
+    setAuditToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const showAuditToast = (message: string, ticker?: string) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setAuditToasts(prev => [...prev, { id, message, ticker }]);
+  };
 
   // Option lists derived from existing data
   const accounts = useMemo(() => Array.from(new Set(assets.map(a => a.account).filter(Boolean))), [assets]);
@@ -116,8 +131,8 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`/api/assets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete asset");
+      showAuditToast(`Asset deleted.`);
       fetchAssets();
-      setMessage({ text: "Asset row deleted.", type: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete asset.";
       setMessage({ text: message, type: "error" });
@@ -147,9 +162,32 @@ export default function DashboardPage() {
 
       if (!res.ok) throw new Error("Failed to save asset");
 
+      const responseData = await res.json();
+      const action = editingId === "NEW" ? "CREATE" : "UPDATE";
+      const savedTicker = editForm.ticker || "";
+
       setEditingId(null);
       setEditForm({});
       fetchAssets();
+
+      // Audit feedback
+      showAuditToast(
+        action === "CREATE"
+          ? `${savedTicker} added to portfolio.`
+          : `${savedTicker} updated.`,
+        savedTicker
+      );
+
+      // Row highlight — use the asset id from response or editingId
+      const highlightId = responseData.asset?.SK || `ASSET#${editingId}`;
+      setHighlightedRows(prev => ({ ...prev, [highlightId]: action }));
+      setTimeout(() => {
+        setHighlightedRows(prev => {
+          const next = { ...prev };
+          delete next[highlightId];
+          return next;
+        });
+      }, 4000);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to save asset.";
       setMessage({ text: message, type: "error" });
@@ -386,6 +424,17 @@ export default function DashboardPage() {
     }, 0)
     : 0;
 
+  const getRowHighlightClass = (assetSK: string) => {
+    const action = highlightedRows[assetSK];
+    if (!action) return "";
+    switch (action) {
+      case 'CREATE': return "audit-highlight-create";
+      case 'UPDATE': return "audit-highlight-update";
+      case 'DELETE': return "audit-highlight-delete";
+      default: return "";
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen md:h-full bg-neutral-50 dark:bg-[#050505] transition-colors duration-300">
       <header className="flex-none min-h-[4rem] h-auto py-3 md:py-0 border-b border-neutral-200 dark:border-neutral-800 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10 space-y-3 md:space-y-0 transition-colors duration-300">
@@ -413,6 +462,30 @@ export default function DashboardPage() {
                 const data = await res.json();
                 if (res.ok) {
                   setMessage({ text: `Imported ${data.count} holdings from PDF.`, type: 'success' });
+
+                  // Set row highlights from classified mutations
+                  if (data.mutations && Array.isArray(data.mutations)) {
+                    const highlights: Record<string, 'CREATE' | 'UPDATE' | 'DELETE'> = {};
+                    const ghosts: Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }> = [];
+
+                    for (const m of data.mutations) {
+                      highlights[m.assetSK] = m.action;
+                      if (m.action === 'DELETE') {
+                        ghosts.push({ ticker: m.ticker, assetSK: m.assetSK, snapshot: {} });
+                      }
+                    }
+
+                    setHighlightedRows(highlights);
+                    setGhostAssets(ghosts);
+
+                    // Clear highlights after animation
+                    setTimeout(() => {
+                      setHighlightedRows({});
+                      setGhostAssets([]);
+                    }, 4000);
+                  }
+
+                  showAuditToast(`PDF imported — ${data.count} holdings processed.`);
                   fetchAssets();
                 } else {
                   setMessage({ text: data.error || 'PDF import failed.', type: 'error' });
@@ -608,7 +681,7 @@ export default function DashboardPage() {
                       };
 
                       return (
-                        <tr key={asset.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors">
+                        <tr key={asset.id} className={`hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors ${getRowHighlightClass(asset.SK)}`}>
                           {/* 1. Account */}
                           <td className={`px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200 ${stickyBodyCol1} min-w-[120px]`}>
                             {isEditing ? (
@@ -729,6 +802,14 @@ export default function DashboardPage() {
                       );
                     })
                   )}
+                  {/* Ghost rows for deleted assets */}
+                  {ghostAssets.map(ghost => (
+                    <tr key={`ghost-${ghost.assetSK}`} className="audit-highlight-delete">
+                      <td colSpan={26} className="px-4 py-3 text-center text-sm text-red-400 line-through opacity-70">
+                        {ghost.ticker} — removed from portfolio
+                      </td>
+                    </tr>
+                  ))}
                   {/* Totals Row */}
                   {(assets.length > 0 || editingId === "NEW") && (
                     <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
@@ -827,6 +908,7 @@ export default function DashboardPage() {
 
         </div>
       </div>
+      <AuditToast toasts={auditToasts} onDismiss={dismissToast} />
     </div>
   );
 }

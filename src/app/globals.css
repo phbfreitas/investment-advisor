@@ -113,3 +113,33 @@
     @apply px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/50;
   }
 }
+
+/* Audit trail row highlight animations */
+@keyframes audit-pulse-green {
+  0% { box-shadow: inset 4px 0 0 0 #10b981, 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: inset 4px 0 0 0 #10b981, 0 0 20px 4px rgba(16, 185, 129, 0.15); }
+  100% { box-shadow: none; border-left-color: transparent; }
+}
+
+@keyframes audit-pulse-amber {
+  0% { box-shadow: inset 4px 0 0 0 #f59e0b, 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: inset 4px 0 0 0 #f59e0b, 0 0 20px 4px rgba(245, 158, 11, 0.15); }
+  100% { box-shadow: none; border-left-color: transparent; }
+}
+
+@keyframes audit-pulse-red {
+  0% { box-shadow: inset 4px 0 0 0 #ef4444; opacity: 0.7; }
+  100% { box-shadow: none; opacity: 0; }
+}
+
+.audit-highlight-create {
+  animation: audit-pulse-green 4s ease-out forwards;
+}
+
+.audit-highlight-update {
+  animation: audit-pulse-amber 4s ease-out forwards;
+}
+
+.audit-highlight-delete {
+  animation: audit-pulse-red 4s ease-out forwards;
+}
