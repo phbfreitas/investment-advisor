@@ -125,9 +125,71 @@ John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *To
 
 ---
 
+## 4. Time Machine (Universal Audit Trail)
+**Code Location:** `src/app/audit/AuditClient.tsx` & `src/app/api/audit-logs/route.ts` & `src/app/api/portfolio-rollback/route.ts`
+
+Every change to your portfolio — whether from a PDF import or a manual inline edit — is permanently recorded in a complete audit trail. The Time Machine lets you review the full history of changes and roll back to any prior state with cascade undo.
+
+### Detailed Features & Functionalities
+
+#### A. Automatic Audit Logging
+Every portfolio mutation is captured with a full before/after snapshot:
+- **PDF Import:** When you upload a brokerage statement, the system classifies every asset as Created (new ticker), Updated (changed quantity/value), or Deleted (no longer in the statement). A single audit log entry records every mutation with complete snapshots of all asset fields.
+- **Manual Edit:** When you edit an asset inline (change quantity, book cost, etc.), a MANUAL_EDIT log captures the exact before and after values.
+- **Manual Create/Delete:** Adding a new asset or deleting an existing one is logged with the full asset snapshot.
+- **Glassmorphic Toast Notification:** After every successful edit, a premium frosted-glass notification slides in from the bottom-right confirming: *"Exact snapshot secured in Audit Trail"* with a quick-link to [View in Time Machine].
+
+#### B. Visual Feedback on Dashboard
+After a PDF import, the dashboard highlights affected rows with color-coded animations:
+- **Created rows:** Neon-green left border with a soft glow that fades over ~4 seconds.
+- **Updated rows:** Amber/gold left border with a subtle pulse that fades over ~4 seconds.
+- **Deleted rows (Ghost Rows):** Assets that were removed from the portfolio are temporarily rendered as phantom rows showing their last known Ticker, Quantity, Market Value, and Book Cost with a red strikethrough animation that fades out.
+
+#### C. The Time Machine Page
+Accessible from the sidebar under **My Blueprint**, the Time Machine presents your audit trail as a visual, interactive timeline.
+
+- **Desktop Layout (>= 768px):** A two-column view — the left side shows a vertical git-style glowing timeline with nodes, and the right side displays the expanded diff card for the selected entry. The diff card sticks to the viewport as you scroll the timeline.
+- **Mobile Layout (< 768px):** A single-column stack where tapping a node expands the diff card inline below it (accordion-style). The rollback button goes full-width for easy tapping.
+
+**Timeline Nodes:** Each node represents a single audit event, styled by source type:
+- *PDF Import:* Document icon with blue accent
+- *Manual Edit:* Pencil icon with green accent
+- *Rollback:* Rewind icon with amber accent
+
+Each node displays the source label, a relative timestamp ("2 hours ago" with absolute time on hover), and a brief summary (e.g., "3 created, 2 updated, 1 deleted").
+
+**Diff Cards:** Clicking a node reveals a frosted-glass card with color-coded mutations:
+- **CREATE:** Green `+` prefix showing the new asset's quantity, market value, and book cost.
+- **DELETE:** Red `-` prefix with strikethrough showing the asset's last known values.
+- **UPDATE:** Side-by-side comparison — old values in red (strikethrough), new values in green. Only fields that actually changed are shown (quantity, market value, book cost, plus any other differing fields).
+
+#### D. Cascade Rollback (The "Ctrl+Z")
+The **"Revert to before this change"** button appears on every non-ROLLBACK entry.
+
+- **Cascade Logic:** Clicking rollback on entry N automatically reverses entries N through the most recent in reverse chronological order. This prevents conflicts — you cannot undo a PDF import while leaving a manual edit that happened after it intact.
+- **Confirmation Dialog:** Before executing, a dialog warns: *"This will undo this change and all X changes after it. Continue?"*
+- **Rewind Animation:** On confirm, a full-screen overlay with a reverse-spinning rewind icon provides visual feedback during the operation.
+- **Audit Integrity:** Each reversed entry generates its own ROLLBACK audit log, so the timeline never breaks — you always have a complete record of what happened and when.
+
+**What Rollback Does Behind the Scenes:**
+- If the original action CREATED an asset → Rollback DELETES it.
+- If the original action DELETED an asset → Rollback RE-CREATES it with the exact original values.
+- If the original action UPDATED an asset → Rollback restores the exact previous values.
+
+#### E. Pagination & Empty State
+- **Pagination:** Logs are loaded 50 at a time (newest first). A "Load more" button fetches the next page.
+- **Empty State:** New users see a centered message: *"No changes recorded yet. Import a PDF or edit an asset to start building your audit trail."*
+
+### The Ripple Effect Example
+John uploads his February brokerage statement. The PDF import creates 2 new tickers, updates 3 existing ones, and deletes 1 that was sold. A single PDF_IMPORT audit log captures all 6 mutations with full before/after snapshots. On the dashboard, new rows glow green, updated rows pulse amber, and the sold ticker appears briefly as a ghost row with red strikethrough before fading out. A glassmorphic toast confirms: "Exact snapshot secured in Audit Trail."
+
+Two days later, John manually edits XQQ from 230 to 250 shares (MANUAL_EDIT log), then realizes the February PDF was wrong — he opens the Time Machine, clicks "Revert to before this change" on the PDF import entry. The system automatically reverses the manual edit first (250 → 230), then reverses the PDF import (deleting the 2 new tickers, restoring the sold one, reverting the 3 updated ones). Three ROLLBACK entries appear in the timeline documenting exactly what was reversed.
+
+---
+
 # Market Intelligence
 
-## 4. Expert Guidance (Chat Engine)
+## 5. Expert Guidance (Chat Engine)
 **Code Location:** `src/app/HomeClient.tsx` & `src/app/api/chat/route.ts` & `src/lib/personas.ts`
 
 This is the homepage of the app, featuring a conversational AI with a panel of legendary investors. Unlike a generic AI, this engine pulls your real, live financial data *before* it answers you. You select which advisors to consult per question — each brings a distinct investment philosophy and will respond in their own voice.
@@ -192,7 +254,7 @@ Your advisors now remember past conversations using a **Per-Advisor Structured M
 
 ---
 
-## 5. AI Guidance (Reasoning & Directive Engine)
+## 6. AI Guidance (Reasoning & Directive Engine)
 **Code Location:** `src/app/profile/guidance/GuidanceClient.tsx`
 
 This page is the heavy-duty analytics engine. It triggers "Directives"—highly engineered prompts that force the AI to process your Portfolio (My Investment Portfolio) using your Strategy rules (My Investment Strategy).
@@ -217,7 +279,7 @@ John inputs `IBIT` (A high-risk Bitcoin ETF). The AI pulls John's Profile (My In
 
 ---
 
-## 6. Global News Guidance (Geopolitical Radar)
+## 7. Global News Guidance (Geopolitical Radar)
 **Code Location:** `src/app/global-radar/GlobalRadarClient.tsx` & `src/app/api/global-radar/route.ts`
 
 This page connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines daily and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
@@ -242,7 +304,7 @@ John clicks the **Deep Critique** card on a Monday morning after a turbulent wee
 
 ---
 
-## 7. Settings (Household Infrastructure)
+## 8. Settings (Household Infrastructure)
 **Code Location:** `src/app/settings/SettingsClient.tsx`
 
 This section handles the app's multi-tenant architecture, security, and aesthetics.

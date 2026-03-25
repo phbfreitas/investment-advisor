@@ -15,7 +15,8 @@ import {
     LineChart,
     Globe,
     Shield,
-    Radio
+    Radio,
+    RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +74,18 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
                     { id: "port-ripple", title: "Cascading Effects" },
                 ]
             },
+            {
+                id: "time-machine",
+                title: "4. Time Machine",
+                icon: RotateCcw,
+                subsections: [
+                    { id: "tm-logging", title: "Automatic Audit Logging" },
+                    { id: "tm-dashboard", title: "Visual Feedback" },
+                    { id: "tm-timeline", title: "Timeline & Diff Cards" },
+                    { id: "tm-rollback", title: "Cascade Rollback" },
+                    { id: "tm-ripple", title: "Ripple Effect" },
+                ]
+            },
         ]
     },
     {
@@ -82,7 +95,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
         items: [
             {
                 id: "advisory-board",
-                title: "4. Expert Guidance",
+                title: "5. Expert Guidance",
                 icon: Users,
                 subsections: [
                     { id: "ab-logic", title: "Logic Mapping" },
@@ -92,7 +105,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
             },
             {
                 id: "ai-guidance",
-                title: "5. AI Guidance",
+                title: "6. AI Guidance",
                 icon: Target,
                 subsections: [
                     { id: "ai-logic", title: "The Data Assembly Line" },
@@ -101,7 +114,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
             },
             {
                 id: "global-radar",
-                title: "6. Global News Guidance",
+                title: "7. Global News Guidance",
                 icon: Globe,
                 subsections: [
                     { id: "radar-logic", title: "The Intelligence Pipeline" },
@@ -112,7 +125,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
     },
     {
         id: "settings",
-        title: "7. Settings",
+        title: "8. Settings",
         icon: Settings,
         subsections: [
             { id: "set-logic", title: "Household Isolation" },
@@ -263,6 +276,7 @@ export default function UserGuideClient() {
                                     <li>1. My Investment Strategy</li>
                                     <li>2. My Finance Summary</li>
                                     <li>3. My Investment Portfolio</li>
+                                    <li>4. Time Machine</li>
                                 </ul>
                             </div>
                             <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-6">
@@ -272,9 +286,9 @@ export default function UserGuideClient() {
                                 </div>
                                 <p className="text-sm text-amber-800 dark:text-amber-300/80 mb-3">The live engine — three distinct voices providing active guidance and external data.</p>
                                 <ul className="text-sm text-amber-700 dark:text-amber-300/70 space-y-1">
-                                    <li>4. Expert Guidance</li>
-                                    <li>5. AI Guidance</li>
-                                    <li>6. Global News Guidance</li>
+                                    <li>5. Expert Guidance</li>
+                                    <li>6. AI Guidance</li>
+                                    <li>7. Global News Guidance</li>
                                 </ul>
                             </div>
                         </div>
@@ -282,13 +296,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 4: Expert Guidance */}
+                    {/* Section 5: Expert Guidance */}
                     <section id="advisory-board" ref={el => { contentRefs.current["advisory-board"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. Expert Guidance (Chat Engine)</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">5. Expert Guidance (Chat Engine)</h2>
                         </div>
 
 
@@ -505,6 +519,112 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
+                    {/* Section 4: Time Machine */}
+                    <section id="time-machine" ref={el => { contentRefs.current["time-machine"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <RotateCcw className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. Time Machine (Universal Audit Trail)</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            Every change to your portfolio — whether from a PDF import or a manual edit — is permanently recorded. The Time Machine lets you review the full history of changes and roll back to any prior state.
+                        </p>
+
+                        <div id="tm-logging" ref={el => { contentRefs.current["tm-logging"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Shield className="h-5 w-5 mr-2 text-teal-500" /> Automatic Audit Logging
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">PDF Import Logging</h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                        When you upload a brokerage statement, the system classifies every asset as <strong>Created</strong> (new ticker), <strong>Updated</strong> (changed quantity/value), or <strong>Deleted</strong> (no longer in the statement). A single audit log captures all mutations with complete before/after snapshots.
+                                    </p>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">Manual Edit Logging</h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                        Every inline edit, new asset creation, and asset deletion is logged with the exact before and after values. A glassmorphic toast notification confirms: <em>&quot;Exact snapshot secured in Audit Trail&quot;</em> with a quick-link to the Time Machine.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tm-dashboard" ref={el => { contentRefs.current["tm-dashboard"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Zap className="h-5 w-5 mr-2 text-amber-500" /> Visual Feedback on Dashboard
+                            </h3>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                After a PDF import, the dashboard highlights affected rows with color-coded animations:
+                            </p>
+                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                <li><strong className="text-emerald-600 dark:text-emerald-400">Created rows:</strong> Neon-green left border with a soft glow (~4 seconds).</li>
+                                <li><strong className="text-amber-600 dark:text-amber-400">Updated rows:</strong> Amber/gold left border with a subtle pulse (~4 seconds).</li>
+                                <li><strong className="text-red-600 dark:text-red-400">Ghost Rows:</strong> Deleted assets appear briefly as phantom rows showing their last known Ticker, Quantity, Market Value, and Book Cost with a red strikethrough that fades out.</li>
+                            </ul>
+                        </div>
+
+                        <div id="tm-timeline" ref={el => { contentRefs.current["tm-timeline"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <RotateCcw className="h-5 w-5 mr-2 text-blue-500" /> Timeline & Diff Cards
+                            </h3>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                The Time Machine page presents your audit trail as a vertical git-style glowing timeline. On desktop, clicking a node reveals the diff card in a side panel. On mobile, it expands inline as an accordion.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-center">
+                                    <p className="text-sm font-bold text-blue-700 dark:text-blue-400">PDF Import</p>
+                                    <p className="text-xs text-blue-600 dark:text-blue-300/70 mt-1">Document icon &middot; Blue accent</p>
+                                </div>
+                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-4 text-center">
+                                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Manual Edit</p>
+                                    <p className="text-xs text-emerald-600 dark:text-emerald-300/70 mt-1">Pencil icon &middot; Green accent</p>
+                                </div>
+                                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 text-center">
+                                    <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Rollback</p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-300/70 mt-1">Rewind icon &middot; Amber accent</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Only fields that changed are displayed.
+                            </p>
+                        </div>
+
+                        <div id="tm-rollback" ref={el => { contentRefs.current["tm-rollback"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <Zap className="h-5 w-5 mr-2 text-red-500" /> Cascade Rollback
+                            </h3>
+                            <p className="text-neutral-600 dark:text-neutral-400">
+                                The <strong>&quot;Revert to before this change&quot;</strong> button appears on every non-rollback entry. Clicking it automatically reverses that entry <em>and everything after it</em> in reverse chronological order — preventing conflicts from interleaved changes.
+                            </p>
+                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                <li>A confirmation dialog warns how many changes will be undone.</li>
+                                <li>A full-screen rewind animation provides visual feedback during the operation.</li>
+                                <li>Each reversal generates its own ROLLBACK audit log — the timeline never loses history.</li>
+                                <li>CREATEs are reversed by deleting, DELETEs are reversed by re-creating, UPDATEs are restored to their exact previous values.</li>
+                            </ul>
+                        </div>
+
+                        <div id="tm-ripple" ref={el => { contentRefs.current["tm-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <Zap className="h-5 w-5 text-teal-600" />
+                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <p className="text-neutral-700 dark:text-neutral-300">
+                                    John uploads his February brokerage statement. The PDF import creates 2 new tickers, updates 3 existing ones, and deletes 1 that was sold. On the dashboard, new rows glow green, updated rows pulse amber, and the sold ticker appears as a ghost row.
+                                </p>
+                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
+                                    <strong>The Ripple:</strong> Two days later, John realizes the February PDF was wrong. He opens the Time Machine, clicks &quot;Revert&quot; on the PDF import. The system automatically reverses his manual edit first (newest-first cascade), then the PDF import — restoring the sold ticker, reverting updated values, and deleting new ones. Three ROLLBACK entries document exactly what changed.
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
                     {/* Section 2: Finance Summary */}
                     <section id="finance-summary" ref={el => { contentRefs.current["finance-summary"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
@@ -652,13 +772,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 5: AI Guidance */}
+                    {/* Section 6: AI Guidance */}
                     <section id="ai-guidance" ref={el => { contentRefs.current["ai-guidance"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Target className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">5. AI Guidance</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. AI Guidance</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -731,13 +851,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 6: Global News Guidance */}
+                    {/* Section 7: Global News Guidance */}
                     <section id="global-radar" ref={el => { contentRefs.current["global-radar"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Globe className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. Global News Guidance</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">7. Global News Guidance</h2>
                         </div>
 
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -796,13 +916,13 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 7: Settings */}
+                    {/* Section 8: Settings */}
                     <section id="settings" ref={el => { contentRefs.current["settings"] = el; }} className="space-y-8 scroll-m-8">
                         <div className="flex items-center space-x-4">
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
                                 <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">7. Settings & Infrastructure</h2>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">8. Settings & Infrastructure</h2>
                         </div>
 
                         <div id="set-logic" ref={el => { contentRefs.current["set-logic"] = el; }} className="space-y-6">
