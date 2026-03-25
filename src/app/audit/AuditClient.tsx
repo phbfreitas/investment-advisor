@@ -153,7 +153,7 @@ export default function AuditClient() {
         </button>
       </header>
 
-      <div className="flex-1 p-4 md:p-8 max-w-4xl mx-auto w-full">
+      <div className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full">
         {message && (
           <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
             message.type === "success"
@@ -175,102 +175,100 @@ export default function AuditClient() {
         )}
 
         {logs.length > 0 && (
-          <div className="relative">
-            <div className="absolute left-[19px] md:left-[23px] top-0 bottom-0 w-px bg-gradient-to-b from-teal-500/40 via-neutral-500/20 to-transparent" />
+          <div className="relative md:flex md:gap-6">
+            {/* Timeline column */}
+            <div className="relative md:w-[380px] md:flex-shrink-0">
+              <div className="absolute left-[19px] md:left-[23px] top-0 bottom-0 w-px bg-gradient-to-b from-teal-500/40 via-neutral-500/20 to-transparent" />
 
-            <div className="space-y-1">
-              {logs.map((log) => {
-                const isExpanded = expandedSK === log.SK;
-                const isTarget = rollbackTarget === log.SK;
+              <div className="space-y-1">
+                {logs.map((log) => {
+                  const isExpanded = expandedSK === log.SK;
+                  const isTarget = rollbackTarget === log.SK;
 
-                return (
-                  <div key={log.SK} className="relative">
-                    <button
-                      onClick={() => setExpandedSK(isExpanded ? null : log.SK)}
-                      className="w-full text-left group"
-                    >
-                      <div className="flex items-start gap-3 md:gap-4 py-3 px-2 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
-                        <div className={`relative z-10 flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center ${getSourceColor(log.source)} ${isTarget ? "animate-pulse" : ""}`}>
-                          {getSourceIcon(log.source)}
-                        </div>
+                  return (
+                    <div key={log.SK} className="relative">
+                      <button
+                        onClick={() => setExpandedSK(isExpanded ? null : log.SK)}
+                        className={`w-full text-left group ${isExpanded ? "md:bg-white/50 md:dark:bg-white/5 rounded-xl" : ""}`}
+                      >
+                        <div className="flex items-start gap-3 md:gap-4 py-3 px-2 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
+                          <div className={`relative z-10 flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center ${getSourceColor(log.source)} ${isTarget ? "animate-pulse" : ""}`}>
+                            {getSourceIcon(log.source)}
+                          </div>
 
-                        <div className="flex-1 min-w-0 pt-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                              {getSourceLabel(log.source)}
-                            </span>
-                            {log.metadata && (log.source === "PDF_IMPORT" || log.source === "MANUAL_EDIT") && (
-                              <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                                — {log.metadata}
+                          <div className="flex-1 min-w-0 pt-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                {getSourceLabel(log.source)}
                               </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-neutral-400 dark:text-neutral-500" title={new Date(log.createdAt).toLocaleString()}>
-                              {formatRelativeTime(log.createdAt)}
-                            </span>
-                            <span className="text-xs text-neutral-400 dark:text-neutral-500">
-                              · {summarizeMutations(log.mutations)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex-shrink-0 pt-2">
-                          {isExpanded
-                            ? <ChevronDown className="h-4 w-4 text-neutral-400" />
-                            : <ChevronRight className="h-4 w-4 text-neutral-400" />
-                          }
-                        </div>
-                      </div>
-                    </button>
-
-                    {isExpanded && (
-                      <div className="ml-12 md:ml-16 mb-4 mt-1">
-                        <div className="bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-neutral-200 dark:border-white/10 rounded-xl p-4 space-y-3">
-                          {log.mutations.map((m, mIndex) => (
-                            <MutationCard key={mIndex} mutation={m} />
-                          ))}
-
-                          {log.source !== "ROLLBACK" && (
-                            <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRollback(log.SK);
-                                }}
-                                disabled={isRollingBack}
-                                className="w-full md:w-auto px-4 py-2.5 rounded-lg text-sm font-medium
-                                  bg-amber-500/10 text-amber-600 dark:text-amber-400
-                                  border border-amber-500/20
-                                  hover:bg-amber-500/20 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10
-                                  transition-all duration-200
-                                  disabled:opacity-50 disabled:cursor-not-allowed
-                                  flex items-center justify-center gap-2"
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                                Revert to before this change
-                              </button>
+                              {log.metadata && (log.source === "PDF_IMPORT" || log.source === "MANUAL_EDIT") && (
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                                  — {log.metadata}
+                                </span>
+                              )}
                             </div>
-                          )}
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-neutral-400 dark:text-neutral-500" title={new Date(log.createdAt).toLocaleString()}>
+                                {formatRelativeTime(log.createdAt)}
+                              </span>
+                              <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                                · {summarizeMutations(log.mutations)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex-shrink-0 pt-2">
+                            {isExpanded
+                              ? <ChevronDown className="h-4 w-4 text-neutral-400" />
+                              : <ChevronRight className="h-4 w-4 text-neutral-400" />
+                            }
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      </button>
+
+                      {/* Mobile: inline diff card */}
+                      {isExpanded && (
+                        <div className="md:hidden ml-12 mb-4 mt-1 animate-[audit-slide-in_0.2s_ease-out]">
+                          <DiffCard log={log} isRollingBack={isRollingBack} onRollback={handleRollback} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {lastKey && (
+                <div className="text-center py-8">
+                  <button
+                    onClick={() => fetchLogs(lastKey)}
+                    disabled={isLoading}
+                    className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-500 transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? "Loading..." : "Load more"}
+                  </button>
+                </div>
+              )}
             </div>
 
-            {lastKey && (
-              <div className="text-center py-8">
-                <button
-                  onClick={() => fetchLogs(lastKey)}
-                  disabled={isLoading}
-                  className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-500 transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? "Loading..." : "Load more"}
-                </button>
+            {/* Desktop: side diff card */}
+            <div className="hidden md:block flex-1 min-w-0">
+              <div className="sticky top-20">
+                {expandedSK ? (
+                  <div className="animate-[audit-slide-in_0.2s_ease-out]" key={expandedSK}>
+                    <DiffCard
+                      log={logs.find(l => l.SK === expandedSK)!}
+                      isRollingBack={isRollingBack}
+                      onRollback={handleRollback}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <Clock className="h-8 w-8 text-neutral-300 dark:text-neutral-700 mb-3" />
+                    <p className="text-sm text-neutral-400 dark:text-neutral-500">Select an entry to view details</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -280,6 +278,39 @@ export default function AuditClient() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function DiffCard({ log, isRollingBack, onRollback }: { log: AuditLog; isRollingBack: boolean; onRollback: (sk: string) => void }) {
+  return (
+    <div className="bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-neutral-200 dark:border-white/10 rounded-xl p-4 space-y-3">
+      {log.mutations.map((m, mIndex) => (
+        <MutationCard key={mIndex} mutation={m} />
+      ))}
+
+      {log.source !== "ROLLBACK" && (
+        <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRollback(log.SK);
+            }}
+            disabled={isRollingBack}
+            className="w-full md:w-auto px-4 py-2.5 rounded-lg text-sm font-medium
+              bg-amber-500/10 text-amber-600 dark:text-amber-400
+              border border-amber-500/20
+              hover:bg-amber-500/20 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10
+              hover:animate-pulse
+              transition-all duration-200
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Revert to before this change
+          </button>
+        </div>
+      )}
     </div>
   );
 }

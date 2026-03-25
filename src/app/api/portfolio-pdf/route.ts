@@ -363,7 +363,12 @@ export async function POST(request: Request) {
             message: "PDF statement imported successfully",
             count: holdings.length,
             holdings: holdings.map(h => ({ ticker: h.ticker, quantity: h.quantity, accountType: h.accountType })),
-            mutations: mutations.map(m => ({ action: m.action, ticker: m.ticker, assetSK: m.assetSK })),
+            mutations: mutations.map(m => ({
+                action: m.action,
+                ticker: m.ticker,
+                assetSK: m.assetSK,
+                ...(m.action === 'DELETE' && m.before ? { before: m.before } : {}),
+            })),
         });
     } catch (error) {
         console.error("Failed to process PDF statement:", error);

@@ -471,7 +471,7 @@ export default function DashboardPage() {
                     for (const m of data.mutations) {
                       highlights[m.assetSK] = m.action;
                       if (m.action === 'DELETE') {
-                        ghosts.push({ ticker: m.ticker, assetSK: m.assetSK, snapshot: {} });
+                        ghosts.push({ ticker: m.ticker, assetSK: m.assetSK, snapshot: m.before || {} });
                       }
                     }
 
@@ -803,13 +803,18 @@ export default function DashboardPage() {
                     })
                   )}
                   {/* Ghost rows for deleted assets */}
-                  {ghostAssets.map(ghost => (
-                    <tr key={`ghost-${ghost.assetSK}`} className="audit-highlight-delete">
-                      <td colSpan={26} className="px-4 py-3 text-center text-sm text-red-400 line-through opacity-70">
-                        {ghost.ticker} — removed from portfolio
-                      </td>
-                    </tr>
-                  ))}
+                  {ghostAssets.map(ghost => {
+                    const s = ghost.snapshot as Record<string, unknown>;
+                    return (
+                      <tr key={`ghost-${ghost.assetSK}`} className="audit-highlight-delete">
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70" colSpan={4}>{ghost.ticker}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">{Number(s.quantity || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.marketValue || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.bookCost || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-red-400 opacity-70 text-center" colSpan={19}>removed from portfolio</td>
+                      </tr>
+                    );
+                  })}
                   {/* Totals Row */}
                   {(assets.length > 0 || editingId === "NEW") && (
                     <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
