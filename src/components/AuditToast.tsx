@@ -14,19 +14,28 @@ export interface AuditToastData {
 interface AuditToastProps {
   toasts: AuditToastData[];
   onDismiss: (id: string) => void;
+  onViewHistory: () => void;
 }
 
-export function AuditToast({ toasts, onDismiss }: AuditToastProps) {
+export function AuditToast({ toasts, onDismiss, onViewHistory }: AuditToastProps) {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map(toast => (
-        <AuditToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+        <AuditToastItem key={toast.id} toast={toast} onDismiss={onDismiss} onViewHistory={onViewHistory} />
       ))}
     </div>
   );
 }
 
-function AuditToastItem({ toast, onDismiss }: { toast: AuditToastData; onDismiss: (id: string) => void }) {
+function AuditToastItem({ 
+  toast, 
+  onDismiss, 
+  onViewHistory 
+}: { 
+  toast: AuditToastData; 
+  onDismiss: (id: string) => void;
+  onViewHistory: () => void;
+}) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -63,12 +72,12 @@ function AuditToastItem({ toast, onDismiss }: { toast: AuditToastData; onDismiss
         <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
           Exact snapshot secured in Audit Trail.
         </p>
-        <Link
-          href="/audit"
+        <button
+          onClick={onViewHistory}
           className="inline-block mt-2 text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 transition-colors"
         >
           View in Time Machine →
-        </Link>
+        </button>
       </div>
       <button
         onClick={() => {

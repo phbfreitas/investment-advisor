@@ -81,7 +81,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
                 subsections: [
                     { id: "tm-logging", title: "Automatic Audit Logging" },
                     { id: "tm-dashboard", title: "Visual Feedback" },
-                    { id: "tm-timeline", title: "Timeline & Diff Cards" },
+                    { id: "tm-access", title: "Accessing History" },
                     { id: "tm-rollback", title: "Cascade Rollback" },
                     { id: "tm-ripple", title: "Ripple Effect" },
                 ]
@@ -566,13 +566,20 @@ export default function UserGuideClient() {
                             </ul>
                         </div>
 
-                        <div id="tm-timeline" ref={el => { contentRefs.current["tm-timeline"] = el; }} className="space-y-6">
+                        <div id="tm-access" ref={el => { contentRefs.current["tm-access"] = el; }} className="space-y-6">
                             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <RotateCcw className="h-5 w-5 mr-2 text-blue-500" /> Timeline & Diff Cards
+                                <RotateCcw className="h-5 w-5 mr-2 text-blue-500" /> Accessing History
                             </h3>
-                            <p className="text-neutral-600 dark:text-neutral-400">
-                                The Time Machine page presents your audit trail as a vertical git-style glowing timeline. On desktop, clicking a node reveals the diff card in a side panel. On mobile, it expands inline as an accordion.
+                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                The Time Machine is now integrated directly into the <strong>My Investment Portfolio</strong> page for a more seamless experience.
                             </p>
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Trigger:</strong> Click the <strong className="text-teal-600 dark:text-teal-400 italic font-bold">"History"</strong> button in the Portfolio dashboard header (next to Export CSV).</li>
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Layout:</strong> A sleek frosted-glass drawer slides in from the right, presenting your audit trail as a visual, interactive timeline.</li>
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Expanded Details:</strong> Clicking a node in the timeline reveals the expanded diff card with all specific change details.</li>
+                                </ul>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-center">
                                     <p className="text-sm font-bold text-blue-700 dark:text-blue-400">PDF Import</p>

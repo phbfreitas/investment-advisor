@@ -1,11 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
+import { TimeMachineDrawer } from "@/components/TimeMachine";
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-teal-500" /></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -31,6 +41,7 @@ export default function DashboardPage() {
   const [auditToasts, setAuditToasts] = useState<AuditToastData[]>([]);
   const [highlightedRows, setHighlightedRows] = useState<Record<string, 'CREATE' | 'UPDATE' | 'DELETE'>>({});
   const [ghostAssets, setGhostAssets] = useState<Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }>>([]);
+  const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
 
   const dismissToast = useCallback((id: string) => {
     setAuditToasts(prev => prev.filter(t => t.id !== id));
@@ -100,9 +111,14 @@ export default function DashboardPage() {
     }
   };
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     fetchAssets();
-  }, []);
+    if (searchParams.get("history") === "true") {
+      setIsTimeMachineOpen(true);
+    }
+  }, [searchParams]);
 
   // Debounced live ticker fetch when editing ticker
   useEffect(() => {
@@ -506,6 +522,15 @@ export default function DashboardPage() {
             <Download className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">Export CSV</span>
             <span className="sm:hidden">CSV</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsTimeMachineOpen(true)}
+            className="flex-1 md:flex-none justify-center items-center space-x-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 px-2 py-2 md:px-4 rounded-lg text-xs md:text-sm font-medium transition-colors flex text-center"
+          >
+            <RotateCcw className="h-4 w-4 shrink-0 text-teal-500" />
+            <span className="hidden sm:inline">History</span>
+            <span className="sm:hidden">History</span>
           </button>
         </div>
       </header>
@@ -913,7 +938,16 @@ export default function DashboardPage() {
 
         </div>
       </div>
-      <AuditToast toasts={auditToasts} onDismiss={dismissToast} />
+      <TimeMachineDrawer 
+        isOpen={isTimeMachineOpen} 
+        onClose={() => setIsTimeMachineOpen(false)} 
+        onRollbackComplete={fetchAssets}
+      />
+      <AuditToast 
+        toasts={auditToasts} 
+        onDismiss={dismissToast} 
+        onViewHistory={() => setIsTimeMachineOpen(true)} 
+      />
     </div>
   );
 }

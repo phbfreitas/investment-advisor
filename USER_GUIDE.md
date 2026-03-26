@@ -126,7 +126,7 @@ John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's *To
 ---
 
 ## 4. Time Machine (Universal Audit Trail)
-**Code Location:** `src/app/audit/AuditClient.tsx` & `src/app/api/audit-logs/route.ts` & `src/app/api/portfolio-rollback/route.ts`
+**Code Location:** `src/components/TimeMachine/TimeMachineDrawer.tsx` & `src/app/api/audit-logs/route.ts` & `src/app/api/portfolio-rollback/route.ts`
 
 Every change to your portfolio — whether from a PDF import or a manual inline edit — is permanently recorded in a complete audit trail. The Time Machine lets you review the full history of changes and roll back to any prior state with cascade undo.
 
@@ -137,7 +137,7 @@ Every portfolio mutation is captured with a full before/after snapshot:
 - **PDF Import:** When you upload a brokerage statement, the system classifies every asset as Created (new ticker), Updated (changed quantity/value), or Deleted (no longer in the statement). A single audit log entry records every mutation with complete snapshots of all asset fields.
 - **Manual Edit:** When you edit an asset inline (change quantity, book cost, etc.), a MANUAL_EDIT log captures the exact before and after values.
 - **Manual Create/Delete:** Adding a new asset or deleting an existing one is logged with the full asset snapshot.
-- **Glassmorphic Toast Notification:** After every successful edit, a premium frosted-glass notification slides in from the bottom-right confirming: *"Exact snapshot secured in Audit Trail"* with a quick-link to [View in Time Machine].
+- **Glassmorphic Toast Notification:** After every successful edit, a premium frosted-glass notification slides in from the bottom-right confirming: *"Exact snapshot secured in Audit Trail"* with a quick-link to [View History].
 
 #### B. Visual Feedback on Dashboard
 After a PDF import, the dashboard highlights affected rows with color-coded animations:
@@ -145,11 +145,12 @@ After a PDF import, the dashboard highlights affected rows with color-coded anim
 - **Updated rows:** Amber/gold left border with a subtle pulse that fades over ~4 seconds.
 - **Deleted rows (Ghost Rows):** Assets that were removed from the portfolio are temporarily rendered as phantom rows showing their last known Ticker, Quantity, Market Value, and Book Cost with a red strikethrough animation that fades out.
 
-#### C. The Time Machine Page
-Accessible from the sidebar under **My Blueprint**, the Time Machine presents your audit trail as a visual, interactive timeline.
+#### C. Accessing the Time Machine
+The Time Machine is now integrated directly into the **My Investment Portfolio** page for a more seamless experience.
 
-- **Desktop Layout (>= 768px):** A two-column view — the left side shows a vertical git-style glowing timeline with nodes, and the right side displays the expanded diff card for the selected entry. The diff card sticks to the viewport as you scroll the timeline.
-- **Mobile Layout (< 768px):** A single-column stack where tapping a node expands the diff card inline below it (accordion-style). The rollback button goes full-width for easy tapping.
+- **Trigger:** Click the **"History"** button in the Portfolio dashboard header (next to Export CSV).
+- **Layout:** A sleek frosted-glass drawer slides in from the right, presenting your audit trail as a visual, interactive timeline.
+- **Expanded Details:** Clicking a node in the timeline reveals the expanded diff card with all specific change details.
 
 **Timeline Nodes:** Each node represents a single audit event, styled by source type:
 - *PDF Import:* Document icon with blue accent

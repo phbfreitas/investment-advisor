@@ -18,7 +18,6 @@ const pillars = [
             { name: "My Investment Strategy", href: "/profile", icon: BrainCircuit },
             { name: "My Finance Summary", href: "/finance-summary", icon: Wallet },
             { name: "My Investment Portfolio", href: "/dashboard", icon: LayoutDashboard },
-            { name: "Time Machine", href: "/audit", icon: RotateCcw },
         ],
     },
     {
