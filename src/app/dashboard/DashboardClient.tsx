@@ -42,6 +42,12 @@ function DashboardContent() {
   const [highlightedRows, setHighlightedRows] = useState<Record<string, 'CREATE' | 'UPDATE' | 'DELETE'>>({});
   const [ghostAssets, setGhostAssets] = useState<Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }>>([]);
   const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
+  
+  // PDF Import Naming State
+  const [isNamingModalOpen, setIsNamingModalOpen] = useState(false);
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
+  const [detectedAccounts, setDetectedAccounts] = useState<string[]>([]);
+  const [accountNameMappings, setAccountNameMappings] = useState<Record<string, string>>({});
 
   const dismissToast = useCallback((id: string) => {
     setAuditToasts(prev => prev.filter(t => t.id !== id));
@@ -470,45 +476,38 @@ function DashboardContent() {
             <input type="file" accept=".pdf" className="hidden" onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              setMessage({ text: 'Importing PDF statement...', type: 'success' });
+
+              setIsUploading(true);
+              setMessage({ text: 'Previewing PDF statement...', type: 'success' });
+
               try {
                 const formData = new FormData();
                 formData.append('file', file);
-                const res = await fetch('/api/portfolio-pdf', { method: 'POST', body: formData });
+                const res = await fetch('/api/portfolio-pdf?preview=true', { method: 'POST', body: formData });
                 const data = await res.json();
-                if (res.ok) {
-                  setMessage({ text: `Imported ${data.count} holdings from PDF.`, type: 'success' });
 
-                  // Set row highlights from classified mutations
-                  if (data.mutations && Array.isArray(data.mutations)) {
-                    const highlights: Record<string, 'CREATE' | 'UPDATE' | 'DELETE'> = {};
-                    const ghosts: Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }> = [];
-
-                    for (const m of data.mutations) {
-                      highlights[m.assetSK] = m.action;
-                      if (m.action === 'DELETE') {
-                        ghosts.push({ ticker: m.ticker, assetSK: m.assetSK, snapshot: m.before || {} });
-                      }
+                if (res.ok && data.preview) {
+                  setPendingPdfFile(file);
+                  setDetectedAccounts(data.accounts || []);
+                  
+                  // Pre-fill mappings with existing account names if possible
+                  const newMappings: Record<string, string> = {};
+                  data.accounts.forEach((acctNum: string) => {
+                    const existing = assets.find(a => a.accountNumber === acctNum);
+                    if (existing && existing.account) {
+                      newMappings[acctNum] = existing.account || "";
                     }
-
-                    setHighlightedRows(highlights);
-                    setGhostAssets(ghosts);
-
-                    // Clear highlights after animation
-                    setTimeout(() => {
-                      setHighlightedRows({});
-                      setGhostAssets([]);
-                    }, 4000);
-                  }
-
-                  showAuditToast(`PDF imported — ${data.count} holdings processed.`);
-                  fetchAssets();
+                  });
+                  setAccountNameMappings(newMappings);
+                  setIsNamingModalOpen(true);
                 } else {
-                  setMessage({ text: data.error || 'PDF import failed.', type: 'error' });
+                  setMessage({ text: data.error || 'Failed to preview PDF', type: 'error' });
                 }
               } catch (err) {
-                console.error('PDF import error:', err);
-                setMessage({ text: 'Failed to import PDF.', type: 'error' });
+                console.error(err);
+                setMessage({ text: 'Error previewing PDF', type: 'error' });
+              } finally {
+                setIsUploading(false);
               }
               e.target.value = '';
             }} />
@@ -588,7 +587,7 @@ function DashboardContent() {
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-0 z-20">
                   <tr>
-                    {renderSortableHeader("Account", "account", `${stickyCol1} min-w-[120px]`)}
+                    {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
                     {renderSortableHeader("Acct Type", "accountType", `${stickyCol2} min-w-[90px]`)}
                     {renderSortableHeader("Acct #", "accountNumber", `${stickyCol3} min-w-[80px]`)}
                     {renderSortableHeader("Ticker", "ticker", `${stickyCol4} min-w-[90px]`)}
@@ -948,6 +947,116 @@ function DashboardContent() {
         onDismiss={dismissToast} 
         onViewHistory={() => setIsTimeMachineOpen(true)} 
       />
+      {/* PDF Account Naming Modal */}
+      {isNamingModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-neutral-900 w-full max-w-md rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden slide-in-from-bottom-4 duration-300">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 text-teal-600 mb-4">
+                <div className="p-2 bg-teal-50 dark:bg-teal-900/30 rounded-lg">
+                  <Upload className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Name Your Accounts</h3>
+              </div>
+              
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+                We detected the following account numbers in your statement. Please provide a friendly name for each (e.g. "TFSA", "RBC Margin").
+              </p>
+
+              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                {detectedAccounts.length > 0 ? (
+                  detectedAccounts.map((acctNum) => (
+                    <div key={acctNum} className="space-y-1.5 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800">
+                      <label className="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider flex justify-between">
+                        <span>Account Number</span>
+                        <span className="text-neutral-900 dark:text-neutral-200">{acctNum}</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter account name..."
+                        className="w-full p-2.5 text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all"
+                        value={accountNameMappings[acctNum] || ""}
+                        onChange={(e) => setAccountNameMappings(prev => ({ ...prev, [acctNum]: e.target.value }))}
+                        autoFocus
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-700">
+                    <p className="text-sm text-neutral-500">No specific account numbers detected.</p>
+                    <p className="text-xs text-neutral-400 mt-1">Default name will be used.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setIsNamingModalOpen(false);
+                    setPendingPdfFile(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!pendingPdfFile) return;
+                    setIsNamingModalOpen(false);
+                    setIsUploading(true);
+                    setMessage({ text: 'Finalizing PDF import...', type: 'success' });
+
+                    try {
+                      const formData = new FormData();
+                      formData.append('file', pendingPdfFile);
+                      formData.append('accountMappings', JSON.stringify(accountNameMappings));
+
+                      const res = await fetch('/api/portfolio-pdf', { method: 'POST', body: formData });
+                      const data = await res.json();
+                      
+                      if (res.ok) {
+                        setMessage({ text: `Imported ${data.count} holdings.`, type: 'success' });
+                        
+                        // Set row highlights logic
+                        if (data.mutations && Array.isArray(data.mutations)) {
+                          const highlights: Record<string, 'CREATE' | 'UPDATE' | 'DELETE'> = {};
+                          const ghosts: Array<{ ticker: string; assetSK: string; snapshot: Record<string, unknown> }> = [];
+
+                          for (const m of data.mutations) {
+                            highlights[m.assetSK] = m.action;
+                            if (m.action === 'DELETE') {
+                              ghosts.push({ ticker: m.ticker, assetSK: m.assetSK, snapshot: m.before || {} });
+                            }
+                          }
+                          setHighlightedRows(highlights);
+                          setGhostAssets(ghosts);
+                          setTimeout(() => {
+                            setHighlightedRows({});
+                            setGhostAssets([]);
+                          }, 10000);
+                        }
+                        
+                        fetchAssets();
+                      } else {
+                        setMessage({ text: data.error || 'Failed to import PDF', type: 'error' });
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      setMessage({ text: 'Error finalizing import', type: 'error' });
+                    } finally {
+                      setIsUploading(false);
+                      setPendingPdfFile(null);
+                    }
+                  }}
+                  className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium shadow-lg shadow-teal-500/20 transition-all flex items-center space-x-2"
+                >
+                  <span>Finish Import</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

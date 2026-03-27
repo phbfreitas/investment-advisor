@@ -106,10 +106,13 @@ At the top, three critical indicators give you an instant macroscopic view:
 #### B. The Holdings Breakdown Table
 This is the interactive nerve center where every asset is dissected in detail.
 - **Sorting & Filtering:** Every column header can be clicked to sort (ascending/descending). Below each header is a filter box—type a ticker like "AAPL" or a sector like "Tech" to instantly isolate specific rows.
-- **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account, Security Type, Strategy Type, etc.).
+- **Editable Inline Rows:** Click the blue pencil icon to edit any asset. The row transforms into input fields and dropdowns (Account Name, Security Type, Strategy Type, etc.).
 - **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
 - **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
-- **PDF Statement Import:** Upload standard brokerage statements (including native support for Wealthsimple PDFs) to automatically extract your holdings. The system intelligently matches existing assets by Ticker and Account Number, updating the `# Tickers` (Quantity), Market Value, and Book Cost, while automatically deleting old or sold tickers to perfectly sync with your statement.
+- **PDF Statement Import:** Upload standard brokerage statements (including native support for Wealthsimple PDFs) to automatically extract your holdings. 
+    - **Step 1: Preview:** The system scans the PDF and identifies the `Acct #` (Account Number) for your holdings.
+    - **Step 2: Naming Prompt:** You will be prompted to provide or confirm an **Account Name** (e.g., "Questrade TFSA") for each account number found.
+    - **Step 3: Sync:** The system then matches existing assets, updating quantities and values, and ensuring your portfolio stays organized by the names you provided.
 - **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
 
 #### C. Profile Page: Investment Portfolio Table
@@ -137,7 +140,7 @@ Every portfolio mutation is captured with a full before/after snapshot:
 - **PDF Import:** When you upload a brokerage statement, the system classifies every asset as Created (new ticker), Updated (changed quantity/value), or Deleted (no longer in the statement). A single audit log entry records every mutation with complete snapshots of all asset fields.
 - **Manual Edit:** When you edit an asset inline (change quantity, book cost, etc.), a MANUAL_EDIT log captures the exact before and after values.
 - **Manual Create/Delete:** Adding a new asset or deleting an existing one is logged with the full asset snapshot, including the Account Name and Account # for better organization.
-- **Account-Level Tracking:** Every mutation now explicitly displays the `Account` and `Acct #` (Account Number) in the history timeline, ensuring you can always trace which institution or sub-account an asset belongs to.
+- **Account-Level Tracking:** Every mutation now explicitly displays the `Account Name` and `Acct #` (Account Number) in the history timeline, ensuring you can always trace which institution or sub-account an asset belongs to.
 - **Glassmorphic Toast Notification:** After every successful edit, a premium frosted-glass notification slides in from the bottom-right confirming: *"Exact snapshot secured in Audit Trail"* with a quick-link to [View History].
 
 #### B. Visual Feedback on Dashboard

@@ -461,12 +461,18 @@ export default function UserGuideClient() {
                                     </h4>
                                     <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Sorting & Filtering:</strong> Click column headers to sort; type in filter boxes to isolate specific rows.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Editable Inline Rows:</strong> Click the blue pencil icon to edit asset details inline.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Editable Inline Rows:</strong> Click the blue pencil icon to edit asset details (Account Name, Security Type, etc.) inline.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Live Ticker Price:</strong> Auto-fetches live prices from Yahoo Finance when editing a ticker symbol.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Frozen Columns:</strong> Account, Acct Type, Acct #, and Ticker columns stay pinned on the left as you scroll horizontally through the table.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Frozen Columns:</strong> Account Name, Acct Type, Acct #, and Ticker columns stay pinned on the left as you scroll horizontally through the table.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Sticky Header:</strong> Column headers and filter row remain visible as you scroll vertically through your holdings.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Unavailable Data Indicator:</strong> Fields that cannot be auto-calculated from market data (e.g., 3YR Return for individual stocks, Analyst ratings for small-caps) display a muted dash (—) with a tooltip explaining the limitation.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">PDF Statement Import:</strong> Upload standard brokerage statements (including native support for Wealthsimple PDFs) to automatically extract your holdings. The system intelligently matches existing assets by Ticker and Account Number, updating the <code># Tickers</code>, Market Value, and Book Cost, while automatically deleting old or sold tickers to perfectly sync with your statement.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">PDF Statement Import:</strong> Upload standard brokerage statements to automatically extract your holdings.
+                                            <ul className="mt-2 space-y-1 ml-4 list-inside list-decimal">
+                                                <li><strong>Step 1: Preview:</strong> The system scans the PDF and identifies the Account Number for your holdings.</li>
+                                                <li><strong>Step 2: Naming Prompt:</strong> You will be prompted to provide or confirm an <strong>Account Name</strong> (e.g., "Questrade TFSA") for each account number found.</li>
+                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets, updating quantities and values, and ensuring your portfolio stays organized by the names you provided.</li>
+                                            </ul>
+                                        </li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
                                     </ul>
                                 </div>
@@ -595,7 +601,7 @@ export default function UserGuideClient() {
                                 </div>
                             </div>
                             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Account details (Name and Acct #) are now explicitly tracked and displayed in every history entry.
+                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Account details (Account Name and Acct #) are now explicitly tracked and displayed in every history entry.
                             </p>
                         </div>
 

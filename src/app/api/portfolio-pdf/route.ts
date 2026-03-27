@@ -132,10 +132,15 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const url = new URL(request.url);
+        const isPreview = url.searchParams.get("preview") === "true";
+
         const PROFILE_KEY = `HOUSEHOLD#${session.user.householdId}`;
 
         const formData = await request.formData();
         const file = formData.get("file") as Blob;
+        const accountMappingsRaw = formData.get("accountMappings") as string;
+        const accountMappings: Record<string, string> = accountMappingsRaw ? JSON.parse(accountMappingsRaw) : {};
 
         if (!file) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -159,6 +164,17 @@ export async function POST(request: Request) {
                 error: "No holdings detected in PDF. Ensure it contains a holdings table with ticker symbols, quantities, and values.",
                 extractedTextPreview: text.substring(0, 500),
             }, { status: 400 });
+        }
+
+        // If in preview mode, just return what we found
+        if (isPreview) {
+            const uniqueAccountNumbers = Array.from(new Set(holdings.map(h => h.accountNumber).filter(Boolean)));
+            return NextResponse.json({
+                preview: true,
+                count: holdings.length,
+                accounts: uniqueAccountNumbers,
+                holdings: holdings.map(h => ({ ticker: h.ticker, quantity: h.quantity, accountNumber: h.accountNumber, accountType: h.accountType })),
+            });
         }
 
         // Ensure profile exists
@@ -237,7 +253,7 @@ export async function POST(request: Request) {
                 importSource: "pdf-statement",
                 updatedAt: new Date().toISOString(),
                 createdAt: existing?.createdAt ?? new Date().toISOString(),
-                account: existing?.account ?? "",
+                account: h.accountNumber && accountMappings[h.accountNumber] ? accountMappings[h.accountNumber] : (existing?.account ?? ""),
                 securityType: existing?.securityType ?? "",
                 strategyType: existing?.strategyType ?? "",
                 call: existing?.call ?? "",

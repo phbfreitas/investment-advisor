@@ -341,7 +341,7 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
           <DiffLine label="Qty" value={mutation.after.quantity} color="text-emerald-400" />
           <DiffLine label="Value" value={`$${mutation.after.marketValue.toLocaleString()}`} color="text-emerald-400" />
           {mutation.after.account && (
-            <DiffLine label="Account" value={mutation.after.account} color="text-emerald-400" />
+            <DiffLine label="Account Name" value={mutation.after.account} color="text-emerald-400" />
           )}
           {mutation.after.accountNumber && (
             <DiffLine label="Acct #" value={mutation.after.accountNumber} color="text-emerald-400" />
@@ -356,7 +356,7 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
           <DiffLine label="Qty" value={mutation.before.quantity} color="text-red-400" strikethrough />
           <DiffLine label="Value" value={`$${mutation.before.marketValue.toLocaleString()}`} color="text-red-400" strikethrough />
           {mutation.before.account && (
-            <DiffLine label="Account" value={mutation.before.account} color="text-red-400" strikethrough />
+            <DiffLine label="Account Name" value={mutation.before.account} color="text-red-400" strikethrough />
           )}
           {mutation.before.accountNumber && (
             <DiffLine label="Acct #" value={mutation.before.accountNumber} color="text-red-400" strikethrough />
@@ -384,6 +384,7 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
         if (bVal !== aVal) {
           let label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
           if (key === "accountNumber") label = "Acct #";
+          if (key === "account") label = "Account Name";
           
           const formatVal = (v: any) => {
             if (v === null || v === undefined || v === "") return "None";
