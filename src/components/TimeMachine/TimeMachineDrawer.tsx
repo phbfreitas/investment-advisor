@@ -340,6 +340,12 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
         <div className="space-y-1">
           <DiffLine label="Qty" value={mutation.after.quantity} color="text-emerald-400" />
           <DiffLine label="Value" value={`$${mutation.after.marketValue.toLocaleString()}`} color="text-emerald-400" />
+          {mutation.after.account && (
+            <DiffLine label="Account" value={mutation.after.account} color="text-emerald-400" />
+          )}
+          {mutation.after.accountNumber && (
+            <DiffLine label="Acct #" value={mutation.after.accountNumber} color="text-emerald-400" />
+          )}
         </div>
       );
     }
@@ -349,6 +355,12 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
         <div className="space-y-1">
           <DiffLine label="Qty" value={mutation.before.quantity} color="text-red-400" strikethrough />
           <DiffLine label="Value" value={`$${mutation.before.marketValue.toLocaleString()}`} color="text-red-400" strikethrough />
+          {mutation.before.account && (
+            <DiffLine label="Account" value={mutation.before.account} color="text-red-400" strikethrough />
+          )}
+          {mutation.before.accountNumber && (
+            <DiffLine label="Acct #" value={mutation.before.accountNumber} color="text-red-400" strikethrough />
+          )}
         </div>
       );
     }
@@ -356,16 +368,29 @@ function MutationCard({ mutation }: { mutation: AuditMutation }) {
     if (mutation.action === "UPDATE" && mutation.before && mutation.after) {
       const fields: { label: string; before: string | number; after: string | number }[] = [];
 
-      const keys: (keyof typeof mutation.before)[] = ["quantity", "marketValue", "bookCost", "yield"];
+      const keys: (keyof typeof mutation.before)[] = [
+        "quantity", 
+        "marketValue", 
+        "bookCost", 
+        "yield", 
+        "accountNumber", 
+        "account", 
+        "strategyType"
+      ];
 
       for (const key of keys) {
         const bVal = mutation.before[key];
         const aVal = mutation.after[key];
         if (bVal !== aVal) {
-          const label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
-          const formatVal = (v: string | number) => typeof v === "number" && (key.includes("Value") || key.includes("Cost"))
-            ? `$${v.toLocaleString()}`
-            : String(v);
+          let label = key.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+          if (key === "accountNumber") label = "Acct #";
+          
+          const formatVal = (v: any) => {
+            if (v === null || v === undefined || v === "") return "None";
+            return typeof v === "number" && (key.includes("Value") || key.includes("Cost"))
+              ? `$${v.toLocaleString()}`
+              : String(v);
+          };
           fields.push({ label, before: formatVal(bVal), after: formatVal(aVal) });
         }
       }

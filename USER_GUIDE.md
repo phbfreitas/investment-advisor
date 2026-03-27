@@ -136,7 +136,8 @@ Every change to your portfolio — whether from a PDF import or a manual inline 
 Every portfolio mutation is captured with a full before/after snapshot:
 - **PDF Import:** When you upload a brokerage statement, the system classifies every asset as Created (new ticker), Updated (changed quantity/value), or Deleted (no longer in the statement). A single audit log entry records every mutation with complete snapshots of all asset fields.
 - **Manual Edit:** When you edit an asset inline (change quantity, book cost, etc.), a MANUAL_EDIT log captures the exact before and after values.
-- **Manual Create/Delete:** Adding a new asset or deleting an existing one is logged with the full asset snapshot.
+- **Manual Create/Delete:** Adding a new asset or deleting an existing one is logged with the full asset snapshot, including the Account Name and Account # for better organization.
+- **Account-Level Tracking:** Every mutation now explicitly displays the `Account` and `Acct #` (Account Number) in the history timeline, ensuring you can always trace which institution or sub-account an asset belongs to.
 - **Glassmorphic Toast Notification:** After every successful edit, a premium frosted-glass notification slides in from the bottom-right confirming: *"Exact snapshot secured in Audit Trail"* with a quick-link to [View History].
 
 #### B. Visual Feedback on Dashboard

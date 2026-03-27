@@ -595,7 +595,7 @@ export default function UserGuideClient() {
                                 </div>
                             </div>
                             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Only fields that changed are displayed.
+                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Account details (Name and Acct #) are now explicitly tracked and displayed in every history entry.
                             </p>
                         </div>
 
