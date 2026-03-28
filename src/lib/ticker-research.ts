@@ -48,7 +48,7 @@ export function classifyStrategyType(yieldDecimal: number, beta: number, descrip
   // Yield > 8.0%
   // Required Keywords: Options, Covered Call, Derivative, Distribution
   if (yieldDecimal > 0.08) {
-    const optionsKeywords = ['options', 'covered call', 'derivative', 'distribution', 'yield enhancement', 'income generation', 'high yield'];
+    const optionsKeywords = ['options', 'covered call', 'derivative', 'distribution', 'yield enhancement', 'income generation', 'high yield', 'global strategic', 'enhanced income', 'financials high income'];
     if (optionsKeywords.some(k => combinedText.includes(k))) {
       return 'The Mix';
     }
@@ -65,7 +65,7 @@ export function classifyStrategyType(yieldDecimal: number, beta: number, descrip
   }
 
   // 4. The Mix - Path B: Hybrid Risk
-  // Yield 2.1% to 8.0% AND Beta > 1.0
+  // Yield 2.1% to 8.0% AND Beta >= 1.0
   if (yieldDecimal > 0.02 && yieldDecimal <= 0.08 && beta >= 1.0) {
     return 'The Mix';
   }
@@ -148,14 +148,18 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
       call: (securityType === 'Fund' && (isCallInName || isCallInDesc)) ? 'Yes' : 'No',
       sector: inferSector(description, assetProfile?.sector),
       market: quote.exchange || '',
-      currency: quote.currency || 'USD',
-      managementFee: (summaryDetail?.expenseRatio || 0) * 100,
-      exDividendDate: summary.calendarEvents?.exDividendDate ? new Date(summary.calendarEvents.exDividendDate).toISOString().split('T')[0] : '',
-      beta,
+      managementStyle: (assetProfile?.longBusinessSummary || '').toLowerCase().includes('index') ? 'Passive' : 'Active',
+      managementFee: summaryDetail?.managementFee || 0,
+      exDividendDate: summaryDetail?.exDividendDate?.toISOString() || '',
+      oneYearReturn: summary.fundPerformance?.trailingReturns?.oneYear || 0,
+      threeYearReturn: summary.fundPerformance?.trailingReturns?.threeYear || 0,
+      analystConsensus: summary.recommendationTrend?.trend?.[0]?.recommendationMean || 'N/A',
+      volatility: 0, 
+      riskFlag: 'Normal',
+      currency: quote.currency || 'USD'
     };
-
   } catch (error) {
-    console.error(`[ticker-research] Error for ${symbol}:`, error);
+    console.error(`Error researching ${ticker}:`, error);
     return null;
   }
 }
