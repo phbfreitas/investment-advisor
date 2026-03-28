@@ -325,12 +325,23 @@ export async function POST(request: Request) {
 
         // 5. Secondary Pass for Auto-Linked Assets (not in current PDF)
         // If an asset was linked to an account number during pre-emptive linking 
-        // but was NOT included in the current PDF holdings, we still update it in the DB.
+        // but was NOT included in the current PDF holdings, we still update it in the DB
+        // UNLESS it belongs to the account being synchronized (PDF is the Source of Truth).
+        const pdfAccountNumber = holdings.length > 0 ? holdings[0].accountNumber : extractAccountNumber(text);
+        const mappedAccountName = pdfAccountNumber ? accountMappings[pdfAccountNumber] : "";
+
         for (const asset of existingAssets) {
             const wasTouchedByHoldings = writeRequests.some(r => r.PutRequest?.Item.SK === asset.SK);
             const originalAsset = originalAssetsSnapshot.find((a: any) => a.SK === asset.SK);
             
             if (!wasTouchedByHoldings && asset.accountNumber !== originalAsset?.accountNumber) {
+                // If this asset belongs to the specific account being synchronized from PDF,
+                // and it was NOT in the PDF holdings (wasTouchedByHoldings is false), 
+                // we skip the update here and let Pass 6 (Sync/Delete) remove it.
+                if (asset.accountNumber === pdfAccountNumber || (mappedAccountName && asset.account === mappedAccountName)) {
+                    continue;
+                }
+
                 const newItem = {
                     ...asset,
                     updatedAt: new Date().toISOString(),
@@ -348,13 +359,24 @@ export async function POST(request: Request) {
             }
         }
 
-        // 6. Classify and build delete requests for assets no longer in PDF
-        const pdfAccountNumber = holdings.length > 0 ? holdings[0].accountNumber : extractAccountNumber(text);
+        // 6. Sync/Delete for assets belonging to this account but NOT in the holdings list
+        // Note: For managed/manual assets that were auto-linked above, we preserve them
         if (pdfAccountNumber && pdfAccountNumber.trim() !== '') {
-            const existingAssetsForAccount = existingAssets.filter(a => a.accountNumber === pdfAccountNumber);
+            // Broaden filter: Include anything with the same Account # OR same Account Name
+            const existingAssetsForAccount = existingAssets.filter(a => 
+                a.accountNumber === pdfAccountNumber || 
+                (mappedAccountName && a.account === mappedAccountName)
+            );
+            
             for (const asset of existingAssetsForAccount) {
                 const stillHoldsIt = holdings.some(h => h.ticker === asset.ticker);
-                if (!stillHoldsIt) {
+                
+                // DEDUPLICATION FIX:
+                // Check if we already have a PutRequest for this asset SK (e.g. from the secondary pass)
+                // DynamoDB BatchWriteCommand cannot contain multiple requests for the same key.
+                const isAlreadyInWriteRequests = writeRequests.some(r => r.PutRequest?.Item.SK === asset.SK);
+                
+                if (!stillHoldsIt && !isAlreadyInWriteRequests) {
                     writeRequests.push({
                         DeleteRequest: {
                             Key: { PK: asset.PK, SK: asset.SK }
