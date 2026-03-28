@@ -165,7 +165,7 @@ export default function UserGuideClient() {
                 <h3 className="text-xl font-bold text-amber-400 mb-3 italic">3. The Mix (O Mix)</h3>
                 <p className="text-slate-400 text-sm leading-relaxed mb-4">
                   Aggressive yield combined with market exposure. This is the home for "Yield Maximizer" assets, 
-                  Covered Call strategies (e.g., HDIV, JEPQ), and high-beta hybrid assets (Yield 2-8%, Beta > 1.0).
+                  Covered Call strategies (e.g., HDIV, JEPQ), and high-beta hybrid assets (Yield 2-8%, Beta &gt; 1.0).
                 </p>
                 <div className="flex gap-2">
                   <span className="px-2 py-1 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-mono border border-amber-500/20 uppercase tracking-wider">Yield Enhanced</span>
