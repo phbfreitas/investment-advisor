@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const data = JSON.parse\\(fs.readFileSync\\(''e:/Paulo/Projects/investment-advisor/data/personas/buffett-index.json''\\)\\); const years = {}; data.forEach\\(item => { years[item.metadata.year] = \\(years[item.metadata.year] || 0\\) + 1; }\\); Object.keys\\(years\\).sort\\(\\(a,b\\) => parseInt\\(a\\) - parseInt\\(b\\)\\).forEach\\(y => console.log\\(y + '': '' + years[y]\\)\\);\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const data = JSON.parse\\(fs.readFileSync\\(''e:/Paulo/Projects/investment-advisor/data/personas/buffett-index.json''\\)\\); const firstChunk = data[0]; console.log\\(''Total chunks:'', data.length\\); console.log\\(''Embedding dimension:'', firstChunk.embedding.length\\); console.log\\(''Text length \\(first chunk\\):'', firstChunk.text.length\\); console.log\\(''Average text length:'', Math.round\\(data.reduce\\(\\(sum, c\\) => sum + c.text.length, 0\\) / data.length\\)\\);\")",
+      "Bash(find /e/Paulo/Projects/investment-advisor -name *persona* -o -name *rag*)",
+      "Bash(bash \"C:/Users/Paulo/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"e:/Paulo/Projects/investment-advisor\")",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node -e \"const path = require\\(''path''\\); const fs = require\\(''fs''\\); const p = path.join\\(process.cwd\\(\\), ''books/Os Axiomas de Zurique -- Max Gunther -- ae1a7e841c58df9a930e79e9df1992bf -- Anna\\\\''s Archive.pdf''\\); console.log\\(''Resolved:'', p\\); console.log\\(''Exists:'', fs.existsSync\\(p\\)\\);\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const files = fs.readdirSync\\(''books''\\); files.forEach\\(f => { console.log\\(JSON.stringify\\(f\\)\\); console.log\\(''  chars:'', [...f].map\\(c => c.charCodeAt\\(0\\).toString\\(16\\)\\).join\\('' ''\\)\\); }\\);\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const path = require\\(''path''\\); const manifest = JSON.parse\\(fs.readFileSync\\(''data/personas/sources.json'', ''utf-8''\\)\\); Object.entries\\(manifest\\).forEach\\(\\([id, data]\\) => { data.sources.filter\\(s => s.type === ''file''\\).forEach\\(s => { const full = path.join\\(process.cwd\\(\\), s.path\\); console.log\\(id + '':'', fs.existsSync\\(full\\) ? ''OK'' : ''MISSING'', ''-'', s.label\\); }\\); }\\);\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); [''buffett'',''barsi'',''gunther'',''housel'',''ramsey''].forEach\\(id => { const f = ''data/personas/'' + id + ''-index.json''; const data = JSON.parse\\(fs.readFileSync\\(f\\)\\); const sizeMB = \\(fs.statSync\\(f\\).size / 1024 / 1024\\).toFixed\\(1\\); console.log\\(id + '': '' + data.length + '' chunks \\('' + sizeMB + '' MB\\)''\\); }\\);\")",
+      "Read(//c/Users/Paulo/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/**)",
+      "Bash(bash scripts/start-server.sh --project-dir \"e:/Paulo/Projects/investment-advisor\")",
+      "Bash(bash \"C:/Users/Paulo/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/scripts/start-server.sh\" --project-dir \"e:/Paulo/Projects/investment-advisor\")",
+      "Bash(find /e/Paulo/Projects/investment-advisor -name *strategy-feedback* -o -name *refinements*)",
+      "Bash(node -e \"const yf = require\\(''''yahoo-finance2''''\\); console.log\\(typeof yf.quoteSummary\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(find /e/Paulo/Projects/investment-advisor/src/app -type f -name *.tsx)",
+      "Bash(grep -rn \"expectedAnnualDividends\\\\|oneYearReturn\\\\|fiveYearReturn\" /e/Paulo/Projects/investment-advisor/src --include=*.ts --include=*.tsx)"
+    ]
+  }
+}

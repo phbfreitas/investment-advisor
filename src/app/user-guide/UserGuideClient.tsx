@@ -70,6 +70,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
                 icon: LayoutDashboard,
                 subsections: [
                     { id: "port-logic", title: "Mathematical Logic" },
+                    { id: "port-classification", title: "Portfolio Classification" },
                     { id: "port-dividends", title: "Dividend Summary" },
                     { id: "port-ripple", title: "Cascading Effects" },
                 ]
@@ -491,6 +492,42 @@ export default function UserGuideClient() {
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> The table footer auto-sums market value, book cost, and expected dividends across all entries.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">CSV Export:</strong> Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.</li>
                                     </ul>
+                                </div>
+                                <div id="port-classification" ref={el => { contentRefs.current["port-classification"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2 scroll-m-8">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
+                                        <BrainCircuit className="h-4 w-4 mr-2 text-blue-500" /> Portfolio Classification (Rules-Based Engine)
+                                    </h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                                        The system uses a strict, data-driven decision tree to categorize every asset into one of three strategy types based on <strong>Trailing Dividend Yield</strong> and <strong>3-Year Beta</strong> from Yahoo Finance.
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                                            <p className="font-bold text-sm text-neutral-900 dark:text-white mb-1">Pure Growth</p>
+                                            <p className="text-xs text-neutral-500 mb-2">Crescimento Puro</p>
+                                            <ul className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 list-disc list-inside">
+                                                <li>Yield: 0.0% - 2.0%</li>
+                                                <li>Keywords: Index, S&P 500, Nasdaq, Growth</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                                            <p className="font-bold text-sm text-neutral-900 dark:text-white mb-1">Pure Dividend</p>
+                                            <p className="text-xs text-neutral-500 mb-2">Dividendos Puros</p>
+                                            <ul className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 list-disc list-inside">
+                                                <li>Yield: 2.1% - 8.0%</li>
+                                                <li>Beta: &lt; 1.0 (Low Volat)</li>
+                                                <li>Keywords: Dividend, Realty, Utility</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                                            <p className="font-bold text-sm text-neutral-900 dark:text-white mb-1">The Mix</p>
+                                            <p className="text-xs text-neutral-500 mb-2">Hybrids / O Mix</p>
+                                            <ul className="text-xs text-neutral-600 dark:text-neutral-400 space-y-1 list-disc list-inside">
+                                                <li>Yield: &gt; 8.0% (w/ Options)</li>
+                                                <li>Yield: 2.1%-8% (w/ Beta &gt; 1)</li>
+                                                <li>Fallback for uncertainty</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div id="port-dividends" ref={el => { contentRefs.current["port-dividends"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2 scroll-m-8">
                                     <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">

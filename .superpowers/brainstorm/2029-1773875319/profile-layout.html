@@ -1,0 +1,162 @@
+<h2>Strategy Configuration — Profile Page Layout</h2>
+<p class="subtitle">New sections inserted between Risk Tolerance and Budget. Each section is collapsible.</p>
+
+<div style="max-width: 700px; margin: 0 auto; font-family: system-ui, sans-serif;">
+
+  <!-- Existing sections (collapsed for reference) -->
+  <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; opacity: 0.5;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:#94a3b8;">1. Investment Strategy</span>
+      <span style="color:#64748b; font-size:12px;">EXISTING — textarea</span>
+    </div>
+  </div>
+  <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; opacity: 0.5;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:#94a3b8;">2. Financial Goals</span>
+      <span style="color:#64748b; font-size:12px;">EXISTING — textarea</span>
+    </div>
+  </div>
+  <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; opacity: 0.5;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:#94a3b8;">3. Risk Tolerance</span>
+      <span style="color:#64748b; font-size:12px;">EXISTING — select</span>
+    </div>
+  </div>
+
+  <!-- NEW: Asset Mix -->
+  <div style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.3); border-radius: 8px; padding: 16px; margin-bottom: 8px;">
+    <div style="font-weight:700; color:#2dd4bf; margin-bottom: 12px;">4. Asset Mix <span style="background:#14b8a6; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px;">NEW</span></div>
+    <div style="display:flex; gap:16px; margin-bottom:12px;">
+      <div style="flex:1; text-align:center;">
+        <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">Growth</div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:8px; color:#fff; font-size:18px; font-weight:600;">60%</div>
+      </div>
+      <div style="flex:1; text-align:center;">
+        <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">Income</div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:8px; color:#fff; font-size:18px; font-weight:600;">30%</div>
+      </div>
+      <div style="flex:1; text-align:center;">
+        <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">Mixed</div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:8px; color:#fff; font-size:18px; font-weight:600;">10%</div>
+      </div>
+    </div>
+    <!-- Visual bar -->
+    <div style="display:flex; height:24px; border-radius:6px; overflow:hidden;">
+      <div style="width:60%; background:#14b8a6; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#000;">Growth</div>
+      <div style="width:30%; background:#8b5cf6; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff;">Income</div>
+      <div style="width:10%; background:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#000;">Mix</div>
+    </div>
+    <div style="color:#64748b; font-size:11px; margin-top:6px; text-align:right;">Must total 100%</div>
+  </div>
+
+  <!-- NEW: Investment Philosophies -->
+  <div style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.3); border-radius: 8px; padding: 16px; margin-bottom: 8px;">
+    <div style="font-weight:700; color:#2dd4bf; margin-bottom: 12px;">5. Investment Philosophies <span style="background:#14b8a6; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px;">NEW</span></div>
+
+    <div style="margin-bottom:10px;">
+      <div style="color:#8b5cf6; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Value-Based</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <span style="background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#c4b5fd;">Regular Value</span>
+        <span style="background:rgba(139,92,246,0.4); border:1px solid rgba(139,92,246,0.6); padding:4px 10px; border-radius:20px; font-size:12px; color:#fff;">Deep Value ✓</span>
+        <span style="background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#c4b5fd;">Mispriced Situations</span>
+        <span style="background:rgba(139,92,246,0.4); border:1px solid rgba(139,92,246,0.6); padding:4px 10px; border-radius:20px; font-size:12px; color:#fff;">Fundamental Value ✓</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <div style="color:#14b8a6; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Strategy-Based</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <span style="background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#5eead4;">Event-Driven</span>
+        <span style="background:rgba(20,184,166,0.4); border:1px solid rgba(20,184,166,0.6); padding:4px 10px; border-radius:20px; font-size:12px; color:#fff;">Indexing ✓</span>
+        <span style="background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#5eead4;">Buy the Dip</span>
+        <span style="background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#5eead4;">Contrarian</span>
+      </div>
+    </div>
+
+    <div>
+      <div style="color:#f59e0b; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Style-Based</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <span style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#fcd34d;">Technical Analysis</span>
+        <span style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.4); padding:4px 10px; border-radius:20px; font-size:12px; color:#fcd34d;">Socially Responsible</span>
+        <span style="background:rgba(245,158,11,0.4); border:1px solid rgba(245,158,11,0.6); padding:4px 10px; border-radius:20px; font-size:12px; color:#fff;">Long-term Growth ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW: Sector Allocation with drift -->
+  <div style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.3); border-radius: 8px; padding: 16px; margin-bottom: 8px;">
+    <div style="font-weight:700; color:#2dd4bf; margin-bottom: 12px;">9. Sector Allocation <span style="background:#14b8a6; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px;">NEW</span></div>
+
+    <div style="display:grid; grid-template-columns: 1fr auto auto auto; gap:4px 12px; align-items:center; font-size:13px;">
+      <div style="color:#64748b; font-size:11px;">Sector</div>
+      <div style="color:#64748b; font-size:11px; text-align:center;">Target</div>
+      <div style="color:#64748b; font-size:11px; text-align:center;">Actual</div>
+      <div style="color:#64748b; font-size:11px; text-align:center;">Drift</div>
+
+      <div style="color:#e2e8f0;">IT</div>
+      <div style="text-align:center; color:#fff;">25%</div>
+      <div style="text-align:center; color:#94a3b8;">28%</div>
+      <div style="text-align:center; color:#22c55e; font-size:12px;">+3%</div>
+
+      <div style="color:#e2e8f0;">Financials</div>
+      <div style="text-align:center; color:#fff;">20%</div>
+      <div style="text-align:center; color:#94a3b8;">14%</div>
+      <div style="text-align:center; color:#ef4444; font-size:12px; font-weight:600;">-6% ⚠</div>
+
+      <div style="color:#e2e8f0;">Healthcare</div>
+      <div style="text-align:center; color:#fff;">15%</div>
+      <div style="text-align:center; color:#94a3b8;">16%</div>
+      <div style="text-align:center; color:#22c55e; font-size:12px;">+1%</div>
+
+      <div style="color:#e2e8f0;">Energy & Utilities</div>
+      <div style="text-align:center; color:#fff;">10%</div>
+      <div style="text-align:center; color:#94a3b8;">3%</div>
+      <div style="text-align:center; color:#ef4444; font-size:12px; font-weight:600;">-7% ⚠</div>
+
+      <div style="color:#64748b;">... 7 more sectors</div>
+      <div></div><div></div><div></div>
+    </div>
+
+    <div style="margin-top:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:8px 12px; font-size:12px; color:#fca5a5;">
+      ⚠ 2 sectors exceed 5% drift threshold: <strong>Financials</strong> (-6%), <strong>Energy & Utilities</strong> (-7%)
+    </div>
+    <div style="color:#64748b; font-size:11px; margin-top:6px; text-align:right;">Must total 100%</div>
+  </div>
+
+  <!-- NEW: Performance Targets with projections -->
+  <div style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.3); border-radius: 8px; padding: 16px; margin-bottom: 8px;">
+    <div style="font-weight:700; color:#2dd4bf; margin-bottom: 12px;">11. Performance Targets <span style="background:#14b8a6; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:8px;">NEW</span></div>
+
+    <div style="display:flex; gap:16px;">
+      <div style="flex:1;">
+        <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">Expected Annual Return</div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:8px 12px; color:#fff; font-size:18px; font-weight:600;">8.5%</div>
+        <div style="margin-top:6px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:6px 8px; font-size:11px; color:#fcd34d;">
+          📊 Portfolio estimate: ~6.2% based on holdings weighted avg return
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div style="color:#94a3b8; font-size:12px; margin-bottom:4px;">Target Monthly Dividend</div>
+        <div style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:8px 12px; color:#fff; font-size:18px; font-weight:600;">$500</div>
+        <div style="margin-top:6px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:4px; padding:6px 8px; font-size:11px; color:#86efac;">
+          📊 Current estimate: $423/mo from expected annual dividends
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing sections (collapsed) -->
+  <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; opacity: 0.5;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:#94a3b8;">12. Budget</span>
+      <span style="color:#64748b; font-size:12px;">EXISTING</span>
+    </div>
+  </div>
+  <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; opacity: 0.5;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:#94a3b8;">13. Wealth</span>
+      <span style="color:#64748b; font-size:12px;">EXISTING</span>
+    </div>
+  </div>
+
+</div>

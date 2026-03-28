@@ -1,0 +1,80 @@
+<h2>Section 3: Guru Prompt Templates</h2>
+<p class="subtitle">4 pre-built prompt buttons in the chat input area</p>
+
+<div class="section">
+  <h3>3A. Prompt Template Buttons</h3>
+  <div class="mockup">
+    <div class="mockup-header">Chat Page — Below Persona Selector, Above Input</div>
+    <div class="mockup-body" style="padding:16px;font-family:system-ui;">
+      <p style="color:#888;font-size:11px;margin-bottom:8px;">QUICK PROMPTS</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <div style="background:#1a1a2e;border:1px solid #333;border-radius:20px;padding:8px 14px;font-size:12px;color:#ccc;cursor:pointer;">
+          💡 Investment Suggestions
+        </div>
+        <div style="background:#1a1a2e;border:1px solid #333;border-radius:20px;padding:8px 14px;font-size:12px;color:#ccc;cursor:pointer;">
+          📊 Financial Analysis
+        </div>
+        <div style="background:#1a1a2e;border:1px solid #333;border-radius:20px;padding:8px 14px;font-size:12px;color:#ccc;cursor:pointer;">
+          ⚖️ Portfolio Rebalancing
+        </div>
+        <div style="background:#1a1a2e;border:1px solid #333;border-radius:20px;padding:8px 14px;font-size:12px;color:#ccc;cursor:pointer;">
+          🏥 Financial Health Audit
+        </div>
+      </div>
+
+      <div style="margin-top:16px;background:#0d0d1a;border:1px solid #333;border-radius:8px;padding:12px;color:#666;font-size:13px;">
+        Ask your advisors...
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3B. What Each Prompt Does</h3>
+  <div style="display:grid;gap:12px;">
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px;">
+      <p style="color:#14b8a6;font-size:13px;font-weight:600;margin-bottom:4px;">💡 Investment Suggestions</p>
+      <p style="color:#aaa;font-size:12px;margin:0;">Pre-fills: <em>"Based on my investment strategy and your core philosophy, suggest specific tickers to buy or sell. Consider my current holdings, sector targets, and risk tolerance."</em></p>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px;">
+      <p style="color:#14b8a6;font-size:13px;font-weight:600;margin-bottom:4px;">📊 Comprehensive Financial Analysis</p>
+      <p style="color:#aaa;font-size:12px;margin:0;">Pre-fills: <em>"Analyze my entire financial situation — investments, net worth, and cash flow (budget vs. actual). Identify strengths, risks, and suggest adjustments."</em></p>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px;">
+      <p style="color:#14b8a6;font-size:13px;font-weight:600;margin-bottom:4px;">⚖️ Portfolio Rebalancing</p>
+      <p style="color:#aaa;font-size:12px;margin:0;">Pre-fills: <em>"Review my portfolio against my target allocations and suggest specific buy/sell orders to rebalance. Prioritize actions by impact and alignment with my strategy."</em></p>
+    </div>
+    <div style="background:#1a1a2e;border-radius:8px;padding:12px;">
+      <p style="color:#14b8a6;font-size:13px;font-weight:600;margin-bottom:4px;">🏥 Full Financial Health Audit</p>
+      <p style="color:#aaa;font-size:12px;margin:0;">Pre-fills: <em>"Perform a complete financial health audit — assets beyond investments, total net worth, cash flow (budgeted vs. actual), debt ratios, and emergency fund adequacy. Recommend changes."</em></p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3C. Behavior</h3>
+  <ul style="color:#ccc;font-size:13px;line-height:1.8;">
+    <li>Clicking a prompt pill <strong>fills the chat input</strong> with the pre-crafted text — user can edit before sending</li>
+    <li>Prompts replace the existing quick prompts on the empty-state welcome screen</li>
+    <li>Prompts are defined in a <code style="color:#14b8a6;">PROMPT_TEMPLATES</code> constant array — easy to add more later</li>
+    <li>Each prompt works with whichever personas are selected — no guru-specific variants needed</li>
+    <li>The advisor's system prompt + RAG context + user profile already provide all the personalization</li>
+  </ul>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Approve Section 3</h3>
+      <p>Guru prompt templates look good — finalize design</p>
+    </div>
+  </div>
+  <div class="option" data-choice="revise" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Needs Changes</h3>
+      <p>I'll explain what to adjust in the terminal</p>
+    </div>
+  </div>
+</div>

@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { extractText, getDocumentProxy } from "unpdf";
 import { insertAuditLog } from "@/lib/auditLog";
 import { toSnapshot } from "@/lib/assetSnapshot";
+import { researchTicker } from '@/lib/ticker-research';
 import type { AuditMutation } from "@/types/audit";
 
 export const dynamic = "force-dynamic";
@@ -236,6 +237,9 @@ export async function POST(request: Request) {
         }
         // ---------------------------------------------------------------------------
 
+        // Cache for ticker research to avoid redundant API calls
+        const tickerCache = new Map<string, any>();
+
         for (const h of holdings) {
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
             const mappedName = h.accountNumber ? accountMappings[h.accountNumber] : "";
@@ -258,6 +262,25 @@ export async function POST(request: Request) {
                 if (naMatches.length === 1) existing = naMatches[0];
             }
 
+            // --- AI ENRICHMENT (New Logic) ---
+            // If asset is new OR has missing metadata, attempt enrichment
+            const needsMetadata = !existing || !existing.strategyType || !existing.sector || !existing.securityType;
+            let enrichedData = null;
+            
+            if (needsMetadata) {
+                if (tickerCache.has(h.ticker)) {
+                    enrichedData = tickerCache.get(h.ticker);
+                } else {
+                    try {
+                        enrichedData = await researchTicker(h.ticker);
+                        tickerCache.set(h.ticker, enrichedData);
+                    } catch (e) {
+                        console.warn(`[portfolio-pdf] AI Enrichment failed for ${h.ticker}:`, e);
+                    }
+                }
+            }
+            // ---------------------------------
+
             const assetId = existing ? existing.id : uuidv4();
             const assetSK = `ASSET#${assetId}`;
 
@@ -268,9 +291,9 @@ export async function POST(request: Request) {
                 profileId: PROFILE_KEY,
                 type: "ASSET",
                 ticker: h.ticker,
-                currency: h.currency || "CAD",
+                currency: h.currency || (enrichedData?.currency ?? (existing?.currency ?? "CAD")),
                 quantity: h.quantity,
-                liveTickerPrice: pricePerShare,
+                liveTickerPrice: pricePerShare > 0 ? pricePerShare : (enrichedData?.currentPrice ?? (existing?.liveTickerPrice ?? 0)),
                 bookCost: h.bookCost,
                 marketValue: h.marketValue,
                 profitLoss: h.marketValue - h.bookCost,
@@ -280,24 +303,30 @@ export async function POST(request: Request) {
                 updatedAt: new Date().toISOString(),
                 createdAt: existing?.createdAt ?? new Date().toISOString(),
                 account: h.accountNumber && accountMappings[h.accountNumber] ? accountMappings[h.accountNumber] : (existing?.account ?? ""),
-                securityType: existing?.securityType ?? "",
-                strategyType: existing?.strategyType ?? "",
-                call: existing?.call ?? "",
-                sector: existing?.sector ?? "",
-                market: existing?.market ?? "",
-                managementStyle: existing?.managementStyle ?? "",
-                externalRating: existing?.externalRating ?? "",
-                managementFee: existing?.managementFee ?? 0,
-                yield: existing?.yield ?? 0,
-                oneYearReturn: existing?.oneYearReturn ?? 0,
+                
+                // Preserve User Intent: Only use AI data if existing field is empty/blank
+                securityType: (existing?.securityType && existing.securityType !== "") ? existing.securityType : (enrichedData?.securityType ?? ""),
+                strategyType: (existing?.strategyType && existing.strategyType !== "") ? existing.strategyType : (enrichedData?.strategyType ?? ""),
+                call: (existing?.call && existing.call !== "" && existing.call !== "N/A") ? existing.call : (enrichedData?.call ?? ""),
+                sector: (existing?.sector && existing.sector !== "" && existing.sector !== "N/A") ? existing.sector : (enrichedData?.sector ?? ""),
+                
+                market: (existing?.market && existing.market !== "") ? existing.market : (enrichedData?.market ?? ""),
+                managementStyle: (existing?.managementStyle && existing.managementStyle !== "") ? existing.managementStyle : (enrichedData?.managementStyle ?? ""),
+                name: (existing?.name && existing.name !== "") ? existing.name : (enrichedData?.name ?? ""),
+                
+                // Other fields
+                externalRating: existing?.externalRating ?? enrichedData?.externalRating ?? "",
+                managementFee: existing?.managementFee ?? enrichedData?.managementFee ?? 0,
+                yield: existing?.yield ?? enrichedData?.dividendYield ?? 0,
+                oneYearReturn: existing?.oneYearReturn ?? enrichedData?.oneYearReturn ?? 0,
                 fiveYearReturn: existing?.fiveYearReturn ?? 0,
-                threeYearReturn: existing?.threeYearReturn ?? 0,
-                exDividendDate: existing?.exDividendDate ?? "",
-                analystConsensus: existing?.analystConsensus ?? "",
-                beta: existing?.beta ?? 0,
-                riskFlag: existing?.riskFlag ?? "",
+                threeYearReturn: existing?.threeYearReturn ?? enrichedData?.threeYearReturn ?? 0,
+                exDividendDate: existing?.exDividendDate ?? enrichedData?.exDividendDate ?? "",
+                analystConsensus: existing?.analystConsensus ?? enrichedData?.analystConsensus ?? "",
+                beta: existing?.beta ?? enrichedData?.beta ?? 0,
+                riskFlag: existing?.riskFlag ?? enrichedData?.riskFlag ?? "",
                 risk: existing?.risk ?? "",
-                volatility: existing?.volatility ?? 0,
+                volatility: existing?.volatility ?? enrichedData?.volatility ?? 0,
                 expectedAnnualDividends: existing?.expectedAnnualDividends ?? 0,
             };
 

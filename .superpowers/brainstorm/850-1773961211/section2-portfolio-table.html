@@ -1,0 +1,170 @@
+<h2>Section 2: Investment Portfolio Table</h2>
+<p class="subtitle">Sticky header, account autofill, Yahoo Finance auto-lookup, calculated fields, Excel export</p>
+
+<div class="section">
+  <h3>2A. Table Layout with Sticky Header</h3>
+  <div class="mockup">
+    <div class="mockup-header">My Investment Portfolio &nbsp;&nbsp;<span style="font-size:12px;background:#14b8a6;color:#000;padding:2px 8px;border-radius:4px;cursor:pointer;">+ Add Holding</span> &nbsp;<span style="font-size:12px;background:#1a1a2e;border:1px solid #555;color:#ccc;padding:2px 8px;border-radius:4px;cursor:pointer;">📥 Export Excel</span></div>
+    <div class="mockup-body" style="padding:0;font-family:system-ui;max-height:300px;overflow-y:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="position:sticky;top:0;background:#1a1a2e;z-index:1;">
+            <th style="padding:8px 6px;text-align:left;color:#14b8a6;border-bottom:2px solid #333;white-space:nowrap;">Account</th>
+            <th style="padding:8px 6px;text-align:left;color:#14b8a6;border-bottom:2px solid #333;">Ticker</th>
+            <th style="padding:8px 6px;text-align:left;color:#14b8a6;border-bottom:2px solid #333;">Type</th>
+            <th style="padding:8px 6px;text-align:left;color:#14b8a6;border-bottom:2px solid #333;">Sector</th>
+            <th style="padding:8px 6px;text-align:left;color:#14b8a6;border-bottom:2px solid #333;">Market</th>
+            <th style="padding:8px 6px;text-align:right;color:#14b8a6;border-bottom:2px solid #333;">Qty</th>
+            <th style="padding:8px 6px;text-align:right;color:#14b8a6;border-bottom:2px solid #333;">Book Cost</th>
+            <th style="padding:8px 6px;text-align:right;color:#14b8a6;border-bottom:2px solid #333;">Mkt Value</th>
+            <th style="padding:8px 6px;text-align:right;color:#14b8a6;border-bottom:2px solid #333;">Weight %</th>
+            <th style="padding:8px 6px;text-align:right;color:#14b8a6;border-bottom:2px solid #333;">P/L</th>
+            <th style="padding:8px 6px;text-align:center;color:#14b8a6;border-bottom:2px solid #333;">⚙</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #222;">
+            <td style="padding:6px;color:#aaa;">TFSA - WS</td>
+            <td style="padding:6px;color:#fff;font-weight:600;">AAPL</td>
+            <td style="padding:6px;color:#aaa;">Stock</td>
+            <td style="padding:6px;color:#aaa;">IT</td>
+            <td style="padding:6px;color:#aaa;">US</td>
+            <td style="padding:6px;text-align:right;color:#fff;">50</td>
+            <td style="padding:6px;text-align:right;color:#aaa;">$8,250</td>
+            <td style="padding:6px;text-align:right;color:#fff;">$11,200</td>
+            <td style="padding:6px;text-align:right;color:#14b8a6;">18.2%</td>
+            <td style="padding:6px;text-align:right;color:#22c55e;">+$2,950</td>
+            <td style="padding:6px;text-align:center;color:#666;">✏️ 🗑️</td>
+          </tr>
+          <tr style="border-bottom:1px solid #222;">
+            <td style="padding:6px;color:#aaa;">TFSA - WS</td>
+            <td style="padding:6px;color:#fff;font-weight:600;">VFV.TO</td>
+            <td style="padding:6px;color:#aaa;">ETF</td>
+            <td style="padding:6px;color:#aaa;">S&P 500</td>
+            <td style="padding:6px;color:#aaa;">US</td>
+            <td style="padding:6px;text-align:right;color:#fff;">100</td>
+            <td style="padding:6px;text-align:right;color:#aaa;">$10,500</td>
+            <td style="padding:6px;text-align:right;color:#fff;">$12,800</td>
+            <td style="padding:6px;text-align:right;color:#14b8a6;">20.8%</td>
+            <td style="padding:6px;text-align:right;color:#22c55e;">+$2,300</td>
+            <td style="padding:6px;text-align:center;color:#666;">✏️ 🗑️</td>
+          </tr>
+          <tr style="border-bottom:1px solid #222;">
+            <td style="padding:6px;color:#aaa;">RRSP - QT</td>
+            <td style="padding:6px;color:#fff;font-weight:600;">ENB.TO</td>
+            <td style="padding:6px;color:#aaa;">Stock</td>
+            <td style="padding:6px;color:#aaa;">Energy</td>
+            <td style="padding:6px;color:#aaa;">CA</td>
+            <td style="padding:6px;text-align:right;color:#fff;">200</td>
+            <td style="padding:6px;text-align:right;color:#aaa;">$9,800</td>
+            <td style="padding:6px;text-align:right;color:#fff;">$10,400</td>
+            <td style="padding:6px;text-align:right;color:#14b8a6;">16.9%</td>
+            <td style="padding:6px;text-align:right;color:#22c55e;">+$600</td>
+            <td style="padding:6px;text-align:center;color:#666;">✏️ 🗑️</td>
+          </tr>
+          <tr style="border-bottom:1px solid #222;background:#111;">
+            <td style="padding:6px;color:#aaa;">Non-Reg</td>
+            <td style="padding:6px;color:#fff;font-weight:600;">BCE.TO</td>
+            <td style="padding:6px;color:#aaa;">Stock</td>
+            <td style="padding:6px;color:#aaa;">Comm.</td>
+            <td style="padding:6px;color:#aaa;">CA</td>
+            <td style="padding:6px;text-align:right;color:#fff;">150</td>
+            <td style="padding:6px;text-align:right;color:#aaa;">$7,200</td>
+            <td style="padding:6px;text-align:right;color:#fff;">$6,100</td>
+            <td style="padding:6px;text-align:right;color:#14b8a6;">9.9%</td>
+            <td style="padding:6px;text-align:right;color:#ef4444;">-$1,100</td>
+            <td style="padding:6px;text-align:center;color:#666;">✏️ 🗑️</td>
+          </tr>
+          <tr style="border-bottom:1px solid #222;">
+            <td colspan="5" style="padding:6px;color:#888;font-style:italic;">... more holdings scroll here ...</td>
+            <td colspan="6"></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#1a1a2e;font-weight:600;">
+            <td colspan="6" style="padding:8px 6px;color:#fff;">Totals</td>
+            <td style="padding:8px 6px;text-align:right;color:#aaa;">$35,750</td>
+            <td style="padding:8px 6px;text-align:right;color:#fff;">$40,500</td>
+            <td style="padding:8px 6px;text-align:right;color:#14b8a6;">100%</td>
+            <td style="padding:8px 6px;text-align:right;color:#22c55e;">+$4,750</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2B. Add Holding Flow</h3>
+  <div class="mockup">
+    <div class="mockup-header">Add New Holding</div>
+    <div class="mockup-body" style="padding:16px;font-family:system-ui;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Account</label>
+          <div style="background:#0d0d1a;border:1px solid #333;border-radius:6px;padding:8px;color:#fff;font-size:13px;">
+            TFSA - WS <span style="color:#14b8a6;font-size:10px;">▼ autofill from existing</span>
+          </div>
+        </div>
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Ticker</label>
+          <div style="background:#0d0d1a;border:1px solid #14b8a6;border-radius:6px;padding:8px;color:#14b8a6;font-size:13px;">
+            MSFT <span style="font-size:10px;color:#888;">→ auto-lookups sector, market, type</span>
+          </div>
+        </div>
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Sector <span style="color:#14b8a6;font-size:10px;">auto-filled</span></label>
+          <div style="background:#0d0d1a;border:1px solid #333;border-radius:6px;padding:8px;color:#aaa;font-size:13px;">Information Technology</div>
+        </div>
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Market <span style="color:#14b8a6;font-size:10px;">auto-filled</span></label>
+          <div style="background:#0d0d1a;border:1px solid #333;border-radius:6px;padding:8px;color:#aaa;font-size:13px;">US</div>
+        </div>
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Quantity</label>
+          <div style="background:#0d0d1a;border:1px solid #333;border-radius:6px;padding:8px;color:#fff;font-size:13px;">25</div>
+        </div>
+        <div>
+          <label style="color:#888;font-size:11px;display:block;margin-bottom:4px;">Book Cost / Share</label>
+          <div style="background:#0d0d1a;border:1px solid #333;border-radius:6px;padding:8px;color:#fff;font-size:13px;">$420.50</div>
+        </div>
+      </div>
+      <p style="color:#888;font-size:12px;margin-top:12px;">🔍 Yahoo Finance auto-populates: sector, market, security type, current price, dividend yield, 1yr/5yr returns</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2C. Auto-Calculated Fields</h3>
+  <p style="color:#aaa;font-size:13px;">These fields are computed client-side from the holdings data — never stored in DB:</p>
+  <ul style="color:#ccc;font-size:13px;line-height:1.8;">
+    <li><strong>Weight %</strong> — holding market value / total portfolio value</li>
+    <li><strong>P/L</strong> — (current price - book cost) × quantity</li>
+    <li><strong>Market Value</strong> — current price × quantity (price from Yahoo)</li>
+    <li><strong>Portfolio Totals</strong> — sum of book cost, market value, P/L across all holdings</li>
+    <li><strong>Sector/Geo drift</strong> — actual allocation vs. target (feeds into existing drift table)</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>2D. Excel Export</h3>
+  <p style="color:#aaa;font-size:13px;">Client-side CSV generation using native JavaScript (no library needed). Downloads as <code style="color:#14b8a6;">portfolio-YYYY-MM-DD.csv</code>. Includes all visible columns plus a totals row. Opens natively in Excel.</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Approve Section 2</h3>
+      <p>Portfolio table design looks good — move to Section 3</p>
+    </div>
+  </div>
+  <div class="option" data-choice="revise" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Needs Changes</h3>
+      <p>I'll explain what to adjust in the terminal</p>
+    </div>
+  </div>
+</div>

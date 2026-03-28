@@ -1,0 +1,189 @@
+﻿2026-03-25T04:15:02.4602317Z Current runner version: '2.332.0'
+2026-03-25T04:15:02.4641093Z ##[group]Runner Image Provisioner
+2026-03-25T04:15:02.4642436Z Hosted Compute Agent
+2026-03-25T04:15:02.4643463Z Version: 20260213.493
+2026-03-25T04:15:02.4645063Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-03-25T04:15:02.4646419Z Build Date: 2026-02-13T00:28:41Z
+2026-03-25T04:15:02.4647752Z Worker ID: {ffb65504-7e61-4627-832d-5faa6f33f839}
+2026-03-25T04:15:02.4648909Z Azure Region: eastus
+2026-03-25T04:15:02.4649791Z ##[endgroup]
+2026-03-25T04:15:02.4652188Z ##[group]Operating System
+2026-03-25T04:15:02.4653237Z Ubuntu
+2026-03-25T04:15:02.4654357Z 24.04.3
+2026-03-25T04:15:02.4655201Z LTS
+2026-03-25T04:15:02.4655947Z ##[endgroup]
+2026-03-25T04:15:02.4656987Z ##[group]Runner Image
+2026-03-25T04:15:02.4658068Z Image: ubuntu-24.04
+2026-03-25T04:15:02.4658947Z Version: 20260309.50.1
+2026-03-25T04:15:02.4661017Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260309.50/images/ubuntu/Ubuntu2404-Readme.md
+2026-03-25T04:15:02.4664035Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260309.50
+2026-03-25T04:15:02.4665745Z ##[endgroup]
+2026-03-25T04:15:02.4667753Z ##[group]GITHUB_TOKEN Permissions
+2026-03-25T04:15:02.4670651Z Contents: read
+2026-03-25T04:15:02.4671502Z Metadata: read
+2026-03-25T04:15:02.4672543Z Packages: read
+2026-03-25T04:15:02.4673384Z ##[endgroup]
+2026-03-25T04:15:02.4677216Z Secret source: Actions
+2026-03-25T04:15:02.4678701Z Prepare workflow directory
+2026-03-25T04:15:02.5133924Z Prepare all required actions
+2026-03-25T04:15:02.5188887Z Getting action download info
+2026-03-25T04:15:02.8249527Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-03-25T04:15:02.9485683Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-03-25T04:15:03.0453604Z Download action repository 'aws-actions/configure-aws-credentials@v4' (SHA:7474bc4690e29a8392af63c5b98e7449536d5c3a)
+2026-03-25T04:15:03.3581327Z Complete job name: deploy
+2026-03-25T04:15:03.4296962Z ##[group]Run actions/checkout@v4
+2026-03-25T04:15:03.4297863Z with:
+2026-03-25T04:15:03.4298324Z   repository: phbfreitas/investment-advisor
+2026-03-25T04:15:03.4299071Z   token: ***
+2026-03-25T04:15:03.4299479Z   ssh-strict: true
+2026-03-25T04:15:03.4299902Z   ssh-user: git
+2026-03-25T04:15:03.4300353Z   persist-credentials: true
+2026-03-25T04:15:03.4300829Z   clean: true
+2026-03-25T04:15:03.4301303Z   sparse-checkout-cone-mode: true
+2026-03-25T04:15:03.4301805Z   fetch-depth: 1
+2026-03-25T04:15:03.4302224Z   fetch-tags: false
+2026-03-25T04:15:03.4302688Z   show-progress: true
+2026-03-25T04:15:03.4303167Z   lfs: false
+2026-03-25T04:15:03.4303605Z   submodules: false
+2026-03-25T04:15:03.4304337Z   set-safe-directory: true
+2026-03-25T04:15:03.4305151Z ##[endgroup]
+2026-03-25T04:15:03.5533078Z Syncing repository: phbfreitas/investment-advisor
+2026-03-25T04:15:03.5535142Z ##[group]Getting Git version info
+2026-03-25T04:15:03.5536019Z Working directory is '/home/runner/work/investment-advisor/investment-advisor'
+2026-03-25T04:15:03.5537121Z [command]/usr/bin/git version
+2026-03-25T04:15:03.5620236Z git version 2.53.0
+2026-03-25T04:15:03.5658299Z ##[endgroup]
+2026-03-25T04:15:03.5674123Z Temporarily overriding HOME='/home/runner/work/_temp/1eba1982-0272-40a2-b257-0c6584075413' before making global git config changes
+2026-03-25T04:15:03.5676590Z Adding repository directory to the temporary git global config as a safe directory
+2026-03-25T04:15:03.5689430Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/investment-advisor/investment-advisor
+2026-03-25T04:15:03.5729300Z Deleting the contents of '/home/runner/work/investment-advisor/investment-advisor'
+2026-03-25T04:15:03.5732705Z ##[group]Initializing the repository
+2026-03-25T04:15:03.5738152Z [command]/usr/bin/git init /home/runner/work/investment-advisor/investment-advisor
+2026-03-25T04:15:03.5881866Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-03-25T04:15:03.5884288Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-03-25T04:15:03.5886053Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-03-25T04:15:03.5887698Z hint: call:
+2026-03-25T04:15:03.5888225Z hint:
+2026-03-25T04:15:03.5889306Z hint: 	git config --global init.defaultBranch <name>
+2026-03-25T04:15:03.5890836Z hint:
+2026-03-25T04:15:03.5892255Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-03-25T04:15:03.5894842Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-03-25T04:15:03.5896554Z hint:
+2026-03-25T04:15:03.5897245Z hint: 	git branch -m <name>
+2026-03-25T04:15:03.5898037Z hint:
+2026-03-25T04:15:03.5899076Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-03-25T04:15:03.5901150Z Initialized empty Git repository in /home/runner/work/investment-advisor/investment-advisor/.git/
+2026-03-25T04:15:03.5904542Z [command]/usr/bin/git remote add origin https://github.com/phbfreitas/investment-advisor
+2026-03-25T04:15:03.5939001Z ##[endgroup]
+2026-03-25T04:15:03.5940280Z ##[group]Disabling automatic garbage collection
+2026-03-25T04:15:03.5944530Z [command]/usr/bin/git config --local gc.auto 0
+2026-03-25T04:15:03.5974718Z ##[endgroup]
+2026-03-25T04:15:03.5975996Z ##[group]Setting up auth
+2026-03-25T04:15:03.5982502Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-03-25T04:15:03.6015923Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-03-25T04:15:03.6381744Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-03-25T04:15:03.6414346Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-03-25T04:15:03.6645086Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-03-25T04:15:03.6676906Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-03-25T04:15:03.6923450Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-03-25T04:15:03.6960656Z ##[endgroup]
+2026-03-25T04:15:03.6962763Z ##[group]Fetching the repository
+2026-03-25T04:15:03.6971359Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +0194272fc6f3dc2db842abbb3bd3d4c559982825:refs/remotes/origin/main
+2026-03-25T04:15:04.1088243Z From https://github.com/phbfreitas/investment-advisor
+2026-03-25T04:15:04.1090934Z  * [new ref]         0194272fc6f3dc2db842abbb3bd3d4c559982825 -> origin/main
+2026-03-25T04:15:04.1124339Z ##[endgroup]
+2026-03-25T04:15:04.1128294Z ##[group]Determining the checkout info
+2026-03-25T04:15:04.1129628Z ##[endgroup]
+2026-03-25T04:15:04.1131501Z [command]/usr/bin/git sparse-checkout disable
+2026-03-25T04:15:04.1175513Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-03-25T04:15:04.1202530Z ##[group]Checking out the ref
+2026-03-25T04:15:04.1206071Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-03-25T04:15:04.2012759Z Switched to a new branch 'main'
+2026-03-25T04:15:04.2016094Z branch 'main' set up to track 'origin/main'.
+2026-03-25T04:15:04.2026545Z ##[endgroup]
+2026-03-25T04:15:04.2065995Z [command]/usr/bin/git log -1 --format=%H
+2026-03-25T04:15:04.2089893Z 0194272fc6f3dc2db842abbb3bd3d4c559982825
+2026-03-25T04:15:04.2413330Z ##[group]Run actions/setup-node@v4
+2026-03-25T04:15:04.2414650Z with:
+2026-03-25T04:15:04.2415449Z   node-version: 20
+2026-03-25T04:15:04.2416337Z   always-auth: false
+2026-03-25T04:15:04.2417240Z   check-latest: false
+2026-03-25T04:15:04.2418630Z   token: ***
+2026-03-25T04:15:04.2419405Z ##[endgroup]
+2026-03-25T04:15:04.4198857Z Found in cache @ /opt/hostedtoolcache/node/20.20.1/x64
+2026-03-25T04:15:04.4205419Z ##[group]Environment details
+2026-03-25T04:15:08.3979638Z node: v20.20.1
+2026-03-25T04:15:08.3981339Z npm: 10.8.2
+2026-03-25T04:15:08.3981899Z yarn: 1.22.22
+2026-03-25T04:15:08.3983194Z ##[endgroup]
+2026-03-25T04:15:08.4163361Z ##[group]Run npm install
+2026-03-25T04:15:08.4164030Z [36;1mnpm install[0m
+2026-03-25T04:15:08.4226053Z shell: /usr/bin/bash -e {0}
+2026-03-25T04:15:08.4226463Z ##[endgroup]
+2026-03-25T04:15:12.1343008Z npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+2026-03-25T04:15:25.8419502Z 
+2026-03-25T04:15:25.8420694Z added 652 packages, and audited 653 packages in 17s
+2026-03-25T04:15:25.8421226Z 
+2026-03-25T04:15:25.8421704Z 261 packages are looking for funding
+2026-03-25T04:15:25.8422278Z   run `npm fund` for details
+2026-03-25T04:15:25.9125849Z 
+2026-03-25T04:15:25.9126566Z 7 vulnerabilities (1 low, 1 moderate, 5 high)
+2026-03-25T04:15:25.9127034Z 
+2026-03-25T04:15:25.9127516Z To address issues that do not require attention, run:
+2026-03-25T04:15:25.9128189Z   npm audit fix
+2026-03-25T04:15:25.9128471Z 
+2026-03-25T04:15:25.9128802Z To address all issues possible, run:
+2026-03-25T04:15:25.9129506Z   npm audit fix --force
+2026-03-25T04:15:25.9129831Z 
+2026-03-25T04:15:25.9130233Z Some issues need review, and may require choosing
+2026-03-25T04:15:25.9130903Z a different dependency.
+2026-03-25T04:15:25.9131183Z 
+2026-03-25T04:15:25.9131442Z Run `npm audit` for details.
+2026-03-25T04:15:25.9637823Z ##[group]Run aws-actions/configure-aws-credentials@v4
+2026-03-25T04:15:25.9638172Z with:
+2026-03-25T04:15:25.9638509Z   aws-access-key-id: ***
+2026-03-25T04:15:25.9638859Z   aws-secret-access-key: ***
+2026-03-25T04:15:25.9639121Z   aws-region: us-east-1
+2026-03-25T04:15:25.9639353Z   audience: sts.amazonaws.com
+2026-03-25T04:15:25.9639610Z   output-env-credentials: true
+2026-03-25T04:15:25.9639866Z ##[endgroup]
+2026-03-25T04:15:26.1900935Z Proceeding with IAM user credentials
+2026-03-25T04:15:26.1999596Z ##[group]Run npx sst deploy --stage production
+2026-03-25T04:15:26.2000052Z [36;1mnpx sst deploy --stage production[0m
+2026-03-25T04:15:26.2051164Z shell: /usr/bin/bash -e {0}
+2026-03-25T04:15:26.2051462Z env:
+2026-03-25T04:15:26.2051692Z   AWS_DEFAULT_REGION: us-east-1
+2026-03-25T04:15:26.2051981Z   AWS_REGION: us-east-1
+2026-03-25T04:15:26.2052368Z   AWS_ACCESS_KEY_ID: ***
+2026-03-25T04:15:26.2052750Z   AWS_SECRET_ACCESS_KEY: ***
+2026-03-25T04:15:26.2053153Z   NEXTAUTH_SECRET: ***
+2026-03-25T04:15:26.2053691Z   GOOGLE_CLIENT_ID: ***
+2026-03-25T04:15:26.2054231Z   GOOGLE_CLIENT_SECRET: ***
+2026-03-25T04:15:26.2054598Z   GEMINI_API_KEY: ***
+2026-03-25T04:15:26.2054846Z ##[endgroup]
+2026-03-25T04:15:32.7276875Z SST 4.1.1 ready!
+2026-03-25T04:15:32.7277390Z 
+2026-03-25T04:15:32.7278159Z ➜  App:        investment-advisor
+2026-03-25T04:15:32.7278926Z    Stage:      production
+2026-03-25T04:15:32.7279486Z 
+2026-03-25T04:15:32.7279813Z ~  Deploy
+2026-03-25T04:15:32.7280134Z 
+2026-03-25T04:15:32.8379328Z |  Locked      A concurrent update was detected on the app. Run `sst unlock` to remove the lock and try again.
+2026-03-25T04:15:32.8893139Z ##[error]Process completed with exit code 1.
+2026-03-25T04:15:32.8974447Z Post job cleanup.
+2026-03-25T04:15:33.0301251Z Post job cleanup.
+2026-03-25T04:15:33.1265414Z [command]/usr/bin/git version
+2026-03-25T04:15:33.1306948Z git version 2.53.0
+2026-03-25T04:15:33.1360712Z Temporarily overriding HOME='/home/runner/work/_temp/d48eb56e-c190-4a3b-b418-9e90d2dce2f3' before making global git config changes
+2026-03-25T04:15:33.1362409Z Adding repository directory to the temporary git global config as a safe directory
+2026-03-25T04:15:33.1367747Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/investment-advisor/investment-advisor
+2026-03-25T04:15:33.1412760Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-03-25T04:15:33.1448426Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-03-25T04:15:33.2032579Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-03-25T04:15:33.2059787Z http.https://github.com/.extraheader
+2026-03-25T04:15:33.2074396Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-03-25T04:15:33.2499719Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-03-25T04:15:33.2771664Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-03-25T04:15:33.2803902Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-03-25T04:15:33.3188993Z Cleaning up orphan processes
+2026-03-25T04:15:33.3516476Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4, aws-actions/configure-aws-credentials@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
