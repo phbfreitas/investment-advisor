@@ -468,9 +468,10 @@ export default function UserGuideClient() {
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Unavailable Data Indicator:</strong> Fields that cannot be auto-calculated from market data (e.g., 3YR Return for individual stocks, Analyst ratings for small-caps) display a muted dash (—) with a tooltip explaining the limitation.</li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">PDF Statement Import:</strong> Upload standard brokerage statements to automatically extract your holdings.
                                             <ul className="mt-2 space-y-1 ml-4 list-inside list-decimal">
-                                                <li><strong>Step 1: Preview:</strong> The system scans the PDF and identifies the Account Number for your holdings.</li>
-                                                <li><strong>Step 2: Naming Prompt:</strong> You will be prompted to provide or confirm an <strong>Account Name</strong> (e.g., "Questrade TFSA") for each account number found.</li>
-                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets, updating quantities and values, and ensuring your portfolio stays organized by the names you provided.</li>
+                                                <li><strong>Step 1: Preview:</strong> The system scans the PDF and identifies the Account Number for your holdings. Each PDF should correspond to a single account (1-to-1 relationship).</li>
+                                                <li><strong>Step 2: Naming Prompt:</strong> You will be prompted to provide or confirm an <strong>Account Name</strong> (e.g., "Questrade TFSA") for the detected account number.</li>
+                                                <li><strong>Intelligent Auto-Linking:</strong> Choosing an existing Account Name automatically links that account number to all matching records in your portfolio, even those not present in the current PDF. This prevents row duplication and ensures data consistency.</li>
+                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets using Ticker and Account details, updating quantities and values to match your statement.</li>
                                             </ul>
                                         </li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>

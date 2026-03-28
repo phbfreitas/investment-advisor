@@ -110,9 +110,10 @@ This is the interactive nerve center where every asset is dissected in detail.
 - **Live Dollar Ticker Price:** When editing a ticker symbol, the system waits a second and automatically fetches the *live* current price from Yahoo Finance, eliminating manual data entry.
 - **Calculated Metrics:** Columns like Market Value and Profit/Loss are automatically computed based on the Quantity, Book Cost, and the Live Ticker Price.
 - **PDF Statement Import:** Upload standard brokerage statements (including native support for Wealthsimple PDFs) to automatically extract your holdings. 
-    - **Step 1: Preview:** The system scans the PDF and identifies the `Acct #` (Account Number) for your holdings.
-    - **Step 2: Naming Prompt:** You will be prompted to provide or confirm an **Account Name** (e.g., "Questrade TFSA") for each account number found.
-    - **Step 3: Sync:** The system then matches existing assets, updating quantities and values, and ensuring your portfolio stays organized by the names you provided.
+    - **Step 1: Preview:** The system scans the PDF and identifies the `Acct #` (Account Number) for your holdings. Note that each PDF should correspond to a single account (1-to-1 relationship).
+    - **Step 2: Naming Prompt:** You will be prompted to provide or confirm an **Account Name** (e.g., "Questrade TFSA") for the detected account number.
+    - **Intelligent Auto-Linking:** If you choose an existing Account Name, the system automatically links that account number to all matching records in your portfolio, even those not present in the current PDF. This ensures your entire account history stays consistent and prevents row duplication.
+    - **Step 3: Sync:** The system then matches existing assets using Ticker and Account details, updating quantities and values to match your statement.
 - **Totals Row:** At the bottom, it automatically sums up your Total Market Value and Total Expected Dividends across all displayed assets.
 
 #### C. Profile Page: Investment Portfolio Table

@@ -212,24 +212,50 @@ export async function POST(request: Request) {
         const writeRequests: WriteRequest[] = [];
         const mutations: AuditMutation[] = [];
 
+        // Keep a snapshot of original assets to detect auto-linking changes later
+        const originalAssetsSnapshot = JSON.parse(JSON.stringify(existingAssets));
+
+        // --- NEW: Pre-emptive Linking (Fixes duplication & auto-link requirement) ---
+        // If an account number in the PDF maps to a known account name, 
+        // link all existing records for that name to this number IMMEDIATELY.
+        const uniqueAcctNums = Array.from(new Set(holdings.map(h => h.accountNumber).filter(Boolean)));
+        for (const acctNum of uniqueAcctNums) {
+            const mappedName = accountMappings[acctNum];
+            if (!mappedName) continue;
+
+            for (let j = 0; j < existingAssets.length; j++) {
+                const asset = existingAssets[j];
+                const isMatchingName = asset.account === mappedName;
+                const missingNumber = !asset.accountNumber || asset.accountNumber.trim() === '' || asset.accountNumber.toLowerCase() === 'n/a' || asset.accountNumber.toLowerCase() === 'closing';
+                
+                if (isMatchingName && missingNumber) {
+                    // Update the local in-memory object so the loop below finds it correctly
+                    existingAssets[j].accountNumber = acctNum;
+                }
+            }
+        }
+        // ---------------------------------------------------------------------------
+
         for (const h of holdings) {
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
+            const mappedName = h.accountNumber ? accountMappings[h.accountNumber] : "";
             const allMatches = existingAssets.filter(a => a.ticker === h.ticker);
             let existing;
 
+            // Refined matching: Ticker + (AccountNumber OR AccountName)
             if (h.accountNumber) {
                 existing = allMatches.find(a => a.accountNumber === h.accountNumber);
-                if (!existing) {
-                    const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
-                    if (naMatches.length === 1) existing = naMatches[0];
-                }
-            } else {
-                if (allMatches.length === 1 && !allMatches[0].accountNumber) {
-                    existing = allMatches[0];
-                } else {
-                    const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
-                    if (naMatches.length === 1) existing = naMatches[0];
-                }
+            }
+            
+            // Fallback to name match if number match failed
+            if (!existing && mappedName) {
+                existing = allMatches.find(a => a.account === mappedName);
+            }
+
+            // Ultimate fallback (legacy) - only if exactly one record exists with no number
+            if (!existing) {
+                const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
+                if (naMatches.length === 1) existing = naMatches[0];
             }
 
             const assetId = existing ? existing.id : uuidv4();
@@ -297,7 +323,32 @@ export async function POST(request: Request) {
             }
         }
 
-        // 5. Classify and build delete requests for assets no longer in PDF
+        // 5. Secondary Pass for Auto-Linked Assets (not in current PDF)
+        // If an asset was linked to an account number during pre-emptive linking 
+        // but was NOT included in the current PDF holdings, we still update it in the DB.
+        for (const asset of existingAssets) {
+            const wasTouchedByHoldings = writeRequests.some(r => r.PutRequest?.Item.SK === asset.SK);
+            const originalAsset = originalAssetsSnapshot.find((a: any) => a.SK === asset.SK);
+            
+            if (!wasTouchedByHoldings && asset.accountNumber !== originalAsset?.accountNumber) {
+                const newItem = {
+                    ...asset,
+                    updatedAt: new Date().toISOString(),
+                    // Ensure the account (name) is correctly set based on the mapping
+                    account: asset.accountNumber ? (accountMappings[asset.accountNumber] || asset.account) : asset.account
+                };
+                writeRequests.push({ PutRequest: { Item: newItem } });
+                mutations.push({
+                    action: 'UPDATE',
+                    ticker: asset.ticker,
+                    assetSK: asset.SK,
+                    before: toSnapshot(originalAsset),
+                    after: toSnapshot(newItem),
+                });
+            }
+        }
+
+        // 6. Classify and build delete requests for assets no longer in PDF
         const pdfAccountNumber = holdings.length > 0 ? holdings[0].accountNumber : extractAccountNumber(text);
         if (pdfAccountNumber && pdfAccountNumber.trim() !== '') {
             const existingAssetsForAccount = existingAssets.filter(a => a.accountNumber === pdfAccountNumber);
