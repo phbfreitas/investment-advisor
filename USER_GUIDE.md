@@ -373,3 +373,19 @@ The system employs a **"Gold Standard" Deduplication Logic** when importing brok
 2. **Metadata Freshness**: Fetches real-time price, yield, and beta for every import.
 3. **Conflict Prevention**: Matches assets by Ticker + Account ID to prevent duplication.
 4. **Pruning**: Redundant or manually tracked records that contradict the latest official statement are flagged for removal.
+
+## 11. Rules-Based Decision Engine
+**Code Location:** `src/lib/classification.ts` (or similar engine)
+
+We use a deterministic, rules-based engine rather than simple keywords. Every asset is strictly evaluated based on quantitative metrics (Yield & Beta) fetched from institutional-grade data providers.
+
+### Rule-Based Precision
+The engine evaluates metrics without bias:
+- **Precision logic:** Assets must meet strict numerical boundaries for yield and 3-Year Beta.
+- **Data-driven:** Eliminates human error or naming-convention guesswork.
+
+### Dynamic Rebalancing
+The engine re-evaluates classifications every time a statement is imported or data changes:
+- **Automatic Drift Detection:** If an asset drifts outside its yield or beta threshold, the engine flags it for strategic review.
+- **Responsive Philosophy:** Ensures your portfolio strictly aligns with the intended category's philosophy as market conditions change.
+

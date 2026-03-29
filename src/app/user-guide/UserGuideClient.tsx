@@ -163,6 +163,15 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
                 subsections: [
                     { id: "sync-logic", title: "Deduplication Logic" },
                 ]
+            },
+            {
+                id: "rules-engine",
+                title: "11. Rules-Based Engine",
+                icon: Zap,
+                subsections: [
+                    { id: "rule-precision", title: "Rule-Based Precision" },
+                    { id: "dynamic-rebalance", title: "Dynamic Rebalancing" },
+                ]
             }
         ]
     }
@@ -1162,6 +1171,44 @@ export default function UserGuideClient() {
                                         </div>
                                     </li>
                                 </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* Section 11: Rules-Based Decision Engine */}
+                    <section id="rules-engine" ref={el => { contentRefs.current["rules-engine"] = el; }} className="space-y-8 scroll-m-8">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+                                <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">11. Rules-Based Decision Engine</h2>
+                        </div>
+
+                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                            We use a deterministic, rules-based engine rather than simple keywords. Every asset is strictly evaluated based on quantitative metrics (Yield & Beta) fetched from institutional-grade data providers.
+                        </p>
+
+                        <div id="rules-logic" ref={el => { contentRefs.current["rules-logic"] = el; }} className="space-y-6">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <ShieldCheck className="h-5 w-5 mr-2 text-indigo-500" /> Engine Capabilities
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">A. Rule-Based Precision</h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Precision logic:</strong> Assets must meet strict numerical boundaries for yield and 3-Year Beta.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Data-driven:</strong> Eliminates human error or naming-convention guesswork.</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">B. Dynamic Rebalancing</h4>
+                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Automatic Drift Detection:</strong> If an asset drifts outside its yield or beta threshold, the engine flags it for strategic review.</li>
+                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Responsive Philosophy:</strong> Ensures your portfolio strictly aligns with the intended category's philosophy as market conditions change.</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </section>
