@@ -513,8 +513,9 @@ export default function UserGuideClient() {
                                             <ul className="mt-2 space-y-1 ml-4 list-inside list-decimal">
                                                 <li><strong>Step 1: Preview:</strong> The system scans the PDF and identifies the Account Number for your holdings. Each PDF should correspond to a single account (1-to-1 relationship).</li>
                                                 <li><strong>Step 2: Naming Prompt:</strong> You will be prompted to provide or confirm an <strong>Account Name</strong> (e.g., "Questrade TFSA") for the detected account number.</li>
-                                                <li><strong>Intelligent Auto-Linking:</strong> Choosing an existing Account Name automatically links that account number to all matching records in your portfolio, even those not present in the current PDF. This prevents row duplication and ensures data consistency.</li>
-                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets using Ticker and Account details, updating quantities and values to match your statement.</li>
+                                                <li><strong>Strict Account-Bound Matching:</strong> To prevent data contamination, the system <strong>only</strong> matches assets that strictly belong to the account being imported (either by matching the Account Number or the mapped Account Name). If an asset exists with the same ticker but in a different account, it will be ignored to preserve data integrity.</li>
+                                                <li><strong>Intelligent Auto-Linking:</strong> Choosing an existing Account Name links that account number to all matching records in your portfolio. Unlike previous versions, this link is now <strong>fully audited</strong>, meaning the "Time Machine" can perfectly revert the account number assignment if needed.</li>
+                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets, updating quantities and values to match your statement.</li>
                                             </ul>
                                         </li>
                                         <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
@@ -590,7 +591,7 @@ export default function UserGuideClient() {
                                 <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                                     <h4 className="font-bold text-neutral-900 dark:text-white mb-2">PDF Import Logging</h4>
                                     <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                        When you upload a brokerage statement, the system classifies every asset as <strong>Created</strong> (new ticker), <strong>Updated</strong> (changed quantity/value), or <strong>Deleted</strong> (no longer in the statement). A single audit log captures all mutations with complete before/after snapshots.
+                                        When you upload a brokerage statement, the system classifies every asset as <strong>Created</strong>, <strong>Updated</strong>, or <strong>Deleted</strong>. Every single field changed — including <strong>Account Numbers</strong> and <strong>Account Names</strong> — is captured in the before/after snapshots, ensuring a 100% accurate rollback capability.
                                     </p>
                                 </div>
                                 <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">

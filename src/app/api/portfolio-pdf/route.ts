@@ -216,25 +216,9 @@ export async function POST(request: Request) {
         // Keep a snapshot of original assets to detect auto-linking changes later
         const originalAssetsSnapshot = JSON.parse(JSON.stringify(existingAssets));
 
-        // --- NEW: Pre-emptive Linking (Fixes duplication & auto-link requirement) ---
-        // If an account number in the PDF maps to a known account name, 
-        // link all existing records for that name to this number IMMEDIATELY.
-        const uniqueAcctNums = Array.from(new Set(holdings.map(h => h.accountNumber).filter(Boolean)));
-        for (const acctNum of uniqueAcctNums) {
-            const mappedName = accountMappings[acctNum];
-            if (!mappedName) continue;
-
-            for (let j = 0; j < existingAssets.length; j++) {
-                const asset = existingAssets[j];
-                const isMatchingName = asset.account === mappedName;
-                const missingNumber = !asset.accountNumber || asset.accountNumber.trim() === '' || asset.accountNumber.toLowerCase() === 'n/a' || asset.accountNumber.toLowerCase() === 'closing';
-                
-                if (isMatchingName && missingNumber) {
-                    // Update the local in-memory object so the loop below finds it correctly
-                    existingAssets[j].accountNumber = acctNum;
-                }
-            }
-        }
+        // --- REMOVED: Pre-emptive Linking (Caused audit log blind-spots) ---
+        // We now handle matching and linking inside the main loop to ensure 
+        // that all field changes (like accountNumber) are recorded in mutations.
         // ---------------------------------------------------------------------------
 
         // Cache for ticker research to avoid redundant API calls
@@ -243,24 +227,23 @@ export async function POST(request: Request) {
         for (const h of holdings) {
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
             const mappedName = h.accountNumber ? accountMappings[h.accountNumber] : "";
-            const allMatches = existingAssets.filter(a => a.ticker === h.ticker);
-            let existing;
+            const allMatches = existingAssets.filter((a: any) => a.ticker === h.ticker);
+            let existing: any;
 
-            // Refined matching: Ticker + (AccountNumber OR AccountName)
+            // --- REFINED MATCHING: Account-Bound Only ---
+            // 1. Try matching by Account Number (strictest)
             if (h.accountNumber) {
-                existing = allMatches.find(a => a.accountNumber === h.accountNumber);
+                existing = allMatches.find((a: any) => a.accountNumber === h.accountNumber);
             }
             
-            // Fallback to name match if number match failed
+            // 2. Try matching by Account Name (if number match failed or asset has no number)
             if (!existing && mappedName) {
                 existing = allMatches.find(a => a.account === mappedName);
             }
 
-            // Ultimate fallback (legacy) - only if exactly one record exists with no number
-            if (!existing) {
-                const naMatches = allMatches.filter(a => !a.accountNumber || a.accountNumber.trim() === '' || a.accountNumber.trim().toLowerCase() === 'n/a' || a.accountNumber.trim().toLowerCase() === 'closing');
-                if (naMatches.length === 1) existing = naMatches[0];
-            }
+            // NOTE: Global "ticker-only" fallback is REMOVED to prevent cross-account contamination.
+            // If no record exists for this specific account, we create a new one.
+            // ---------------------------------------------
 
             // --- AI ENRICHMENT (New Logic) ---
             // If asset is new OR has missing metadata, attempt enrichment
