@@ -29,10 +29,18 @@ export async function GET(request: Request) {
     };
 
     if (lastKey) {
-      commandInput.ExclusiveStartKey = {
-        PK: `HOUSEHOLD#${session.user.householdId}`,
-        SK: lastKey,
-      };
+      // Decode URI-encoded characters (like %23 for #) which can cause 500 errors in production
+      const decodedKey = decodeURIComponent(lastKey);
+      
+      // Safety check: The key must match the range key predicate to avoid ValidationException
+      if (!decodedKey.startsWith("AUDIT_LOG#")) {
+        console.warn(`[API /audit-logs] Skipping invalid pagination key: ${decodedKey}`);
+      } else {
+        commandInput.ExclusiveStartKey = {
+          PK: `HOUSEHOLD#${session.user.householdId}`,
+          SK: decodedKey,
+        };
+      }
     }
 
     const { Items, LastEvaluatedKey } = await db.send(
