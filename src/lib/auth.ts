@@ -7,6 +7,7 @@ import * as crypto from "crypto";
 const ALLOWED_EMAILS = [
     "phbfreitas2@gmail.com",
     "sialvesamaral@gmail.com",
+    "barthkico@gmail.com",
 ];
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
