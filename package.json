@@ -6,10 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.999.0",
+    "@aws-sdk/client-kms": "^3.1023.0",
     "@aws-sdk/lib-dynamodb": "^3.999.0",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
@@ -34,6 +37,7 @@
     "@aws-sdk/client-lambda": "^3.999.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.0-alpha.3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
@@ -42,8 +46,10 @@
     "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jest": "^30.3.0",
     "sst": "^4.1.1",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.9",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }
