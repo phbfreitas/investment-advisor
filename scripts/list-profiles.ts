@@ -17,7 +17,7 @@ async function listProfiles() {
             }
         })
     );
-    console.log("Profiles in DB:", result.Items?.map(i => i.PK));
+    console.log("Profiles in DB:", result.Items?.map((i: Record<string, unknown>) => i.PK));
 }
 
 listProfiles();
