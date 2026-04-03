@@ -108,7 +108,7 @@ export async function POST(request: Request) {
             existingAssets.forEach((asset: Record<string, unknown>) => {
                 writeRequests.push({
                     DeleteRequest: {
-                        Key: { PK: asset.PK, SK: asset.SK }
+                        Key: { PK: asset.PK as string, SK: asset.SK as string }
                     }
                 });
             });
