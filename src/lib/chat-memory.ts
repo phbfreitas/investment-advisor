@@ -282,7 +282,7 @@ export async function clearHistory(
       })
     );
 
-    const deleteRequests = (chatItems || []).map((item) => ({
+    const deleteRequests = (chatItems || []).map((item: Record<string, unknown>) => ({
       DeleteRequest: { Key: { PK: item.PK, SK: item.SK } },
     }));
 

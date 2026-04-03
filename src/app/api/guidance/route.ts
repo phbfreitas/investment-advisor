@@ -93,7 +93,7 @@ export async function POST(request: Request) {
             strategy: profile?.strategy || "Not specified",
             riskTolerance: profile?.riskTolerance || "Not specified",
             goals: profile?.goals || "Not specified",
-            portfolioFingerprint: assetsList.map(a => `${a.ticker}:${a.quantity}`).sort().join("|"),
+            portfolioFingerprint: assetsList.map((a: Record<string, unknown>) => `${a.ticker}:${a.quantity}`).sort().join("|"),
             strategyFingerprint,
         };
 

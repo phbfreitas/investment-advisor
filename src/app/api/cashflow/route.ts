@@ -55,10 +55,10 @@ export async function POST(request: Request) {
                 ExpressionAttributeValues: { ":pk": PROFILE_KEY, ":skPrefix": "CASHFLOW#" },
             })
         );
-        const existingKeys = (existingData.Items || []).map(item => item.SK);
+        const existingKeys = (existingData.Items || []).map((item: Record<string, unknown>) => item.SK as string);
         const incomingKeys = cashflows.map(cf => `CASHFLOW#${cf.year}-${cf.month}`);
 
-        const deleteKeys = existingKeys.filter(sk => !incomingKeys.includes(sk));
+        const deleteKeys = existingKeys.filter((sk: string) => !incomingKeys.includes(sk));
 
         // 2. Prepare Batch Write Requests (max 25 per batch)
         type WriteRequest =

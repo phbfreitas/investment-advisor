@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 
         // Add Delete requests for old assets
         if (existingAssets) {
-            existingAssets.forEach(asset => {
+            existingAssets.forEach((asset: Record<string, unknown>) => {
                 writeRequests.push({
                     DeleteRequest: {
                         Key: { PK: asset.PK, SK: asset.SK }
