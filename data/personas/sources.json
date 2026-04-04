@@ -42,5 +42,10 @@
     "sources": [
       { "type": "file", "path": "books/annas-arch-ed4c3cf39a7f (1).pdf", "label": "The Intelligent Investor, Revised Edition" }
     ]
+  },
+  "moneyguy": {
+    "sources": [
+      { "type": "file", "path": "books/Millionaire Mission -- Brian Preston -- PLACEHOLDER.pdf", "label": "Millionaire Mission" }
+    ]
   }
 }
