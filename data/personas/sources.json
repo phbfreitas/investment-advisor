@@ -1,51 +1,119 @@
 {
   "buffett": {
     "sources": [
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/1977.html", "label": "1977 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/1989.html", "label": "1989 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/1995.html", "label": "1995 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/2018ltr.pdf", "label": "2018 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/2021ltr.pdf", "label": "2021 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/2022ltr.pdf", "label": "2022 Shareholder Letter" },
-      { "type": "url", "path": "https://www.berkshirehathaway.com/letters/2023ltr.pdf", "label": "2023 Shareholder Letter" },
-      { "type": "file", "path": "books/Warren Buffett_ The Ultimate Guide To Investing like Warren -- Borrows, Richard -- 2016 -- eb48ea224196690234197b5e6be1c0ad -- Anna\u2019s Archive.pdf", "label": "The Ultimate Guide to Investing like Warren Buffett" }
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/1977.html",
+        "label": "1977 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/1989.html",
+        "label": "1989 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/1995.html",
+        "label": "1995 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/2018ltr.pdf",
+        "label": "2018 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/2021ltr.pdf",
+        "label": "2021 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/2022ltr.pdf",
+        "label": "2022 Shareholder Letter"
+      },
+      {
+        "type": "url",
+        "path": "https://www.berkshirehathaway.com/letters/2023ltr.pdf",
+        "label": "2023 Shareholder Letter"
+      },
+      {
+        "type": "file",
+        "path": "books/Warren Buffett_ The Ultimate Guide To Investing like Warren -- Borrows, Richard -- 2016 -- eb48ea224196690234197b5e6be1c0ad -- Anna\u2019s Archive.pdf",
+        "label": "The Ultimate Guide to Investing like Warren Buffett"
+      }
     ]
   },
   "barsi": {
     "sources": [
-      { "type": "file", "path": "books/O rei dos dividends _ a saga do filho de imigrantes pobres -- Luiz Barsi Filho -- Rio de Janeiro, 2022 -- Editora Sextante -- 9786555644746 -- c51ffcc8863a684d5faa02e410801708 -- Anna\u2019s Archive.pdf", "label": "O Rei dos Dividendos" }
+      {
+        "type": "file",
+        "path": "books/O rei dos dividends _ a saga do filho de imigrantes pobres -- Luiz Barsi Filho -- Rio de Janeiro, 2022 -- Editora Sextante -- 9786555644746 -- c51ffcc8863a684d5faa02e410801708 -- Anna\u2019s Archive.pdf",
+        "label": "O Rei dos Dividendos"
+      }
     ]
   },
   "gunther": {
     "sources": [
-      { "type": "file", "path": "books/Os Axiomas de Zurique -- Max Gunther -- ae1a7e841c58df9a930e79e9df1992bf -- Anna\u2019s Archive.pdf", "label": "The Zurich Axioms" }
+      {
+        "type": "file",
+        "path": "books/Os Axiomas de Zurique -- Max Gunther -- ae1a7e841c58df9a930e79e9df1992bf -- Anna\u2019s Archive.pdf",
+        "label": "The Zurich Axioms"
+      }
     ]
   },
   "housel": {
     "sources": [
-      { "type": "file", "path": "books/The Psychology of Money_ Timeless lessons on wealth, greed, -- Morgan Housel -- United Kingdom, Sep 08, 2020 -- Harriman House -- 9780857197689 -- 27ef11c0c6cadc87941099f5b8c6177a -- Anna\u2019s Archive.pdf", "label": "The Psychology of Money" }
+      {
+        "type": "file",
+        "path": "books/The Psychology of Money_ Timeless lessons on wealth, greed, -- Morgan Housel -- United Kingdom, Sep 08, 2020 -- Harriman House -- 9780857197689 -- 27ef11c0c6cadc87941099f5b8c6177a -- Anna\u2019s Archive.pdf",
+        "label": "The Psychology of Money"
+      }
     ]
   },
   "bogle": {
     "sources": [
-      { "type": "file", "path": "books/annas-arch-68938b88ae2a.pdf", "label": "The Little Book of Common Sense Investing" }
+      {
+        "type": "file",
+        "path": "books/annas-arch-68938b88ae2a.pdf",
+        "label": "The Little Book of Common Sense Investing"
+      }
     ]
   },
   "kiyosaki": {
     "sources": [
-      { "type": "file", "path": "books/annas-arch-10a00f175afa.pdf", "label": "Cashflow: The Way to Invest in Real Estate" },
-      { "type": "file", "path": "books/annas-arch-23868c893255.pdf", "label": "5 Ways to Make Your Real Estate Returns Skyrocket" },
-      { "type": "file", "path": "books/annas-arch-8436f39d786c.pdf", "label": "The Real Book of Real Estate" }
+      {
+        "type": "file",
+        "path": "books/annas-arch-10a00f175afa.pdf",
+        "label": "Cashflow: The Way to Invest in Real Estate"
+      },
+      {
+        "type": "file",
+        "path": "books/annas-arch-23868c893255.pdf",
+        "label": "5 Ways to Make Your Real Estate Returns Skyrocket"
+      },
+      {
+        "type": "file",
+        "path": "books/annas-arch-8436f39d786c.pdf",
+        "label": "The Real Book of Real Estate"
+      }
     ]
   },
   "graham": {
     "sources": [
-      { "type": "file", "path": "books/annas-arch-ed4c3cf39a7f (1).pdf", "label": "The Intelligent Investor, Revised Edition" }
+      {
+        "type": "file",
+        "path": "books/annas-arch-ed4c3cf39a7f (1).pdf",
+        "label": "The Intelligent Investor, Revised Edition"
+      }
     ]
   },
   "moneyguy": {
     "sources": [
-      { "type": "file", "path": "books/Millionaire Mission -- Brian Preston -- PLACEHOLDER.pdf", "label": "Millionaire Mission" }
+      {
+        "type": "file",
+        "path": "books/Millionaire Mission _ A 9-Step System to Level Up Your -- Brian Preston.pdf",
+        "label": "Millionaire Mission"
+      }
     ]
   }
 }
