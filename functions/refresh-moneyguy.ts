@@ -1,5 +1,6 @@
 import * as https from 'https';
 import * as http from 'http';
+import * as cheerio from 'cheerio';
 import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -115,50 +116,30 @@ async function fetchRssLinks(maxItems: number = 30): Promise<string[]> {
     return links.slice(0, maxItems);
 }
 
-// ── HTML → plain text ──────────────────────────────────────────────────────
+// ── HTML → plain text (cheerio) ────────────────────────────────────────────
 
 function extractTextFromHtml(html: string): { title: string; text: string } {
-    // Extract <title>
-    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    let title = titleMatch ? titleMatch[1].replace(/&#\d+;/g, '').trim() : 'Untitled';
-    // Decode common HTML entities in title
-    title = title
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&nbsp;/g, ' ');
+    const $ = cheerio.load(html);
 
-    // Remove script / style / nav / header / footer / aside blocks
-    let body = html
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<nav[\s\S]*?<\/nav>/gi, '')
-        .replace(/<header[\s\S]*?<\/header>/gi, '')
-        .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-        .replace(/<aside[\s\S]*?<\/aside>/gi, '');
+    // Remove noise elements
+    $("script, style, nav, header, footer, aside, .sidebar, .ads, .comments").remove();
 
-    // Try to isolate the article body (common class names used by Money Guy / WordPress)
-    const articleMatch =
-        body.match(/<article[\s\S]*?<\/article>/i) ??
-        body.match(/class="[^"]*(?:entry-content|post-content|article-content)[^"]*"[\s\S]*?<\/div>/i);
-    if (articleMatch) {
-        body = articleMatch[0];
+    // Try to find the main article content
+    const contentSelectors = ["article", ".entry-content", ".post-content", "main", "body"];
+    let text = "";
+    for (const selector of contentSelectors) {
+        const el = $(selector).first();
+        if (el.length && el.text().trim().length > 200) {
+            text = el.text();
+            break;
+        }
     }
+    if (!text) text = $("body").text();
 
-    // Strip remaining HTML tags
-    const text = body
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&nbsp;/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/(\. |\? |! )/g, '$1\n')
-        .trim();
+    // Clean up whitespace
+    text = text.replace(/\s+/g, " ").trim();
+
+    const title = $("title").text().trim() || $("h1").first().text().trim() || "Untitled";
 
     return { title, text };
 }
