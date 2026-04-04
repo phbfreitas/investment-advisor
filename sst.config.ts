@@ -31,6 +31,37 @@ export default $config({
             targetKeyId: encryptionKey.id,
         });
 
+        // S3 bucket for dynamic RAG indexes (Money Guy rolling article index)
+        const dynamicRagBucket = new sst.aws.Bucket("DynamicRagBucket");
+
+        // Standalone Lambda for refreshing the Money Guy dynamic article index
+        const moneyGuyRefreshFn = new sst.aws.Function("MoneyGuyRefreshFn", {
+            handler: "functions/refresh-moneyguy.handler",
+            timeout: "5 minutes",
+            memory: "512 MB",
+            environment: {
+                GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+                DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData",
+                DYNAMIC_RAG_BUCKET: dynamicRagBucket.name,
+            },
+            permissions: [
+                {
+                    actions: ["s3:PutObject", "s3:GetObject"],
+                    resources: [$interpolate`${dynamicRagBucket.arn}/*`],
+                },
+                {
+                    actions: ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"],
+                    resources: ["*"],
+                },
+            ],
+        });
+
+        // Daily cron: fires every day, Lambda decides internally whether refresh is due
+        new sst.aws.Cron("MoneyGuyRefreshCron", {
+            schedule: "rate(1 day)",
+            job: moneyGuyRefreshFn.arn,
+        });
+
         new sst.aws.Nextjs("InvestmentAdvisorWeb", {
             environment: {
                 DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData",
@@ -41,6 +72,7 @@ export default $config({
                 GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
                 NODE_ENV: "production",
                 KMS_KEY_ID: encryptionKey.id,
+                DYNAMIC_RAG_BUCKET: dynamicRagBucket.name,
             },
             permissions: [
                 {
@@ -55,6 +87,10 @@ export default $config({
                         "kms:DescribeKey",
                     ],
                     resources: [encryptionKey.arn],
+                },
+                {
+                    actions: ["s3:GetObject"],
+                    resources: [$interpolate`${dynamicRagBucket.arn}/*`],
                 },
             ],
             server: {
