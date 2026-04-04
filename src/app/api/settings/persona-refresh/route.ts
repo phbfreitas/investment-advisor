@@ -1,38 +1,31 @@
 import { NextResponse } from "next/server";
-import {
-  GetItemCommand,
-  UpdateItemCommand,
-} from "@aws-sdk/client-dynamodb";
-import { dynamoClient } from "@/lib/db";
+import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { db, TABLE_NAME } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData";
 const PK = "SYSTEM#CONFIG";
 const SK = "PERSONA_REFRESH#moneyguy";
 
 export async function GET() {
   try {
-    const result = await dynamoClient.send(
-      new GetItemCommand({
+    const result = await db.send(
+      new GetCommand({
         TableName: TABLE_NAME,
-        Key: {
-          PK: { S: PK },
-          SK: { S: SK },
-        },
+        Key: { PK, SK },
       })
     );
 
     const item = result.Item;
 
     return NextResponse.json({
-      frequencyDays: item?.frequencyDays?.N ? parseInt(item.frequencyDays.N, 10) : 7,
-      lastRefreshedAt: item?.lastRefreshedAt?.S ?? null,
-      status: item?.status?.S ?? "pending",
-      articleCount: item?.articleCount?.N ? parseInt(item.articleCount.N, 10) : 0,
+      frequencyDays: item?.frequencyDays ?? 7,
+      lastRefreshedAt: item?.lastRefreshedAt ?? null,
+      status: item?.status ?? "pending",
+      articleCount: item?.articleCount ?? 0,
     });
   } catch (error) {
     console.error("GET /api/settings/persona-refresh error:", error);
@@ -72,21 +65,15 @@ export async function PUT(request: Request) {
     );
   }
 
-  const updatedAt = new Date().toISOString();
-
   try {
-    await dynamoClient.send(
-      new UpdateItemCommand({
+    await db.send(
+      new UpdateCommand({
         TableName: TABLE_NAME,
-        Key: {
-          PK: { S: PK },
-          SK: { S: SK },
-        },
-        UpdateExpression:
-          "SET frequencyDays = :frequencyDays, updatedAt = :updatedAt",
+        Key: { PK, SK },
+        UpdateExpression: "SET frequencyDays = :fd, updatedAt = :ua",
         ExpressionAttributeValues: {
-          ":frequencyDays": { N: String(frequencyDays) },
-          ":updatedAt": { S: updatedAt },
+          ":fd": frequencyDays,
+          ":ua": new Date().toISOString(),
         },
       })
     );
