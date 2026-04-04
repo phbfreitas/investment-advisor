@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { db, TABLE_NAME } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -66,17 +66,25 @@ export async function PUT(request: Request) {
   }
 
   try {
-    await db.send(
-      new UpdateCommand({
-        TableName: TABLE_NAME,
-        Key: { PK, SK },
-        UpdateExpression: "SET frequencyDays = :fd, updatedAt = :ua",
-        ExpressionAttributeValues: {
-          ":fd": frequencyDays,
-          ":ua": new Date().toISOString(),
-        },
-      })
-    );
+    // Read current item first to preserve existing fields
+    const existing = await db.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { PK: "SYSTEM#CONFIG", SK: "PERSONA_REFRESH#moneyguy" }
+    }));
+    const current = existing.Item ?? {};
+
+    await db.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        PK: "SYSTEM#CONFIG",
+        SK: "PERSONA_REFRESH#moneyguy",
+        frequencyDays: frequencyDays,
+        lastRefreshedAt: current.lastRefreshedAt ?? null,
+        status: current.status ?? "pending",
+        articleCount: current.articleCount ?? 0,
+        updatedAt: new Date().toISOString(),
+      }
+    }));
 
     return NextResponse.json({ frequencyDays });
   } catch (error) {
