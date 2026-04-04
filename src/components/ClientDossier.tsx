@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BrainCircuit, Target, TrendingUp, AlertTriangle, CheckCircle2, FileText, Trash2, X, RotateCcw, BookOpen } from "lucide-react";
-import { personas, PersonaId } from "@/lib/personas";
+import { personas, PersonaId } from "@/lib/personas-data";
 import type { PersonaSummaryInfo } from "@/types";
 
 const PERSONA_IDS: PersonaId[] = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki", "moneyguy"];
