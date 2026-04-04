@@ -1,6 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { fetchS3Json } from './s3';
+import { personas } from './personas-data';
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -17,6 +19,15 @@ export interface DocumentChunk {
 }
 
 const cachedIndexes: Map<string, DocumentChunk[]> = new Map();
+
+const DYNAMIC_INDEX_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+interface DynamicIndexCache {
+    chunks: DocumentChunk[];
+    loadedAt: number;
+}
+
+const cachedDynamicIndexes: Map<string, DynamicIndexCache> = new Map();
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
     let dotProduct = 0;
@@ -38,6 +49,34 @@ function estimateTokens(text: string): number {
     return Math.ceil(text.length / 4);
 }
 
+async function loadDynamicIndex(personaId: string, s3Key: string): Promise<DocumentChunk[]> {
+    const bucket = process.env.DYNAMIC_RAG_BUCKET || "";
+    const cached = cachedDynamicIndexes.get(personaId);
+
+    // Return cached data if still fresh
+    if (cached && (Date.now() - cached.loadedAt) < DYNAMIC_INDEX_TTL_MS) {
+        return cached.chunks;
+    }
+
+    // Fetch from S3
+    const chunks = await fetchS3Json<DocumentChunk[]>(bucket, s3Key);
+
+    if (chunks && chunks.length > 0) {
+        cachedDynamicIndexes.set(personaId, { chunks, loadedAt: Date.now() });
+        console.log(`[RAG:${personaId}] Loaded ${chunks.length} dynamic chunks from S3.`);
+        return chunks;
+    }
+
+    // S3 empty or failed — return stale cache if available, else empty
+    if (cached) {
+        console.log(`[RAG:${personaId}] S3 fetch returned empty — using stale dynamic cache (${cached.chunks.length} chunks).`);
+        return cached.chunks;
+    }
+
+    console.log(`[RAG:${personaId}] No dynamic index available yet (S3 empty before first refresh).`);
+    return [];
+}
+
 export async function getRagContext(personaId: string, query: string, topK: number = 3): Promise<string> {
     try {
         if (!cachedIndexes.has(personaId)) {
@@ -52,14 +91,26 @@ export async function getRagContext(personaId: string, query: string, topK: numb
             }
         }
 
-        const index = cachedIndexes.get(personaId);
-        if (!index || index.length === 0) return "";
+        const staticIndex = cachedIndexes.get(personaId) ?? [];
+
+        // Merge dynamic index for personas that support it
+        const persona = personas[personaId as keyof typeof personas];
+        let allChunks: DocumentChunk[];
+        if (persona?.hasDynamicRag && persona.dynamicRagS3Key) {
+            const dynamicChunks = await loadDynamicIndex(personaId, persona.dynamicRagS3Key);
+            allChunks = [...staticIndex, ...dynamicChunks];
+            console.log(`[RAG:${personaId}] Composite index: ${staticIndex.length} static + ${dynamicChunks.length} dynamic chunks.`);
+        } else {
+            allChunks = staticIndex;
+        }
+
+        if (allChunks.length === 0) return "";
 
         const queryEmbeddingResult = await embeddingModel.embedContent(query);
         const queryEmbedding = queryEmbeddingResult.embedding.values;
 
         // Calculate similarities
-        const scoredChunks = index.map(chunk => ({
+        const scoredChunks = allChunks.map(chunk => ({
             ...chunk,
             score: cosineSimilarity(queryEmbedding, chunk.embedding)
         }));
