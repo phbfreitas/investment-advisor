@@ -10,10 +10,39 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
     const { theme, setTheme, systemTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
+    const [refreshConfig, setRefreshConfig] = useState<{
+        frequencyDays: number;
+        lastRefreshedAt: string | null;
+        status: string;
+        articleCount: number;
+    } | null>(null);
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
     // Avoid hydration mismatch by waiting for client mount to read theme
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        fetch('/api/settings/persona-refresh')
+            .then(r => r.json())
+            .then(setRefreshConfig)
+            .catch(() => {/* silently fail */});
+    }, []);
+
+    const handleFrequencyChange = async (days: number) => {
+        setRefreshLoading(true);
+        try {
+            await fetch('/api/settings/persona-refresh', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frequencyDays: days }),
+            });
+            setRefreshConfig(prev => prev ? { ...prev, frequencyDays: days } : null);
+        } finally {
+            setRefreshLoading(false);
+        }
+    };
 
     const getActiveTheme = () => {
         if (theme === 'system') return systemTheme;
@@ -111,6 +140,86 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
                 {/* Household Settings Card */}
                 <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm transition-colors duration-300">
                     <HouseholdSettings />
+                </div>
+
+                {/* Dynamic Knowledge Sources Card */}
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm transition-colors duration-300">
+                    <div className="p-6">
+                        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Dynamic Knowledge Sources</h2>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">Configure how frequently the Money Guy advisor refreshes its article knowledge base.</p>
+
+                        {refreshConfig === null ? (
+                            <div className="h-24 bg-neutral-100 dark:bg-neutral-800 rounded-lg animate-pulse" />
+                        ) : (
+                            <div className="space-y-5">
+                                {/* Status row */}
+                                <div className="flex items-center justify-between gap-4 bg-neutral-50 dark:bg-neutral-950 rounded-lg p-4 border border-neutral-200 dark:border-neutral-800">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl" aria-hidden="true">💰</span>
+                                        <span className="text-sm font-medium text-neutral-900 dark:text-white">Money Guy — The Financial Order of Operations</span>
+                                    </div>
+                                    <div className="shrink-0">
+                                        {refreshConfig.status === "success" && (
+                                            <span className="inline-flex items-center rounded-md bg-green-100 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-800 dark:text-green-400 ring-1 ring-inset ring-green-500/30 dark:ring-green-500/20">
+                                                Up to date
+                                            </span>
+                                        )}
+                                        {refreshConfig.status === "error" && (
+                                            <span className="inline-flex items-center rounded-md bg-amber-100 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-800 dark:text-amber-400 ring-1 ring-inset ring-amber-500/30 dark:ring-amber-500/20">
+                                                Refresh error
+                                            </span>
+                                        )}
+                                        {refreshConfig.status !== "success" && refreshConfig.status !== "error" && (
+                                            <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-2 py-1 text-xs font-medium text-neutral-600 dark:text-neutral-400 ring-1 ring-inset ring-neutral-500/30 dark:ring-neutral-500/20">
+                                                Pending first refresh
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Stats row */}
+                                <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-neutral-400">
+                                    <span>
+                                        <span className="font-medium text-neutral-900 dark:text-white">{refreshConfig.articleCount}</span> articles indexed
+                                    </span>
+                                    <span>
+                                        Last updated:{" "}
+                                        <span className="font-medium text-neutral-900 dark:text-white">
+                                            {refreshConfig.lastRefreshedAt
+                                                ? new Date(refreshConfig.lastRefreshedAt).toLocaleDateString()
+                                                : "Never"}
+                                        </span>
+                                    </span>
+                                </div>
+
+                                {/* Frequency selector */}
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Refresh frequency</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[1, 3, 7, 14, 30].map((days) => (
+                                            <button
+                                                key={days}
+                                                onClick={() => handleFrequencyChange(days)}
+                                                disabled={refreshLoading}
+                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                    refreshConfig.frequencyDays === days
+                                                        ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/50 text-teal-700 dark:text-teal-400'
+                                                        : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
+                                                }`}
+                                            >
+                                                {days} {days === 1 ? "Day" : "Days"}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Helper text */}
+                                <p className="text-xs text-neutral-500 dark:text-neutral-500 leading-relaxed">
+                                    The advisor automatically fetches the latest articles from The Money Guy Show on this schedule.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
             </div>
