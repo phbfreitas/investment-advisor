@@ -14,7 +14,7 @@ const TTL_DAYS = 180;
 const MAX_SUMMARY_WORDS = 600;
 export const SUMMARY_FORMAT_VERSION = "v2"; // bump to force regeneration of all summaries
 
-const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki"];
+const PERSONA_IDS = ["barsi", "bogle", "buffett", "graham", "gunther", "housel", "kiyosaki", "moneyguy"];
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
