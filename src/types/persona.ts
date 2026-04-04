@@ -9,4 +9,6 @@ export interface Persona {
   background?: string;
   philosophy?: string;
   riskTolerance?: "Low" | "Medium" | "High";
+  hasDynamicRag?: boolean;
+  dynamicRagS3Key?: string;
 }
