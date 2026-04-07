@@ -139,6 +139,7 @@ const sectionGroups: (SectionItem | PillarGroup)[] = [
         icon: Settings,
         subsections: [
             { id: "set-logic", title: "Household Isolation" },
+            { id: "set-dynamic-rag", title: "Dynamic Knowledge Sources" },
             { id: "set-ripple", title: "Instant Synchronization" },
         ]
     },
@@ -353,6 +354,16 @@ export default function UserGuideClient() {
                         <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
                             This is the homepage of the app, featuring a panel of legendary investors — John C. Bogle, Warren Buffett, Luiz Barsi, Benjamin Graham, Max Gunther, Morgan Housel, Robert Kiyosaki, and Brian Preston &amp; Bo Hanson (The Money Guy Team). Select which advisors to consult using the collapsible chip selector — your selected advisors appear as compact chips, and clicking &quot;Change&quot; opens a responsive grid to toggle advisors on or off. Each advisor brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
                         </p>
+
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-6 my-6">
+                            <div className="flex items-center space-x-2 mb-3">
+                                <RefreshCw className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                <h4 className="font-bold text-neutral-900 dark:text-white">The Money Guy Team — A Living Advisor</h4>
+                            </div>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                Brian Preston &amp; Bo Hanson (💰) are the only advisor with a <strong className="text-neutral-800 dark:text-neutral-200">dynamic, auto-refreshing knowledge base</strong>. All other advisors draw exclusively from curated, static sources (books, transcripts). The Money Guy Team combines a static foundation — the <em>Millionaire Mission</em> book — with a rolling window of their ~30 latest published articles, automatically re-ingested on a configurable schedule. This means their advice evolves as they publish new content, making them uniquely current. You can configure the refresh frequency in <strong className="text-neutral-800 dark:text-neutral-200">Settings → Dynamic Knowledge Sources</strong>.
+                            </p>
+                        </div>
 
                         <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
                             <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Prompt Templates (Pill Buttons):</h4>
@@ -1012,6 +1023,25 @@ export default function UserGuideClient() {
                                     </ul>
                                 </div>
                             </div>
+                        </div>
+
+                        <div id="set-dynamic-rag" ref={el => { contentRefs.current["set-dynamic-rag"] = el; }} className="space-y-4">
+                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
+                                <RefreshCw className="h-5 w-5 mr-2 text-amber-500" /> Dynamic Knowledge Sources
+                            </h3>
+                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                This card controls the auto-refresh behavior for advisors with living knowledge bases. Currently, only <strong className="text-neutral-800 dark:text-neutral-200">The Money Guy Team</strong> uses this system.
+                            </p>
+                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Status Badge:</strong> Shows whether the last refresh succeeded (green), is pending (amber), or has never run (gray).</li>
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Last Refreshed / Article Count:</strong> Displays when the knowledge base was last updated and how many articles are currently indexed.</li>
+                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Refresh Frequency:</strong> Choose how often the system re-ingests the latest articles — 1, 3, 7, 14, or 30 days. A daily background job fires automatically, but only triggers a full refresh when the selected interval has elapsed. Changing this setting takes effect immediately without any redeployment.</li>
+                                </ul>
+                            </div>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-500">
+                                <strong className="text-neutral-700 dark:text-neutral-300">How it works under the hood:</strong> A scheduled Lambda function fetches the ~30 latest articles from the Money Guy RSS feed, extracts the text, splits it into chunks, embeds each chunk with Gemini, and stores the resulting vector index in S3. At query time, the app merges this dynamic index with the static book index before running cosine similarity to find the most relevant context for your question.
+                            </p>
                         </div>
 
                         <div id="set-ripple" ref={el => { contentRefs.current["set-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
