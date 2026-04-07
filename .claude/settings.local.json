@@ -20,7 +20,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(find /e/Paulo/Projects/investment-advisor/src/app -type f -name *.tsx)",
-      "Bash(grep -rn \"expectedAnnualDividends\\\\|oneYearReturn\\\\|fiveYearReturn\" /e/Paulo/Projects/investment-advisor/src --include=*.ts --include=*.tsx)"
+      "Bash(grep -rn \"expectedAnnualDividends\\\\|oneYearReturn\\\\|fiveYearReturn\" /e/Paulo/Projects/investment-advisor/src --include=*.ts --include=*.tsx)",
+      "mcp__plugin_context-mode_context-mode__ctx_doctor"
     ]
   }
 }

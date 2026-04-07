@@ -26,7 +26,8 @@ import {
     CheckCircle2,
     Lock,
     Search,
-    BookOpen
+    BookOpen,
+    Coins
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,139 +47,176 @@ type PillarGroup = {
 
 const sectionGroups: (SectionItem | PillarGroup)[] = [
     {
-        id: "intro-john",
-        title: "Introduction",
-        icon: Info,
-        subsections: []
+        pillar: "Fundação & UX / Foundation & UX",
+        pillarIcon: Shield,
+        pillarAccent: "text-indigo-600 dark:text-indigo-400",
+        items: [
+            {
+                id: "livro-1",
+                title: "LIVRO I: Gênese & Arquitetura",
+                icon: Info,
+                subsections: [
+                    { id: "philosophy-manifesto", title: "A Diretriz Primária / Primary Directive" },
+                    { id: "philosophy-ripple", title: "Arquitetura Ripple / Ripple Architecture" },
+                ]
+            },
+            {
+                id: "livro-2",
+                title: "LIVRO II: Taxonomia da Interface",
+                icon: Search,
+                subsections: [
+                    { id: "nav-sidebar", title: "Sidebar Strategy" },
+                    { id: "nav-global", title: "Global Bar Elements" },
+                ]
+            },
+        ]
     },
     {
-        pillar: "My Blueprint",
-        pillarIcon: Shield,
+        pillar: "Governança / Governance",
+        pillarIcon: Database,
         pillarAccent: "text-teal-600 dark:text-teal-400",
         items: [
             {
-                id: "strategy-profile",
-                title: "1. My Investment Strategy",
-                icon: BrainCircuit,
+                id: "livro-3",
+                title: "LIVRO III: Guardião de Identidade",
+                icon: Target,
                 subsections: [
-                    { id: "strat-logic", title: "The Steering Wheel" },
-                    { id: "strat-ripple", title: "Dynamic Rewiring" },
+                    { id: "strat-philosophy", title: "Philosophy & Risk" },
+                    { id: "strat-drift", title: "Gestão de Drift / Drift Management" },
                 ]
             },
             {
-                id: "finance-summary",
-                title: "2. My Finance Summary",
-                icon: Wallet,
-                subsections: [
-                    { id: "fin-logic", title: "Cashflow Mathematics" },
-                    { id: "fin-ripple", title: "The Ultimate Metric" },
-                ]
-            },
-            {
-                id: "portfolio",
-                title: "3. My Investment Portfolio",
+                id: "livro-4",
+                title: "LIVRO IV: Governança de Portfólio",
                 icon: LayoutDashboard,
                 subsections: [
-                    { id: "port-logic", title: "Mathematical Logic" },
-                    { id: "port-dividends", title: "Dividend Summary" },
-                    { id: "port-ripple", title: "Cascading Effects" },
+                    { id: "holdings-registry", title: "Atomic Registry" },
+                    { id: "holdings-edit", title: "Edição / Inline Editing" },
                 ]
             },
             {
-                id: "time-machine",
-                title: "4. Time Machine",
+                id: "livro-5",
+                title: "LIVRO V: Motor Time Machine",
                 icon: RotateCcw,
                 subsections: [
-                    { id: "tm-logging", title: "Automatic Audit Logging" },
-                    { id: "tm-dashboard", title: "Visual Feedback" },
-                    { id: "tm-access", title: "Accessing History" },
+                    { id: "tm-audit", title: "Audit Trail Ledger" },
                     { id: "tm-rollback", title: "Cascade Rollback" },
-                    { id: "tm-ripple", title: "Ripple Effect" },
                 ]
             },
         ]
     },
     {
-        pillar: "Market Intelligence",
-        pillarIcon: Radio,
+        pillar: "Inteligência & IA / Intelligence & AI",
+        pillarIcon: BrainCircuit,
+        pillarAccent: "text-rose-600 dark:text-rose-400",
+        items: [
+            {
+                id: "livro-6",
+                title: "LIVRO VI: Market Intelligence",
+                icon: Globe,
+                subsections: [
+                    { id: "radar-global", title: "Global Radar" },
+                    { id: "radar-directives", title: "Strategic Directives" },
+                ]
+            },
+            {
+                id: "livro-7",
+                title: "LIVRO VII: Ingestão PDF / PDF Import",
+                icon: Zap,
+                subsections: [
+                    { id: "pdf-workflow", title: "3-Stage Workflow" },
+                    { id: "pdf-sync", title: "Atomic Sync" },
+                ]
+            },
+            {
+                id: "livro-8",
+                title: "LIVRO VIII: O Guru AI (RAG)",
+                icon: Users,
+                subsections: [
+                    { id: "guru-motor", title: "Context Motor" },
+                    { id: "guru-personas", title: "Persona Selection" },
+                ]
+            },
+        ]
+    },
+    {
+        pillar: "Finanças & Segurança / Wealth & Security",
+        pillarIcon: Lock,
         pillarAccent: "text-amber-600 dark:text-amber-400",
         items: [
             {
-                id: "advisory-board",
-                title: "5. Expert Guidance",
-                icon: Users,
+                id: "livro-9",
+                title: "LIVRO IX: Alquimia de Finanças",
+                icon: Wallet,
                 subsections: [
-                    { id: "ab-logic", title: "Logic Mapping" },
-                    { id: "ab-memory", title: "Advisor Notebook" },
-                    { id: "ab-ripple", title: " Ripple Effect" },
+                    { id: "alquimia-budget", title: "Budget vs Actuals" },
+                    { id: "alquimia-rental", title: "Rental Reality" },
                 ]
             },
             {
-                id: "ai-guidance",
-                title: "6. AI Guidance",
-                icon: Target,
+                id: "livro-10",
+                title: "LIVRO X: Protocolos de Segurança",
+                icon: ShieldCheck,
                 subsections: [
-                    { id: "ai-logic", title: "The Data Assembly Line" },
-                    { id: "ai-ripple", title: "The 4-Pillar Test" },
+                    { id: "seguranca-identidade", title: "Atomic Identity" },
+                    { id: "seguranca-household", title: "Household Governance" },
                 ]
             },
             {
-                id: "global-radar",
-                title: "7. Global News Guidance",
-                icon: Globe,
+                id: "livro-11",
+                title: "LIVRO XI: Ecossistema Técnico",
+                icon: Code,
                 subsections: [
-                    { id: "radar-logic", title: "The Intelligence Pipeline" },
-                    { id: "radar-ripple", title: "The Deep Critique" },
+                    { id: "tech-hierarchy", title: "Classification Engine" },
+                    { id: "tech-stack", title: "Stack Tecnológica" },
                 ]
             },
         ]
     },
     {
-        id: "settings",
-        title: "8. Settings",
-        icon: Settings,
-        subsections: [
-            { id: "set-logic", title: "Household Isolation" },
-            { id: "set-ripple", title: "Instant Synchronization" },
-        ]
-    },
-    {
-        pillar: "Data & Methodology",
-        pillarIcon: Database,
+        pillar: "Referência / Reference",
+        pillarIcon: Info,
         pillarAccent: "text-blue-600 dark:text-blue-400",
         items: [
             {
-                id: "classification-engine",
-                title: "9. Classification Engine",
-                icon: ShieldCheck,
+                id: "livro-12",
+                title: "LIVRO XII: Troubleshooting",
+                icon: AlertCircle,
                 subsections: [
-                    { id: "class-hierarchy", title: "Category Hierarchy" },
-                    { id: "class-strategies", title: "Strategy Definitions" },
+                    { id: "err-dictionary", title: "Error Glossary" },
                 ]
             },
             {
-                id: "data-sync",
-                title: "10. Data Synchronization",
-                icon: RefreshCw,
+                id: "livro-13",
+                title: "LIVRO XIII: Filosofia / Philosophy",
+                icon: CheckCircle2,
                 subsections: [
-                    { id: "sync-logic", title: "Deduplication Logic" },
+                    { id: "mindset-pillars", title: "The 3 Pillars" },
                 ]
             },
             {
-                id: "rules-engine",
-                title: "11. Rules-Based Engine",
-                icon: Zap,
+                id: "livro-14",
+                title: "LIVRO XIV: Glossário do Oráculo",
+                icon: BookOpen,
                 subsections: [
-                    { id: "rule-precision", title: "Rule-Based Precision" },
-                    { id: "dynamic-rebalance", title: "Dynamic Rebalancing" },
+                    { id: "glossary-market", title: "Market Terms" },
+                    { id: "glossary-platform", title: "System Terms" },
                 ]
-            }
+            },
+            {
+                id: "livro-15",
+                title: "LIVRO XV: Roadmap Estratégico",
+                icon: TrendingUp,
+                subsections: [
+                    { id: "road-phase2", title: "Future Phases" },
+                ]
+            },
         ]
     }
 ];
 
 export default function UserGuideClient() {
-    const [activeSection, setActiveSection] = useState("intro-john");
+    const [activeSection, setActiveSection] = useState("livro-1");
     const contentRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
     const scrollToSection = (id: string, parentId?: string) => {
@@ -274,853 +312,507 @@ export default function UserGuideClient() {
             <main className="flex-1 overflow-y-auto custom-scrollbar md:p-12 p-6 scroll-smooth">
                 <div className="max-w-4xl mx-auto space-y-20 pb-32">
 
-                    {/* Intro & Hero Section */}
-                    <section id="intro-john" ref={el => { contentRefs.current["intro-john"] = el; }} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* LIVRO I: Gênese & Arquitetura */}
+                    <section id="livro-1" ref={el => { contentRefs.current["livro-1"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-4">
-                                System Logic & Ripple Effect Manual
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                    <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">Pillar 1: Fundação & UX / Foundation & UX</span>
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO I: Gênese & Arquitetura<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-3xl md:text-4xl uppercase">Genesis & Architecture</span>
                             </h1>
-                            <p className="text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-3xl">
-                                A definitive backend-to-business translation manual. The platform is organized into two pillars: <strong className="text-teal-700 dark:text-teal-400">My Blueprint</strong> (your private financial vault) and <strong className="text-amber-700 dark:text-amber-400">Market Intelligence</strong> (AI-driven guidance and live data).
-                            </p>
-                        </div>
-
-                        {/* Narrative Hero Card */}
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-teal-50/50 dark:from-indigo-950/20 dark:via-neutral-900 dark:to-teal-900/20 border border-neutral-200 dark:border-neutral-800 shadow-xl dark:shadow-2xl">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-400/10 dark:bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 dark:bg-indigo-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
-
-                            <div className="relative p-8 md:p-10">
-                                <div className="flex items-center space-x-3 mb-6">
-                                    <div className="h-10 w-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-700 dark:text-teal-400 font-bold backdrop-blur-sm shadow-sm ring-1 ring-teal-500/20">
-                                        J
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Meet our Example User: John</h3>
-                                        <p className="text-sm text-neutral-500 dark:text-neutral-400">To make assimilation easy, we follow a single running example.</p>
-                                    </div>
-                                </div>
-                                <div className="bg-white/60 dark:bg-black/20 backdrop-blur-md rounded-xl p-6 border border-white/20 dark:border-white/5 shadow-inner">
-                                    <p className="text-neutral-700 dark:text-neutral-300 font-medium text-lg leading-relaxed italic">
-                                        "John is a 55-year-old preparing for retirement. He has a $100,000 stock portfolio and keeps $15,000 in cash reserves. He just logged into the app."
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <p className="text-lg text-neutral-700 dark:text-neutral-300 leading-relaxed font-medium">
+                                        Bem-vindo ao manual definitivo de tradução técnica para negócios da plataforma Investment Advisor. Este guia foi construído para ajudar usuários a entenderem exatamente <strong>como o software pensa</strong>.
+                                    </p>
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed italic">
+                                        Welcome to the definitive backend-to-business translation manual for the Investment Advisor. This guide is built to help users understand exactly <strong>how the software thinks</strong>.
                                     </p>
                                 </div>
-                            </div>
-                        </div>
-                        {/* Navigation Pillars Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                            <div className="rounded-xl border border-teal-200 dark:border-teal-800/50 bg-teal-50/50 dark:bg-teal-900/10 p-6">
-                                <div className="flex items-center space-x-2 mb-3">
-                                    <Shield className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                                    <h3 className="font-bold text-teal-900 dark:text-teal-400">My Blueprint</h3>
-                                </div>
-                                <p className="text-sm text-teal-800 dark:text-teal-300/80 mb-3">Your private vault — all static and dynamic data about your financial situation.</p>
-                                <ul className="text-sm text-teal-700 dark:text-teal-300/70 space-y-1">
-                                    <li>1. My Investment Strategy</li>
-                                    <li>2. My Finance Summary</li>
-                                    <li>3. My Investment Portfolio</li>
-                                    <li>4. Time Machine</li>
-                                </ul>
-                            </div>
-                            <div className="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-6">
-                                <div className="flex items-center space-x-2 mb-3">
-                                    <Radio className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                                    <h3 className="font-bold text-amber-900 dark:text-amber-400">Market Intelligence</h3>
-                                </div>
-                                <p className="text-sm text-amber-800 dark:text-amber-300/80 mb-3">The live engine — three distinct voices providing active guidance and external data.</p>
-                                <ul className="text-sm text-amber-700 dark:text-amber-300/70 space-y-1">
-                                    <li>5. Expert Guidance</li>
-                                    <li>6. AI Guidance</li>
-                                    <li>7. Global News Guidance</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 5: Expert Guidance */}
-                    <section id="advisory-board" ref={el => { contentRefs.current["advisory-board"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Users className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">5. Expert Guidance (Chat Engine)</h2>
-                        </div>
-
-
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the homepage of the app, featuring a panel of legendary investors — John C. Bogle, Warren Buffett, Luiz Barsi, Benjamin Graham, Max Gunther, Morgan Housel, and Robert Kiyosaki. Select which advisors to consult using the collapsible chip selector — your selected advisors appear as compact chips, and clicking &quot;Change&quot; opens a responsive grid to toggle advisors on or off. Each advisor brings a distinct investment philosophy. Unlike a generic AI, this engine pulls your real, live financial data <em>before</em> it answers you.
-                        </p>
-
-                        <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 my-6">
-                            <h4 className="font-bold text-neutral-900 dark:text-white mb-4">Prompt Templates (Pill Buttons):</h4>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                                Each advisor card displays four built-in prompt templates as pill buttons in the chat area. Clicking any pill instantly populates the chat input with a fully engineered prompt tailored for that advisor&apos;s philosophy.
-                            </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                                    <LineChart className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Investment Suggestions</span>
-                                </div>
-                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                                    <BrainCircuit className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Financial Analysis</span>
-                                </div>
-                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                                    <Target className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Portfolio Rebalancing</span>
-                                </div>
-                                <div className="flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                                    <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Financial Health Audit</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="ab-logic" ref={el => { contentRefs.current["ab-logic"] = el; }} className="space-y-4">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> How it Thinks (Logic Mapping)
-                            </h3>
-                            <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Context Harvesting</strong>
-                                    Before the AI sees your typed question, it builds a comprehensive &quot;Context String&quot; by gathering <em>all</em> of your data: your Investment Strategy configuration (asset mix, philosophies, sector/geographic targets, risk tolerance), your full Finance Summary (monthly budget, income/expenses, wealth, liabilities, net worth), and your complete Portfolio Holdings (every position with market value, P/L, yield, beta, sector, analyst consensus, and more).
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Dynamic Prompting</strong>
-                                    It pastes all these numbers into the invisible instructions given to the AI.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Tool Calling</strong>
-                                    Only <em>then</em> does it give the AI the question, along with a hidden tool to fetch real-time stock prices (via Yahoo Finance) if you mention a specific company.
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div id="ab-memory" ref={el => { contentRefs.current["ab-memory"] = el; }} className="space-y-4">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-teal-500" /> Advisor Notebook (EA Memory)
-                            </h3>
-                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                Your advisors build <strong className="text-neutral-900 dark:text-white">per-advisor structured memory</strong>, surfaced as a persistent <strong className="text-neutral-900 dark:text-white">Advisor Notebook</strong> sidebar. Each guru develops their own independent understanding of your investment profile — Buffett doesn&apos;t see what Housel discussed.
-                            </p>
-                            <ul className="space-y-4 text-neutral-600 dark:text-neutral-400 ml-2 border-l-2 border-neutral-200 dark:border-neutral-800 pl-6 py-2">
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Our Journey So Far</strong>
-                                    The centerpiece of each advisor&apos;s notebook is a warm, narrative summary of your conversations together — covering key topics discussed, how your thinking has evolved, and the trajectory of your investment journey with that advisor. It reads like an advisor recounting their relationship with you.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Structured Section Cards</strong>
-                                    Below the narrative, each advisor&apos;s memory is organized into 5 sections: <em>Investment Thesis</em>, <em>Current Asset Focus</em>, <em>Risk Parameters</em>, <em>Active Dilemmas</em>, and <em>Key Decisions</em>. These display as glassmorphic cards in the sidebar, giving you instant visibility into what each guru knows about you.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Two-Column Executive Board</strong>
-                                    On desktop, the Advisory Board uses a two-column layout — the Advisor Notebook on the left (300px), your active conversation on the right. On mobile, the Notebook opens as a slide-out drawer via the &quot;Notebook&quot; button in the header.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Progress Indicator</strong>
-                                    For advisors you&apos;ve started chatting with but haven&apos;t reached the memory threshold yet (3 exchanges), a progress bar shows how close you are to generating their first notebook entry.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Transcript Archive</strong>
-                                    A &quot;View Transcript Archive&quot; link in the Notebook opens a date-grouped modal showing all past exchanges. Each day&apos;s conversations are expandable to see the full advisor responses — keeping the main board clean while preserving full audit capability.
-                                </li>
-                                <li className="relative">
-                                    <div className="absolute -left-[33px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white dark:ring-[#050505]"></div>
-                                    <strong className="text-neutral-900 dark:text-white block mb-1">Memory Control</strong>
-                                    Reset a single advisor&apos;s memory independently, or reset all advisors at once from the Notebook footer. Chat history auto-cleans after 180 days. Advisors naturally reference past decisions when relevant, but never force references on unrelated questions.
-                                </li>
-                            </ul>
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Graceful Degradation</h4>
-                                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                    If the memory system encounters any issue (network error, database timeout), Expert Guidance automatically falls back to its original stateless behavior — your question is still answered, just without historical context. Memory is a seamless enhancement, never a blocker.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div id="ab-ripple" ref={el => { contentRefs.current["ab-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <p className="text-neutral-700 dark:text-neutral-300">
-                                    Let's say John types: <br /><strong className="text-teal-700 dark:text-teal-400 italic text-lg">"Should I buy $20,000 worth of Tesla stock today?"</strong>
-                                </p>
-                                <ol className="list-decimal list-outside ml-5 space-y-2 text-neutral-600 dark:text-neutral-400">
-                                    <li>The AI engine checks John's injected context and sees: <code className="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-sm text-neutral-900 dark:text-neutral-200 font-mono font-medium">CASH RESERVES: $15,000</code>.</li>
-                                    <li><strong>The Logic Branch:</strong> The system immediately flags a contradiction. The user is asking to spend $20k, but only has $15k liquid.</li>
-                                    <li><strong>The Result:</strong> Instead of analyzing Tesla's P/E ratio, your selected advisors will immediately address the contradiction, each through their own lens: <em className="text-neutral-800 dark:text-neutral-200 block mt-2 p-3 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg border border-neutral-100 dark:border-neutral-800">"Rule No. 1 is never lose money. You only have $15,000 in cash reserves. Never invest money you don't possess..."</em></li>
-                                </ol>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 3: Portfolio */}
-                    <section id="portfolio" ref={el => { contentRefs.current["portfolio"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <LayoutDashboard className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">3. My Investment Portfolio</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This section is the mathematical core of your individual holdings and where you manage your day-to-day assets.
-                        </p>
-
-                        <div id="port-logic" ref={el => { contentRefs.current["port-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <LayoutDashboard className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
-                                        <LineChart className="h-4 w-4 mr-2 text-indigo-500" /> KPI Summary Cards
-                                    </h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Total Market Value:</strong> Sums the real-time value of every asset you own. Pulls live market data.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Total Return:</strong> Percentage of profit or loss across your entire portfolio based on initial Book Cost.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Avg Dividend Yield:</strong> Computes a weighted average of your dividend yields.</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
-                                        <LayoutDashboard className="h-4 w-4 mr-2 text-rose-500" /> The Holdings Breakdown Table
-                                    </h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Sorting & Filtering:</strong> Click column headers to sort; type in filter boxes to isolate specific rows.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Editable Inline Rows:</strong> Click the blue pencil icon to edit asset details (Account Name, Security Type, etc.) inline.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Live Ticker Price:</strong> Auto-fetches live prices from Yahoo Finance when editing a ticker symbol.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Frozen Columns:</strong> Account Name, Acct Type, Acct #, and Ticker columns stay pinned on the left as you scroll horizontally through the table.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Sticky Header:</strong> Column headers and filter row remain visible as you scroll vertically through your holdings.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Unavailable Data Indicator:</strong> Fields that cannot be auto-calculated from market data (e.g., 3YR Return for individual stocks, Analyst ratings for small-caps) display a muted dash (—) with a tooltip explaining the limitation.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">PDF Statement Import:</strong> Upload standard brokerage statements to automatically extract your holdings.
-                                            <ul className="mt-2 space-y-1 ml-4 list-inside list-decimal">
-                                                <li><strong>Step 1: Preview:</strong> The system scans the PDF and identifies the Account Number for your holdings. Each PDF should correspond to a single account (1-to-1 relationship).</li>
-                                                <li><strong>Step 2: Naming Prompt:</strong> You will be prompted to provide or confirm an <strong>Account Name</strong> (e.g., "Questrade TFSA") for the detected account number.</li>
-                                                <li><strong>Strict Account-Bound Matching:</strong> To prevent data contamination, the system <strong>only</strong> matches assets that strictly belong to the account being imported (either by matching the Account Number or the mapped Account Name). If an asset exists with the same ticker but in a different account, it will be ignored to preserve data integrity.</li>
-                                                <li><strong>Intelligent Auto-Linking:</strong> Choosing an existing Account Name links that account number to all matching records in your portfolio. Unlike previous versions, this link is now <strong>fully audited</strong>, meaning the "Time Machine" can perfectly revert the account number assignment if needed.</li>
-                                                <li><strong>Step 3: Sync:</strong> The system then matches existing assets, updating quantities and values to match your statement.</li>
-                                            </ul>
-                                        </li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> Auto-sums Total Market Value and Expected Dividends at the bottom.</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
-                                        <Code className="h-4 w-4 mr-2 text-teal-500" /> Profile Page: Investment Portfolio Table
-                                    </h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                                        A dedicated portfolio entry table lives on the My Investment Strategy page, designed for adding and editing holdings with maximum automation:
+                                <div id="philosophy-manifesto" ref={el => { contentRefs.current["philosophy-manifesto"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-3">A Diretriz Primária / The Primary Directive</h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                                        A plataforma é organizada em dois pilares de navegação: <strong>My Blueprint</strong> (seu cofre privado de dados estáticos e dinâmicos) e <strong>Market Intelligence</strong> (motores de orientação ativa e dados externos).
                                     </p>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Ticker Auto-Lookup:</strong> Type a ticker symbol and the system automatically fetches the current price from Yahoo Finance — no manual price entry required.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Account Name Autofill:</strong> The account name field auto-suggests based on your previously used account names, speeding up data entry.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Auto-Calculated Fields:</strong> Weight % (position size relative to total portfolio), P/L (profit or loss vs. book cost), and Market Value are all computed automatically — you only enter the quantity and book cost.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Totals Row:</strong> The table footer auto-sums market value, book cost, and expected dividends across all entries.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">CSV Export:</strong> Export your entire portfolio to a CSV file with one click for use in spreadsheets or external tools.</li>
-                                    </ul>
-                                </div>
-                                <div id="port-dividends" ref={el => { contentRefs.current["port-dividends"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2 scroll-m-8">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-4 flex items-center">
-                                        <LineChart className="h-4 w-4 mr-2 text-emerald-500" /> Dividend Summary
-                                    </h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                                        Below the Holdings Breakdown table, a dedicated Dividend Summary section provides income projections:
-                                    </p>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Period Selector:</strong> Toggle between Next Month, 3 Months, 6 Months, or 12 Months to project expected dividend income.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Three KPI Cards:</strong> Shows the expected dividends for the selected period, monthly average, and annual total.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Strategy Breakdown:</strong> Dividends are broken down by Strategy Type (Growth, Dividend, Mix/Hybrid) so you can see which part of your portfolio generates the most income.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="port-ripple" ref={el => { contentRefs.current["port-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <p className="text-neutral-700 dark:text-neutral-300">
-                                    John owns 100 shares of Microsoft. The price jumps from $400 to $410. John's <em>Total Market Value</em> in the Holdings Breakdown increases by $1,000.
-                                </p>
-                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
-                                    <strong>The Ripple:</strong> This $1,000 increase doesn't just stay on this page—it immediately "ripples" over to the <strong>My Finance Summary</strong> page, instantly increasing John's calculated <code>Net Worth</code> without him typing a single thing.
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 4: Time Machine */}
-                    <section id="time-machine" ref={el => { contentRefs.current["time-machine"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <RotateCcw className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">4. Time Machine (Universal Audit Trail)</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            Every change to your portfolio — whether from a PDF import or a manual edit — is permanently recorded. The Time Machine lets you review the full history of changes and roll back to any prior state.
-                        </p>
-
-                        <div id="tm-logging" ref={el => { contentRefs.current["tm-logging"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Shield className="h-5 w-5 mr-2 text-teal-500" /> Automatic Audit Logging
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">PDF Import Logging</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                        When you upload a brokerage statement, the system classifies every asset as <strong>Created</strong>, <strong>Updated</strong>, or <strong>Deleted</strong>. Every single field changed — including <strong>Account Numbers</strong> and <strong>Account Names</strong> — is captured in the before/after snapshots, ensuring a 100% accurate rollback capability.
-                                    </p>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">Manual Edit Logging</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                        Every inline edit, new asset creation, and asset deletion is logged with the exact before and after values. A glassmorphic toast notification confirms: <em>&quot;Exact snapshot secured in Audit Trail&quot;</em> with a quick-link to the Time Machine.
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-500 italic border-t border-neutral-200 dark:border-neutral-800 pt-3">
+                                        The platform is organized into two navigation pillars: <strong>My Blueprint</strong> (your private vault) and <strong>Market Intelligence</strong> (active guidance and external data).
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="tm-dashboard" ref={el => { contentRefs.current["tm-dashboard"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Zap className="h-5 w-5 mr-2 text-amber-500" /> Visual Feedback on Dashboard
-                            </h3>
-                            <p className="text-neutral-600 dark:text-neutral-400">
-                                After a PDF import, the dashboard highlights affected rows with color-coded animations:
-                            </p>
-                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                <li><strong className="text-emerald-600 dark:text-emerald-400">Created rows:</strong> Neon-green left border with a soft glow (~4 seconds).</li>
-                                <li><strong className="text-amber-600 dark:text-amber-400">Updated rows:</strong> Amber/gold left border with a subtle pulse (~4 seconds).</li>
-                                <li><strong className="text-red-600 dark:text-red-400">Ghost Rows:</strong> Deleted assets appear briefly as phantom rows showing their last known Ticker, Quantity, Market Value, and Book Cost with a red strikethrough that fades out.</li>
-                            </ul>
-                        </div>
-
-                        <div id="tm-access" ref={el => { contentRefs.current["tm-access"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <RotateCcw className="h-5 w-5 mr-2 text-blue-500" /> Accessing History
-                            </h3>
-                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                The Time Machine is now integrated directly into the <strong>My Investment Portfolio</strong> page for a more seamless experience.
-                            </p>
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Trigger:</strong> Click the <strong className="text-teal-600 dark:text-teal-400 italic font-bold">"History"</strong> button in the Portfolio dashboard header (next to Export CSV).</li>
-                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Layout:</strong> A sleek frosted-glass drawer slides in from the right, presenting your audit trail as a visual, interactive timeline.</li>
-                                    <li><strong className="text-neutral-800 dark:text-neutral-200">Expanded Details:</strong> Clicking a node in the timeline reveals the expanded diff card with all specific change details.</li>
-                                </ul>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-center">
-                                    <p className="text-sm font-bold text-blue-700 dark:text-blue-400">PDF Import</p>
-                                    <p className="text-xs text-blue-600 dark:text-blue-300/70 mt-1">Document icon &middot; Blue accent</p>
-                                </div>
-                                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-xl p-4 text-center">
-                                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Manual Edit</p>
-                                    <p className="text-xs text-emerald-600 dark:text-emerald-300/70 mt-1">Pencil icon &middot; Green accent</p>
-                                </div>
-                                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 text-center">
-                                    <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Rollback</p>
-                                    <p className="text-xs text-amber-600 dark:text-amber-300/70 mt-1">Rewind icon &middot; Amber accent</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                Diff cards show color-coded mutations: <strong className="text-emerald-500">+CREATE</strong> in green, <strong className="text-red-500">-DELETE</strong> in red with strikethrough, and <strong className="text-blue-500">~UPDATE</strong> with side-by-side before/after values. Account details (Account Name and Acct #) are now explicitly tracked and displayed in every history entry.
-                            </p>
-                        </div>
-
-                        <div id="tm-rollback" ref={el => { contentRefs.current["tm-rollback"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Zap className="h-5 w-5 mr-2 text-red-500" /> Cascade Rollback
-                            </h3>
-                            <p className="text-neutral-600 dark:text-neutral-400">
-                                The <strong>&quot;Revert to before this change&quot;</strong> button appears on every non-rollback entry. Clicking it automatically reverses that entry <em>and everything after it</em> in reverse chronological order — preventing conflicts from interleaved changes.
-                            </p>
-                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                <li>A confirmation dialog warns how many changes will be undone.</li>
-                                <li>A full-screen rewind animation provides visual feedback during the operation.</li>
-                                <li>Each reversal generates its own ROLLBACK audit log — the timeline never loses history.</li>
-                                <li>CREATEs are reversed by deleting, DELETEs are reversed by re-creating, UPDATEs are restored to their exact previous values.</li>
-                            </ul>
-                        </div>
-
-                        <div id="tm-ripple" ref={el => { contentRefs.current["tm-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <p className="text-neutral-700 dark:text-neutral-300">
-                                    John uploads his February brokerage statement. The PDF import creates 2 new tickers, updates 3 existing ones, and deletes 1 that was sold. On the dashboard, new rows glow green, updated rows pulse amber, and the sold ticker appears as a ghost row.
-                                </p>
-                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
-                                    <strong>The Ripple:</strong> Two days later, John realizes the February PDF was wrong. He opens the Time Machine, clicks &quot;Revert&quot; on the PDF import. The system automatically reverses his manual edit first (newest-first cascade), then the PDF import — restoring the sold ticker, reverting updated values, and deleting new ones. Three ROLLBACK entries document exactly what changed.
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 2: Finance Summary */}
-                    <section id="finance-summary" ref={el => { contentRefs.current["finance-summary"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Wallet className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">2. My Finance Summary</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            While the Portfolio tracks the stock market, this section tracks your real-life wallet: your salary, expenses, real estate, and liabilities.
-                        </p>
-
-                        <div id="fin-logic" ref={el => { contentRefs.current["fin-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Wallet className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">A. Budget Monthly Cashflow</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Income & Expense Inputs:</strong> Enter values for Paycheck, Dividends, Fixed Home, etc. Auto-formats currency.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Auto-Calculated Savings:</strong> Instantly updates Income minus Expenses as you type.</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">B. Actual Monthly Cash Flow</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Tabular Tracking:</strong> Add rows for Years and Months. Enter actual Income, Expenses, and ending Cash Reserves.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Row Management:</strong> Easily add new rows or remove mistakes with the trashcan icon.</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">C. Rental Cashflow</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                        A dedicated module to isolate income and expenses related to rental properties, calculating an isolated Net Profit / Loss.
-                                    </p>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">D. Personal Wealth</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Asset Integrations:</strong> Enter values for Real Estate, Cash, Cars, and <strong>Other Assets</strong> (a catch-all field for any asset not covered by other categories, such as collectibles, business interests, or personal property).</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Synced Investment Field:</strong> Read-only field pulling Total Market Value directly from the Portfolio page.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Net Worth Calculation:</strong> Total Assets minus Total Liabilities, instantly updated and timestamped.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="fin-ripple" ref={el => { contentRefs.current["fin-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ultimate Metric: Net Worth</h3>
-                            </div>
-                            <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-                                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed italic">
-                                    "If the stock market crashes (My Investment Portfolio) AND John buys a new car on credit (My Finance Summary expenses), both of these negative actions cascade simultaneously into this one Net Worth number, providing a brutally honest, real-time snapshot of wealth."
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 1: Strategy */}
-                    <section id="strategy-profile" ref={el => { contentRefs.current["strategy-profile"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <BrainCircuit className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">1. My Investment Strategy</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This page is the <strong>Steering Wheel</strong> for the AI. It combines free-text narrative context with structured strategy configuration, giving advisors both qualitative and quantitative understanding of your investment approach.
-                        </p>
-
-                        <div id="strat-logic" ref={el => { contentRefs.current["strat-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <BrainCircuit className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
-
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">A. Narrative Context</h4>
-                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                    <li><strong>Overall Investment Strategy:</strong> A free-text area describing your narrative focus (e.g., &quot;Dividend growth for passive income&quot;). Auto-resizes as you type.</li>
-                                    <li><strong>Financial Goals:</strong> Define short term and long term milestones.</li>
-                                    <li><strong>Risk Tolerance Slider:</strong> A 1–10 numeric slider replaces the old dropdown. A score of 1 is maximally conservative; 10 is fully speculative. The selected value is passed directly to the AI, allowing it to calibrate advice with finer precision than broad category labels.</li>
-                                </ul>
-                            </div>
-
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">B. Strategy Configuration (8 Collapsible Sections)</h4>
-                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                    <li><strong>Asset Mix:</strong> Define Growth / Income / Mixed target percentages (must sum to 100%). A visual stacked bar chart updates in real-time.</li>
-                                    <li><strong>Investment Philosophies:</strong> Toggle-select from 11 options grouped by Value-Based (purple), Strategy-Based (teal), and Style-Based (amber).</li>
-                                    <li><strong>Core Principles:</strong> Select Diversification, Discipline/Rebalancing, and/or Cost Minimization.</li>
-                                    <li><strong>Account Types:</strong> Specify TFSA, RRSP, and/or Non-Registered accounts.</li>
-                                    <li><strong>Trading Methodology:</strong> Choose from Buy and Hold, Trend Following, Value Averaging, Sector Rotation, and Swing Trading.</li>
-                                    <li><strong>Sector Allocation:</strong> Set target percentages across 11 standard sectors plus two additional options — <strong>S&amp;P 500</strong> (for broad index exposure) and <strong>Other</strong> (for assets that don&apos;t fit a standard sector). Includes an inline <strong>drift table</strong> comparing targets to actuals from your portfolio. Sectors drifting &gt;5% are flagged.</li>
-                                    <li><strong>Geographic Exposure:</strong> Set target percentages across geographic regions. Three new regions have been added — <strong>USA Only</strong>, <strong>Canada Only</strong>, and <strong>Global Mix</strong> — alongside existing options (North America, Europe, Asia, Emerging Markets, Frontier Markets). Same drift detection applies.</li>
-                                    <li><strong>Performance Targets:</strong> Set Expected Annual Return (%) and Target Monthly Dividend ($). The system projects estimates from your actual holdings and flags when targets exceed reality.</li>
-                                </ul>
-                            </div>
-
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <h4 className="font-bold text-neutral-900 dark:text-white mb-4">C. Validation</h4>
-                                <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-3 list-disc list-outside ml-4">
-                                    <li>All percentage groups must sum to exactly 100% before saving. Real-time &quot;Remaining: X%&quot; indicators turn green/red.</li>
-                                    <li>Server-side validation provides a second safety net, returning specific error messages.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div id="strat-ripple" ref={el => { contentRefs.current["strat-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: Risk Tolerance + Strategy Config</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <p className="text-neutral-700 dark:text-neutral-300 text-sm">
-                                    Both narrative fields AND structured strategy config are injected into every AI request.
-                                </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="p-6 rounded-xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-900/10">
-                                        <h4 className="font-bold text-teal-900 dark:text-teal-400 mb-2">John: Conservative + Buy and Hold</h4>
-                                        <p className="text-sm text-teal-800 dark:text-teal-300/80 leading-relaxed">
-                                            The AI ONLY recommends safe, established companies with strong dividends and broad portfolio diversification.
-                                        </p>
-                                    </div>
-                                    <div className="p-6 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-900/10">
-                                        <h4 className="font-bold text-rose-900 dark:text-rose-400 mb-2">John&apos;s son: Aggressive + Swing Trading</h4>
-                                        <p className="text-sm text-rose-800 dark:text-rose-300/80 leading-relaxed">
-                                            The AI recommends distressed, volatile opportunities for short-term gains, ignoring safe dividend stocks.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="mt-4 p-4 rounded-lg bg-neutral-100 dark:bg-neutral-900/50 text-sm text-neutral-600 dark:text-neutral-400 italic">
-                                    <strong>Drift Alert:</strong> If John sets 20% target for Financials but only has 14% actual, the drift table shows -6% with a warning — reminding him to rebalance.
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 6: AI Guidance */}
-                    <section id="ai-guidance" ref={el => { contentRefs.current["ai-guidance"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Target className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">6. AI Guidance</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This is the heavy-duty analytics engine that generates multi-page strategic reports using highly engineered "Directives".
-                        </p>
-
-                        <div id="ai-logic" ref={el => { contentRefs.current["ai-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Target className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features six targeted AI Directives:</p>
-                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <span><strong>Rebalance with Precision:</strong> Identifies asset allocation drifts.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <span><strong>Optimize Dividend Growth:</strong> Suggests moves to increase cash flow.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <span><strong>Maintain Tactical Aggression:</strong> Highlights 'Buy the Dip' opportunities.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <span><strong>Investment Idea Evaluation:</strong> A rigorous 4-pillar analysis for a specific new asset (requires ticker input).</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <span><strong>Portfolio Report:</strong> Multi-factor analysis highlighting strengths and weaknesses.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <span><strong>Stock Recommendations:</strong> Agent recommendations based on expert opinions.</span></li>
-                                </ul>
-                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4">
-                                    <div>
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Live Streaming Interface:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">When a report is triggered, an elegant modal opens, and the AI's response is streamed live to the screen, formatted in rich Markdown (tables, bold text, lists) for immediate readability.</span>
-                                    </div>
-                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Intelligent Caching:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">To maximize speed and minimize API costs, the system caches every generated report. If you open a previously generated directive, it will load instantly exactly as it was.</span>
-                                    </div>
-                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Stale Data Warnings:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400 block mb-3">The system takes a fingerprint snapshot of your Portfolio and Strategy whenever an analysis is generated. If you change your holdings or risk tolerance and then open a cached report, you will be greeted by an Amber Warning Banner explicitly listing which underlying data fields have changed since the last run.</span>
-                                        <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/50 rounded-lg p-4">
-                                            <strong className="text-xs text-amber-900 dark:text-amber-400 uppercase tracking-wider block mb-2 flex items-center"><Zap className="h-3 w-3 mr-1" /> Monitored Fields (Triggers Stale Warning)</strong>
-                                            <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1.5 list-none">
-                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Investment Strategy</li>
-                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Financial Goals</li>
-                                                <li className="flex items-center"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 shrink-0" /> Risk Tolerance</li>
-                                                <li className="flex items-start"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 mt-1 shrink-0" /><span className="leading-tight">Strategy Configuration (Asset Mix, Philosophies, Principles, Account Types, Trading Methodology, Sector/Geographic Targets, Performance Targets)</span></li>
-                                                <li className="flex items-start"><ChevronRight className="h-3 w-3 text-amber-500 mr-1 mt-1 shrink-0" /><span className="leading-tight">Portfolio Asset Changes (Tickers, Shares Owned, Current Price, Market Value, Book Cost, and Expected Dividends)</span></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Content Blurring & On-Demand Refresh:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">To prevent you from acting on outdated advice, the presence of a Stale Data Warning will dynamically blur the underlying report. You can either dismiss the warning or click the <strong>"Refresh Analysis"</strong> button to force the AI to generate a brand new, up-to-date report. A timestamp in the header always ensures you know exactly when the current analysis was generated.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="ai-ripple" ref={el => { contentRefs.current["ai-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-indigo-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-indigo-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: The 4-Pillar Test</h3>
-                            </div>
-                            <p className="text-neutral-700 dark:text-neutral-300 mb-4">
-                                John inputs <code className="bg-neutral-100 dark:bg-neutral-800 px-1 rounded">IBIT</code> (A high-risk Bitcoin ETF) to see if he should buy it.
-                            </p>
-                            <ul className="space-y-3 text-neutral-600 dark:text-neutral-400 text-sm list-disc list-inside">
-                                <li>The AI pulls John's Profile: <strong>Conservative near-retiree</strong>.</li>
-                                <li>AI simulates Cathie Wood: <em>Loves it (blockchain disruption).</em></li>
-                                <li>AI simulates Warren Buffett: <em>Hates it (lacks intrinsic value).</em></li>
-                                <li className="font-semibold text-neutral-900 dark:text-white mt-4">
-                                    The Final Verdict: <span className="text-rose-600 dark:text-rose-400 font-normal">While the asset might go up, it violates John's strict profile rules. The output firmly rejects the purchase, proving algorithm loyalty to user intent.</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 7: Global News Guidance */}
-                    <section id="global-radar" ref={el => { contentRefs.current["global-radar"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Globe className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">7. Global News Guidance</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The Global News Guidance connects real-world geopolitical and macroeconomic news to your portfolio. It fetches live financial headlines and uses AI to analyze how world events impact your specific strategy, identify panic-driven buying opportunities, and stress-test your total net worth.
-                        </p>
-
-                        <div id="radar-logic" ref={el => { contentRefs.current["radar-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Globe className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <p className="text-neutral-700 dark:text-neutral-300 mb-4 font-medium">The page features five targeted analyses, one master synthesis, and one total integration view:</p>
-                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">1.</span> <span><strong>Net Worth Stress Test:</strong> Assesses total financial health (liquid + real estate) against this week&apos;s macro events.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">2.</span> <span><strong>Deep Buy Scanner:</strong> Finds panic-driven value opportunities using 3 criteria: non-fundamental price drops, selling exhaustion signals, and below-average valuations.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">3.</span> <span><strong>Opportunity Cost Evaluator:</strong> Identifies &quot;dead money&quot; sectors and suggests strategic rotations based on shifting macro regimes.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">4.</span> <span><strong>Cross-Sectional Impact Report:</strong> Maps weekly news (rates, conflicts, energy) to your Growth/Mix/Dividend allocation.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">5.</span> <span><strong>Full Strategy Critic:</strong> Compares your portfolio against global asset classes (S&P 500, TSX, Bonds, Commodities) and critiques exposure gaps.</span></li>
-                                    <li className="flex items-start"><span className="text-indigo-500 mr-2 font-bold">6.</span> <span><strong>Deep Critique:</strong> Runs all 5 analyses in parallel, then synthesizes them into a single executive report with Top 3 Actions, Top 3 Deep Buy Stocks, Single Biggest Risk, and Strategic Outlook.</span></li>
-                                </ul>
-                                <div className="mt-6 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4">
-                                    <div>
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Live News Integration:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">Headlines are fetched daily from NewsData.io covering interest rates, inflation, energy, commodities, geopolitical events, and central bank policy. News is cached globally (shared across all users) to conserve API quota.</span>
-                                    </div>
-                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Intelligent Caching & Stale Warnings:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">Same smart caching as AI Guidance. Analyses are cached per-household and fingerprinted against your portfolio, strategy, <em>and</em> the news date. If any of these change, a Stale Data Warning appears with the report blurred until you refresh.</span>
-                                    </div>
-                                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                                        <strong className="text-neutral-900 dark:text-white block mb-1">Deep Critique Progress Tracking:</strong>
-                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">When running the Deep Critique, a real-time checklist shows each of the 5 sub-analyses completing with checkmarks. Failed analyses are gracefully noted and excluded from synthesis. Once all complete, the unified executive report streams in.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="radar-ripple" ref={el => { contentRefs.current["radar-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-indigo-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-indigo-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect: The Deep Critique</h3>
-                            </div>
-                            <p className="text-neutral-700 dark:text-neutral-300 mb-4">
-                                John clicks the <strong>Deep Critique</strong> card on a Monday morning after a turbulent week in global markets.
-                            </p>
-                            <ul className="space-y-3 text-neutral-600 dark:text-neutral-400 text-sm list-disc list-inside">
-                                <li>The system fires 5 parallel AI analyses, each examining a different dimension of John&apos;s portfolio against the latest headlines.</li>
-                                <li>A live checklist shows progress: <em>Net Worth Stress Test &#10003;, Deep Buy Scanner &#10003;, Opportunity Cost &#10003;...</em></li>
-                                <li>Once all 5 complete, the AI synthesizes everything into one executive report.</li>
-                                <li className="font-semibold text-neutral-900 dark:text-white mt-4">
-                                    The Result: <span className="text-teal-600 dark:text-teal-400 font-normal">A single-page report listing the Top 3 Immediate Actions, Top 3 Deep Buy Stocks of the Week, the Single Biggest Risk, and a Strategic Outlook &mdash; all grounded in real news and John&apos;s actual holdings.</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 8: Settings */}
-                    <section id="settings" ref={el => { contentRefs.current["settings"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">8. Settings & Infrastructure</h2>
-                        </div>
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            This section handles the app's multi-tenant architecture, security, and aesthetics.
-                        </p>
-
-                        <div id="set-logic" ref={el => { contentRefs.current["set-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Settings className="h-5 w-5 mr-2 text-indigo-500" /> Detailed Features & Functionalities
-                            </h3>
+                        {/* Ripple Architecture Card */}
+                        <div id="philosophy-ripple" ref={el => { contentRefs.current["philosophy-ripple"] = el; }} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50/50 via-white to-teal-50/50 dark:from-indigo-950/20 dark:via-neutral-900 dark:to-teal-900/20 border border-neutral-200 dark:border-neutral-800 shadow-xl group">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/20 transition-all duration-1000"></div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">A. Appearance</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                        Instantly switch between Light, Dark, or System themes. The UI provides a real-time preview context noting which theme is actively applied.
-                                    </p>
+                            <div className="relative p-8 md:p-12 space-y-8">
+                                <div className="flex items-center space-x-4">
+                                    <div className="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 ring-4 ring-indigo-500/10">
+                                        <Zap className="h-8 w-8" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Arquitetura Ripple / Ripple Architecture</h2>
+                                        <p className="text-indigo-600 dark:text-indigo-400 font-medium tracking-tight">O Efeito Cascata da Verdade / The Cascading Truth Effect</p>
+                                    </div>
                                 </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">B. Account & Security</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Identity Display:</strong> Shows the currently authorized email identity.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Perfect Segregation:</strong> Confirms that all data is cryptographically isolated to your unique Household ID.</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:col-span-2">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">C. Household Settings</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Household Management:</strong> Create or join a household using secure alphanumeric ID codes.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Shared Access:</strong> Allows you to invite spouses or financial planners into your cryptographic partition, securely sharing data.</li>
-                                    </ul>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <h4 className="font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider text-xs">Português (Brasil)</h4>
+                                            <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                                Explicamos a lógica matemática e o "Ripple Effect" — como um número inserido em um lugar gatilha mudanças em todo o sistema. Se você alterar seu perfil de risco em <strong>My Investment Strategy</strong>, o <strong>AI Guidance</strong> instantaneamente recodifica seus conselhos.
+                                            </p>
+                                        </div>
+                                        <div className="bg-white/40 dark:bg-black/20 backdrop-blur-sm rounded-xl p-5 border border-white dark:border-white/5 shadow-sm">
+                                            <p className="text-neutral-700 dark:text-neutral-300 font-medium text-sm italic leading-relaxed">
+                                                "Sua riqueza não é estática; ela é uma rede de funções matemáticas interconectadas."
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <h4 className="font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider text-xs">English</h4>
+                                            <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-sm">
+                                                We explain the mathematical logic and the "Ripple Effect"—how a number entered in one place triggers changes across the entire system. If you change your risk in <strong>My Investment Strategy</strong>, the <strong>AI Guidance</strong> instantly rewires its advice.
+                                            </p>
+                                        </div>
+                                        <div className="bg-white/40 dark:bg-black/20 backdrop-blur-sm rounded-xl p-5 border border-white dark:border-white/5 shadow-sm">
+                                            <p className="text-neutral-500 dark:text-neutral-400 font-medium text-sm italic leading-relaxed">
+                                                "Your wealth is not static; it is a web of interconnected mathematical functions."
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </section>
 
-                        <div id="set-ripple" ref={el => { contentRefs.current["set-ripple"] = el; }} className="bg-white dark:bg-[#0a0a0a] rounded-xl border-l-4 border-l-teal-500 border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-md">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <Zap className="h-5 w-5 text-teal-600" />
-                                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">The Ripple Effect</h3>
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO II: Taxonomia da Interface */}
+                    <section id="livro-2" ref={el => { contentRefs.current["livro-2"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                    <Search className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">Pillar 1: Navegação / Navigation</span>
                             </div>
-                            <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-                                <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed italic">
-                                    &quot;John links his wife Mary to his Household ID. The moment John hits &lsquo;Save&rsquo; on his iPad, Mary&rsquo;s laptop screen instantly updates. Her Net Worth calculation auto-corrects, and if she asks a question on the Advisory Board, the AI immediately knows about the new money John just added.&quot;
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO II: Taxonomia da Interface<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Interface Taxonomy</span>
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-6">
+                                    <h3 id="nav-sidebar" ref={el => { contentRefs.current["nav-sidebar"] = el; }} className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-indigo-500 pl-4">
+                                        Estratégia de Sidebar / Sidebar Strategy
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                            A interface é dividida em dois domínios ontológicos: <strong>My Blueprint</strong> (estático/histórico) e <strong>Market Intelligence</strong> (dinâmico/futuro). Esta separação garante que o usuário saiba se está olhando para seus próprios dados ou para a análise do mercado.
+                                        </p>
+                                        <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                            The interface is divided into two ontological domains: <strong>My Blueprint</strong> (static/historical) and <strong>Market Intelligence</strong> (dynamic/future). This ensures clarity between private data and market analysis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <h3 id="nav-global" ref={el => { contentRefs.current["nav-global"] = el; }} className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-indigo-500 pl-4 text-right">
+                                        Elementos Globais / Global Elements
+                                    </h3>
+                                    <div className="space-y-4 text-right">
+                                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                            A Barra Superior contém o Oráculo de Busca (Universal Search) e o seletor de Household. Cada elemento é projetado para acesso instantâneo, independentemente de onde você esteja na aplicação.
+                                        </p>
+                                        <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                            The Top Bar contains the Universal Search Oracle and the Household selector. Every element is designed for instant access regardless of your location in the app.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO III: Guardião de Identidade */}
+                    <section id="livro-3" ref={el => { contentRefs.current["livro-3"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                                    <Target className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-teal-600 dark:text-teal-400">Pillar 2: Governança / Governance</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO III: Guardião de Identidade<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Identity Guardian</span>
+                            </h2>
+                            
+                            <div id="strat-philosophy" ref={el => { contentRefs.current["strat-philosophy"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] rounded-3xl p-8 border border-neutral-200 dark:border-neutral-800 shadow-sm mb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Filosofia & Risco / Philosophy & Risk</h3>
+                                        <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                            O <strong>Risk Tolerance Slider</strong> (1-10) é o volante da IA. Um valor de 1 é conservador; 10 é totalmente especulativo. Este número calibra todos os conselhos gerados no sistema, alterando os "circuitos cerebrais" dos consultores virtuais.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest">English Interpretation</h4>
+                                        <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-sm italic">
+                                            The <strong>Risk Tolerance Slider</strong> (1-10) is the AI&apos;s steering wheel. A value of 1 is conservative; 10 is fully speculative. This number calibrates all advice generated by the system.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="strat-drift" ref={el => { contentRefs.current["strat-drift"] = el; }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <LineChart className="h-20 w-20" />
+                                    </div>
+                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-3">Gestão de Drift / Drift Management</h4>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                        O sistema compara seus alvos (Target %) contra o portfolio real (Actual %) e exibe uma tabela de drift. Desvios maiores que 5% disparam alertas visuais imediatos.
+                                    </p>
+                                </div>
+                                <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <Globe className="h-20 w-20" />
+                                    </div>
+                                    <h4 className="font-bold text-neutral-500 dark:text-neutral-500 mb-3">Drift Management (EN)</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-500 leading-relaxed italic">
+                                        The system compares your targets against actual holdings and displays a drift table. Deviations over 5% trigger immediate visual alerts.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO IV: Governança de Portfólio */}
+                    <section id="livro-4" ref={el => { contentRefs.current["livro-4"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                                    <LayoutDashboard className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-teal-600 dark:text-teal-400">Pillar 2: Governança / Governance</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO IV: Governança de Portfólio<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Portfolio Governance</span>
+                            </h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div id="holdings-registry" ref={el => { contentRefs.current["holdings-registry"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Atomic Registry (Registro Atômico)</h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Cada holding é um objeto matemático único. O sistema rastreia Ticker, Quantidade, Preço Médio (Book Cost) e integra com dados do Yahoo Finance para calcular o Market Value em tempo real.
+                                    </p>
+                                    <div className="p-4 rounded-xl bg-teal-100/50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800">
+                                        <p className="text-xs text-teal-800 dark:text-teal-300 italic font-medium">
+                                            &quot;Every asset is a mathematical proof of your strategy application.&quot;
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="holdings-edit" ref={el => { contentRefs.current["holdings-edit"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-500 dark:text-neutral-400">Inline Editing & Automation</h3>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-sm italic">
+                                        Edit assets directly in the table. Ticker lookups are automated, fetching live prices instantly. The UI uses glassmorphic indicators to confirm that every edit is captured in the universal audit trail.
+                                    </p>
+                                    <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                                        Edição direta na tabela com busca automatizada de tickers. A interface usa indicadores para confirmar que cada edição foi capturada no rastro de auditoria.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO V: Motor Time Machine */}
+                    <section id="livro-5" ref={el => { contentRefs.current["livro-5"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                                    <RotateCcw className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-teal-600 dark:text-teal-400">Pillar 2: Governança / Governance</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO V: Motor Time Machine<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Time Machine Engine</span>
+                            </h2>
+                            
+                            <div className="relative overflow-hidden rounded-3xl bg-neutral-900 dark:bg-black p-8 md:p-12 text-white border border-white/5 shadow-2xl">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-[80px]"></div>
+                                <div className="relative space-y-8">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="h-12 w-12 rounded-xl bg-teal-500 flex items-center justify-center text-black">
+                                            <RotateCcw className="h-6 w-6" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold">Audit Trail Ledger / Livro de Auditoria</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        <div className="space-y-4">
+                                            <p id="tm-audit" ref={el => { contentRefs.current["tm-audit"] = el; }} className="text-neutral-400 leading-relaxed text-sm">
+                                                Cada mutação do portfolio — manual ou via PDF — é registrada com snapshots de &quot;antes&quot; e &quot;depois&quot;. O Time Machine permite visualizar diffs coloridos para cada transação e entender a origem de cada centavo.
+                                            </p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <h4 id="tm-rollback" ref={el => { contentRefs.current["tm-rollback"] = el; }} className="font-bold text-teal-400 text-sm uppercase tracking-wider">Cascade Rollback (EN)</h4>
+                                            <p className="text-neutral-500 leading-relaxed text-xs italic">
+                                                Revert any change and all subsequent ones in reverse chronological order. This ensures data integrity by preventing orphan records or inconsistent states during historical rewinds.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO VI: Market Intelligence */}
+                    <section id="livro-6" ref={el => { contentRefs.current["livro-6"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                                    <Globe className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-rose-600 dark:text-rose-400">Pillar 3: Inteligência & IA / Intelligence & AI</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO VI: Market Intelligence<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Market & Guidance Reactor</span>
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div id="radar-global" ref={el => { contentRefs.current["radar-global"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-rose-500 pl-4">
+                                        Global Radar (Sinal Macro)
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        O <strong>Global News Guidance</strong> conecta manchetes geopolíticas ao seu cofre. Ele utiliza integração com <code>NewsData.io</code> para realizar testes de estresse em tempo real, analisando como taxas de juros ou conflitos afetam seu <em>Net Worth</em>.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        The Global News Guidance connects geopolitical headlines to your vault. It uses <code>NewsData.io</code> integration for real-time stress tests, analyzing how macro variables affect your <em>Net Worth</em>.
+                                    </p>
+                                </div>
+                                <div id="radar-directives" ref={el => { contentRefs.current["radar-directives"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-rose-500 pl-4">
+                                        Strategic Directives (O Motor Analítico)
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Através de diretivas de IA (como Rebalancing ou Dividend Optimization), o sistema gera relatórios multi-página com dados em streaming. Inclui avisos de &quot;Stale Data&quot; caso seu portfólio mude antes de você atualizar a análise.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        Through AI directives, the system generates streaming multi-page reports. Includes &quot;Stale Data&quot; warnings if your portfolio changes before you refresh the analysis.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO VII: Ingestão PDF / PDF Import */}
+                    <section id="livro-7" ref={el => { contentRefs.current["livro-7"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                                    <Zap className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-rose-600 dark:text-rose-400">Pillar 3: Inteligência & IA / Intelligence & AI</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO VII: Ingestão PDF / PDF Import<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Atomic Ingestion Engine</span>
+                            </h2>
+
+                            <div id="pdf-workflow" ref={el => { contentRefs.current["pdf-workflow"] = el; }} className="bg-neutral-50 dark:bg-[#0a0a0a] rounded-3xl p-8 border border-neutral-200 dark:border-neutral-800 shadow-sm mb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-sm leading-relaxed">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Fluxo de 3 Estágios / Stage Workflow</h3>
+                                        <p className="text-neutral-600 dark:text-neutral-400">
+                                            1. <strong>Parsing</strong>: Extração de texto via OCR e processamento de linguagem natural.<br/>
+                                            2. <strong>Validation</strong>: Verificação de duplicatas e limpeza de ruído.<br/>
+                                            3. <strong>Atomic Sync</strong>: Gravação irreversível (via Time Machine) no banco de dados.
+                                        </p>
+                                    </div>
+                                    <div id="pdf-sync" ref={el => { contentRefs.current["pdf-sync"] = el; }} className="space-y-4">
+                                        <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Atomic Sync & Deduplication</h3>
+                                        <p className="text-neutral-500 dark:text-neutral-500 italic">
+                                            The system resolves Canadian tickers (appending .TO) and matches assets by Ticker + Account ID. Redundant records are automatically pruned to maintain the &quot;Gold Standard&quot; of truth.
+                                        </p>
+                                        <p className="text-neutral-600 dark:text-neutral-400">
+                                            Resolução automática de tickers canadenses e cruzamento de dados para evitar duplicidade entre PDFs e registros manuais.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO VIII: O Guru AI (RAG) */}
+                    <section id="livro-8" ref={el => { contentRefs.current["livro-8"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+                                    <BrainCircuit className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-rose-600 dark:text-rose-400">Pillar 3: Inteligência & IA / Intelligence & AI</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO VIII: O Guru AI (RAG)<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Chat & Knowledge Matrix</span>
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div id="guru-motor" ref={el => { contentRefs.current["guru-motor"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-rose-500 pl-4">
+                                        Motor de Contexto / Context Motor
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Utilizamos RAG (<em>Retrieval-Augmented Generation</em>) para injetar seus dados privados (Holdings e Estratégia) no contexto da IA com segurança. Isso garante que o Guru nunca dê conselhos genéricos; ele sempre sabe exatamente o que você possui.
+                                    </p>
+                                    <div className="p-4 rounded-xl bg-orange-100/50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
+                                        <p className="text-xs text-orange-800 dark:text-orange-300 italic font-medium">
+                                            &quot;The AI doesn&apos;t just chat; it audits your reality before speaking.&quot;
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="guru-personas" ref={el => { contentRefs.current["guru-personas"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-rose-500 pl-4">
+                                        Seleção de Personas / Persona Selection
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Escolha entre arquiteturas de pensamento distintas: <strong>Buffett</strong> (Valor/Longo Prazo), <strong>Cathie Wood</strong> (Inovação/Agressivo) ou <strong>Dave Ramsey</strong> (Disciplina/Gestão de Dívidas). A lógica da IA muda drasticamente de acordo com o Guru escolhido.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        Select distinct thinking architectures: <strong>Buffett</strong> (Value/Long Term), <strong>Cathie Wood</strong> (Innovation/Aggressive), or <strong>Dave Ramsey</strong> (Debt/Discipline).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+
+                    {/* LIVRO IX: Alquimia de Finanças */}
+                    <section id="livro-9" ref={el => { contentRefs.current["livro-9"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <Coins className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400">Pillar 4: Riqueza & Segurança / Wealth & Security</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO IX: Alquimia de Finanças<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Cash Flow & Real Estate Mastery</span>
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div id="alquimia-budget" ref={el => { contentRefs.current["alquimia-budget"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Budget vs Actuals (O Reflexo do Gasto)
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Integramos seu orçamento mensal diretamente à sua capacidade de investimento. O sistema monitora o &quot;investable cash&quot; e sugere aportes baseados no que sobrou no mês, garantindo que o plano de aposentadoria nunca fique no papel.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        We integrate your monthly budget directly with your investment capacity. The system monitors &quot;investable cash&quot; and suggests contributions based on monthly surplus.
+                                    </p>
+                                </div>
+                                <div id="alquimia-rental" ref={el => { contentRefs.current["alquimia-rental"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Rental Reality (Yield Imobiliário Real)
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Não olhe apenas para o aluguel bruto. O motor imobiliário desconta automaticamente taxas de condomínio, IPTU e manutenção para entregar o <em>Net Yield</em>. Compare seus imóveis com o retorno de dividendos do mercado financeiro em um clique.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        Real Estate engine automatically deducts fees, taxes, and maintenance to deliver <em>Net Yield</em>. Compare property returns with stock market dividends instantly.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO X: Protocolos de Segurança */}
+                    <section id="livro-10" ref={el => { contentRefs.current["livro-10"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <ShieldCheck className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400">Pillar 4: Riqueza & Segurança / Wealth & Security</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO X: Protocolos de Segurança<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Fortress Security & Governance</span>
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div id="seguranca-identidade" ref={el => { contentRefs.current["seguranca-identidade"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Identidade Atômica / Atomic Identity
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Segregação perfeita de dados. Cada pedaço de informação é autenticado contra seu *Household ID* único. Seus ativos nunca se misturam aos de outros usuários, mesmo em queries de massa do Guru AI.
+                                    </p>
+                                    <div className="p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                                        <p className="text-xs text-neutral-500 dark:text-neutral-500 italic">
+                                            Cryptographic data isolation at the Household level ensures absolute privacy and zero cross-contamination.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="seguranca-household" ref={el => { contentRefs.current["seguranca-household"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Household Governance
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Compartilhe seu cofre com quem importa. Convide cônjuges ou planejadores financeiros para sua partição segura. O acesso é revogável e controlado por chaves de convite alfanuméricas exclusivas.
+                                    </p>
+                                    <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                        Share your vault with stakeholders. Invite spouses or planners to your secure partition. Access is revocable and controlled via unique alphanumeric keys.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Blind Admin Encryption */}
+                            <div id="seguranca-encryption" ref={el => { contentRefs.current["seguranca-encryption"] = el; }} className="mt-10 space-y-6">
+                                <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                    Criptografia em Repouso / Encrypted at Rest
+                                </h3>
+                                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                    Seus dados financeiros são criptografados pelo servidor antes de serem gravados no banco de dados — não apenas na transmissão, mas no próprio armazenamento. Valores de portfólio, quantidades, custos, lucros, rendas, despesas e patrimônio líquido são todos transformados em texto cifrado antes de chegarem ao disco.
                                 </p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 9: Classification Engine */}
-                    <section id="classification-engine" ref={el => { contentRefs.current["classification-engine"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <ShieldCheck className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">9. Portfolio Classification Engine</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            The system uses a strict, rules-based decision tree to categorize assets. This approach prioritizes quantitative data (Yield and 3-Year Beta) from Yahoo Finance to ensure 100% alignment with your investment philosophy.
-                        </p>
-
-                        <div id="class-hierarchy" ref={el => { contentRefs.current["class-hierarchy"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <PieChart className="h-5 w-5 mr-2 text-blue-500" /> Classification Hierarchy
-                            </h3>
-                            <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0a0a0a]">
-                                <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="bg-neutral-100 dark:bg-neutral-900/50 border-b border-neutral-200 dark:border-neutral-800">
-                                            <th className="px-6 py-4 font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">Category</th>
-                                            <th className="px-6 py-4 font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">Yield</th>
-                                            <th className="px-6 py-4 font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">Risk Metric</th>
-                                            <th className="px-6 py-4 font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">Logic</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                                        <tr>
-                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white italic">Pure Growth</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">0.0% — 2.0%</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">S&amp;P/Nasdaq Index</td>
-                                            <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400">High Growth</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white italic">Pure Dividend</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">2.1% — 8.0%</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">Beta &lt; 1.0</td>
-                                            <td className="px-6 py-4 text-blue-600 dark:text-blue-400">Income/Stability</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white italic">The Mix</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">&gt; 8.0%</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">Any</td>
-                                            <td className="px-6 py-4 text-amber-600 dark:text-amber-400">Options/High Yield</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="px-6 py-4 font-medium text-neutral-900 dark:text-white italic">The Mix</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">2.1% — 8.0%</td>
-                                            <td className="px-6 py-4 text-neutral-600 dark:text-neutral-400">Beta &ge; 1.0</td>
-                                            <td className="px-6 py-4 text-amber-600 dark:text-amber-400">Hybrid / Volatile</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div id="class-strategies" ref={el => { contentRefs.current["class-strategies"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <TrendingUp className="h-5 w-5 mr-2 text-emerald-500" /> Strategy Definitions
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50">
-                                    <h4 className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mb-2 italic">1. Pure Growth</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                                        Maximum capital gain with minimum emphasis on current cash flow. Indexes or growth stocks with yield &lt; 2%.
+                                <p className="text-neutral-500 dark:text-neutral-500 leading-relaxed text-xs italic">
+                                    Your financial data is encrypted by the application server before it is written to the database — not only in transit, but in storage itself. Portfolio values, quantities, costs, profits, income, expenses, and net worth figures are all transformed into ciphertext before they reach disk.
+                                </p>
+                                <div className="p-4 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 space-y-3">
+                                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Blind Admin Guarantee</p>
+                                    <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                        Even if someone with direct database access — including our own infrastructure team — were to query the database, they would see only encrypted blobs. Dollar amounts, quantities, account numbers, conversation content, and AI-generated advice are mathematically unreadable without the encryption key held exclusively by the application.
                                     </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-200 dark:border-emerald-800">Aggressive</span>
-                                        <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded border border-emerald-200 dark:border-emerald-800">Index-Based</span>
-                                    </div>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50">
-                                    <h4 className="text-lg font-bold text-blue-700 dark:text-blue-400 mb-2 italic">2. Pure Dividend</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                                        Sustainable, high-quality cash flow with lower-than-market volatility. Yield between 2.1% - 8% and Beta &lt; 1.0.
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-500 italic">
+                                        Mesmo com acesso direto ao banco de dados, nossa equipe de infraestrutura não consegue ler seus números financeiros, conteúdo de conversas ou conselhos gerados pela IA. Apenas a aplicação, autenticada com sua chave, pode descriptografar esses dados.
                                     </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded border border-blue-200 dark:border-blue-800">Conservative</span>
-                                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded border border-blue-200 dark:border-blue-800">Low Beta</span>
-                                    </div>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50">
-                                    <h4 className="text-lg font-bold text-amber-700 dark:text-amber-400 mb-2 italic">3. The Mix</h4>
-                                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                                        High current income (often Options/CC) or aggressive market exposure. Yield &gt; 8% or Beta &gt; 1.0.
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs rounded border border-amber-200 dark:border-amber-800">Yield Enhanced</span>
-                                        <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs rounded border border-amber-200 dark:border-amber-800">Derivative</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1128,92 +820,221 @@ export default function UserGuideClient() {
 
                     <hr className="border-neutral-200 dark:border-neutral-800/50" />
 
-                    {/* Section 10: Data Sync */}
-                    <section id="data-sync" ref={el => { contentRefs.current["data-sync"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <RefreshCw className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
+                    {/* LIVRO XI: Ecossistema Técnico */}
+                    <section id="livro-11" ref={el => { contentRefs.current["livro-11"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                                    <Settings className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-amber-600 dark:text-amber-400">Pillar 4: Riqueza & Segurança / Wealth & Security</span>
                             </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">10. Data Synchronization</h2>
-                        </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO XI: Ecossistema Técnico<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Technical Anatomy & Engine</span>
+                            </h2>
 
-                        <div id="sync-logic" ref={el => { contentRefs.current["sync-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <Database className="h-5 w-5 mr-2 text-indigo-500" /> Gold Standard Deduplication Logic
-                            </h3>
-                            <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                <ul className="space-y-4 text-sm text-neutral-600 dark:text-neutral-400 ml-4">
-                                    <li className="flex items-start">
-                                        <div className="mr-3 mt-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">1</div>
-                                        <div>
-                                            <strong className="text-neutral-900 dark:text-white block mb-1">Ticker Resolution</strong>
-                                            Automatically detects Canadian assets (appending `.TO` if needed).
-                                        </div>
-                                    </li>
-                                    <li className="flex items-start">
-                                        <div className="mr-3 mt-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">2</div>
-                                        <div>
-                                            <strong className="text-neutral-900 dark:text-white block mb-1">Conflict Prevention</strong>
-                                            Matches assets by Ticker + Account ID to prevent duplication across PDF statements and existing records.
-                                        </div>
-                                    </li>
-                                    <li className="flex items-start">
-                                        <div className="mr-3 mt-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">3</div>
-                                        <div>
-                                            <strong className="text-neutral-900 dark:text-white block mb-1">Redundancy Pruning</strong>
-                                            Redundant or manually tracked records that contradict the latest official statement are flagged for removal.
-                                        </div>
-                                    </li>
-                                    <li className="flex items-start">
-                                        <div className="mr-3 mt-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold border border-indigo-200 dark:border-indigo-800">4</div>
-                                        <div>
-                                            <strong className="text-neutral-900 dark:text-white block mb-1">Metadata Freshness</strong>
-                                            Fetches real-time price, yield, and beta for every import to automatically categorize your assets according to the engine rules.
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
-
-                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
-
-                    {/* Section 11: Rules-Based Decision Engine */}
-                    <section id="rules-engine" ref={el => { contentRefs.current["rules-engine"] = el; }} className="space-y-8 scroll-m-8">
-                        <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
-                                <Settings className="h-8 w-8 text-neutral-700 dark:text-neutral-300" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">11. Rules-Based Decision Engine</h2>
-                        </div>
-
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                            We use a deterministic, rules-based engine rather than simple keywords. Every asset is strictly evaluated based on quantitative metrics (Yield & Beta) fetched from institutional-grade data providers.
-                        </p>
-
-                        <div id="rules-logic" ref={el => { contentRefs.current["rules-logic"] = el; }} className="space-y-6">
-                            <h3 className="text-xl font-semibold text-neutral-900 dark:text-white flex items-center">
-                                <ShieldCheck className="h-5 w-5 mr-2 text-indigo-500" /> Engine Capabilities
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">A. Rule-Based Precision</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Precision logic:</strong> Assets must meet strict numerical boundaries for yield and 3-Year Beta.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Data-driven:</strong> Eliminates human error or naming-convention guesswork.</li>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div id="tech-hierarchy" ref={el => { contentRefs.current["tech-hierarchy"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Classification Engine
+                                    </h3>
+                                    <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed text-sm">
+                                        Nosso motor de classificação usa uma árvore de decisão determinística baseada em métricas quantitativas:
+                                    </p>
+                                    <ul className="text-xs text-neutral-500 dark:text-neutral-400 space-y-2 list-disc ml-4">
+                                        <li><strong>Pure Growth</strong>: Yield 0-2% | Index Focused</li>
+                                        <li><strong>Pure Dividend</strong>: Yield 2.1-8% | Beta &lt; 1.0</li>
+                                        <li><strong>The Mix</strong>: Yield &gt; 8% ou Beta &gt; 1.0</li>
                                     </ul>
                                 </div>
-                                <div className="bg-neutral-50 dark:bg-[#0a0a0a] border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
-                                    <h4 className="font-bold text-neutral-900 dark:text-white mb-2">B. Dynamic Rebalancing</h4>
-                                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-2 list-disc list-outside ml-4">
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Automatic Drift Detection:</strong> If an asset drifts outside its yield or beta threshold, the engine flags it for strategic review.</li>
-                                        <li><strong className="text-neutral-800 dark:text-neutral-200">Responsive Philosophy:</strong> Ensures your portfolio strictly aligns with the intended category's philosophy as market conditions change.</li>
-                                    </ul>
+                                <div id="tech-stack" ref={el => { contentRefs.current["tech-stack"] = el; }} className="space-y-6">
+                                    <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 border-l-2 border-amber-500 pl-4">
+                                        Stack Tecnológica
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                            <span className="block text-[10px] uppercase font-bold text-neutral-400">Frontend</span>
+                                            <span className="text-xs font-semibold text-neutral-900 dark:text-white">Next.js 16</span>
+                                        </div>
+                                        <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                            <span className="block text-[10px] uppercase font-bold text-neutral-400">Intelligence</span>
+                                            <span className="text-xs font-semibold text-neutral-900 dark:text-white">OpenAI / RAG</span>
+                                        </div>
+                                        <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                            <span className="block text-[10px] uppercase font-bold text-neutral-400">Database</span>
+                                            <span className="text-xs font-semibold text-neutral-900 dark:text-white">Supabase / PG</span>
+                                        </div>
+                                        <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                                            <span className="block text-[10px] uppercase font-bold text-neutral-400">News</span>
+                                            <span className="text-xs font-semibold text-neutral-900 dark:text-white">NewsData.io</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO XII: Troubleshooting */}
+                    <section id="livro-12" ref={el => { contentRefs.current["livro-12"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                    <AlertCircle className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">Pillar 5: Referência / Reference</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO XII: Troubleshooting<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Error Dictionary & Recovery</span>
+                            </h2>
+
+                            <div id="err-dictionary" ref={el => { contentRefs.current["err-dictionary"] = el; }} className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                        <h4 className="font-bold text-red-600 dark:text-red-400 mb-2">PDF Parse Failure</h4>
+                                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">Ocorre quando o arquivo não segue o padrão bancário reconhecido.</p>
+                                        <div className="text-xs p-3 bg-neutral-50 dark:bg-neutral-950 rounded-lg italic">
+                                            Solution: Ensure the PDF is a direct export (not a scan) from your bank portal.
+                                        </div>
+                                    </div>
+                                    <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                                        <h4 className="font-bold text-red-600 dark:text-red-400 mb-2">Guru Timeout</h4>
+                                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">A engine de RAG excedeu o tempo de processamento.</p>
+                                        <div className="text-xs p-3 bg-neutral-50 dark:bg-neutral-950 rounded-lg italic">
+                                            Solution: Simplify your question or reduce the number of selected documents.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO XIII: Filosofia / Philosophy */}
+                    <section id="livro-13" ref={el => { contentRefs.current["livro-13"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                    <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">Pillar 5: Referência / Reference</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO XIII: Filosofia / Philosophy<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">The 3 Pillars of Logic</span>
+                            </h2>
+
+                            <div id="mindset-pillars" ref={el => { contentRefs.current["mindset-pillars"] = el; }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-4">
+                                    <div className="text-3xl font-black text-blue-600/20 dark:text-blue-400/10">01</div>
+                                    <h4 className="font-bold text-neutral-800 dark:text-neutral-200">Integridade / Integrity</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                        Dados puros. O sistema recusa interpolações criativas. Se os dados não estão no cofre, a resposta é "Não sei".
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="text-3xl font-black text-blue-600/20 dark:text-blue-400/10">02</div>
+                                    <h4 className="font-bold text-neutral-800 dark:text-neutral-200">Inteligência / Intelligence</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                        Análise preditiva vs Reativa. O Oráculo foca no que o ativo *será*, não no que *foi*.
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="text-3xl font-black text-blue-600/20 dark:text-blue-400/10">03</div>
+                                    <h4 className="font-bold text-neutral-800 dark:text-neutral-200">Resiliência / Resilience</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                                        Proteção contra o ruído do mercado. Taxas de giro baixas e foco no longo prazo geométrico.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO XIV: Glossário do Oráculo */}
+                    <section id="livro-14" ref={el => { contentRefs.current["livro-14"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                    <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">Pillar 5: Referência / Reference</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO XIV: Glossário do Oráculo<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">Terms & Definitions</span>
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div id="glossary-market" ref={el => { contentRefs.current["glossary-market"] = el; }} className="space-y-4">
+                                    <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-widest">Market Terms</h3>
+                                    <dl className="space-y-4">
+                                        <div>
+                                            <dt className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Beta</dt>
+                                            <dd className="text-xs text-neutral-500 dark:text-neutral-500">Média de volatilidade relativa ao mercado (Benchmark).</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Yield</dt>
+                                            <dd className="text-xs text-neutral-500 dark:text-neutral-500">Fluxo de caixa gerado pelo ativo (Dividendos/Juros).</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                <div id="glossary-platform" ref={el => { contentRefs.current["glossary-platform"] = el; }} className="space-y-4">
+                                    <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-widest">System Terms</h3>
+                                    <dl className="space-y-4">
+                                        <div>
+                                            <dt className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Ripple ID</dt>
+                                            <dd className="text-xs text-neutral-500 dark:text-neutral-500">Identificador único global para rastrear o efeito cascata de dados.</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Time Machine</dt>
+                                            <dd className="text-xs text-neutral-500 dark:text-neutral-500">Engine de reconstrução histórica e auditoria de estado passados.</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr className="border-neutral-200 dark:border-neutral-800/50" />
+
+                    {/* LIVRO XV: Roadmap Estratégico */}
+                    <section id="livro-15" ref={el => { contentRefs.current["livro-15"] = el; }} className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
+                        <div>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                    <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-sm font-bold tracking-widest uppercase text-blue-600 dark:text-blue-400">Pillar 5: Referência / Reference</span>
+                            </div>
+                            <h2 className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
+                                LIVRO XV: Roadmap Estratégico<br/>
+                                <span className="text-neutral-400 dark:text-neutral-600 text-2xl uppercase tracking-tighter font-medium">The Future of Intelligence</span>
+                            </h2>
+
+                            <div id="road-phase2" ref={el => { contentRefs.current["road-phase2"] = el; }} className="relative border-l border-neutral-200 dark:border-neutral-800 ml-4 pl-8 space-y-12">
+                                <div className="relative">
+                                    <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full bg-blue-600 ring-4 ring-blue-100 dark:ring-blue-900/20" />
+                                    <h4 className="font-bold text-neutral-800 dark:text-neutral-200">Phase II: Auto-Refining (Q3 2026)</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-lg">
+                                        Rebalanceamento automático e monitoramento de taxas 24/7. Integração direta com APIs de corretoras globais.
+                                    </p>
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+                                    <h4 className="font-bold text-neutral-400 dark:text-neutral-600">Phase III: Decentralized Audit (2027)</h4>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-800 leading-relaxed max-w-lg">
+                                        Protocolos de auditoria descentralizada para garantir a imutabilidade dos registros de patrimônio.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </main>
         </div>

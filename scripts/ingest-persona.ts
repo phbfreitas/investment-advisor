@@ -1,5 +1,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
 import * as cheerio from "cheerio";
 import { extractText, getDocumentProxy } from "unpdf";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -52,9 +54,25 @@ async function fetchUrl(url: string): Promise<string> {
         return (text as string).replace(/\s+/g, " ").trim();
     } else {
         const html = await response.text();
+        const dom = new JSDOM(html, { url });
+        const reader = new Readability(dom.window.document);
+        const article = reader.parse();
+
+        if (article) {
+            // Readability successfully extracted article content
+            const fullContent = `${article.title}\n\n${article.textContent}`;
+            return fullContent.replace(/\s+/g, " ").trim();
+        }
+
+        // Fallback: Readability couldn't identify article structure — extract body text via cheerio
+        console.warn(`  [warn] Readability could not parse ${url} — falling back to body text extraction.`);
         const $ = cheerio.load(html);
-        $("script, style").remove();
-        return $("body").text().replace(/\s+/g, " ").trim();
+        $("script, style, nav, header, footer, aside").remove();
+        const bodyText = $("body").text().replace(/\s+/g, " ").trim();
+        if (!bodyText) {
+            throw new Error(`No extractable text content found at ${url}`);
+        }
+        return bodyText;
     }
 }
 

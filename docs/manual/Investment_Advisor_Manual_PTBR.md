@@ -759,6 +759,27 @@ A plataforma roda na infraestrutura da **AWS** — especificamente os serviços 
 
 **CloudFront** fornece a camada de entrega de conteúdo, servindo o frontend da aplicação de locais de borda em todo o mundo para acesso de baixa latência.
 
+### 10.5 — Criptografia em Nível de Aplicação: A Garantia Blind Admin
+
+A criptografia gerenciada pela AWS (o AES-256 em repouso mencionado acima) protege seus dados caso alguém remova fisicamente um dispositivo de armazenamento. Ela não protege contra um cenário em que alguém com credenciais legítimas de banco de dados — um administrador de banco de dados, um funcionário de infraestrutura de nuvem, ou qualquer pessoa que obtenha acesso ao console do banco de dados — execute uma consulta e leia seus registros diretamente.
+
+Esta plataforma vai além.
+
+Seus números financeiros são criptografados pelo servidor da aplicação **antes de serem gravados no banco de dados**. Isso não é criptografia de trânsito — é criptografia de armazenamento na camada da aplicação. Quando um valor em reais, uma quantidade de portfólio, um número de conta ou uma linha de conversa é salva, o servidor a criptografa usando AES-256-GCM com uma chave que nunca entra no banco de dados. O que chega ao banco de dados é texto cifrado.
+
+**O que isso significa na prática:** Se alguém consultar o banco de dados diretamente — mesmo um membro de nossa própria equipe de infraestrutura — verá blobs criptografados onde seus dados financeiros deveriam estar. Os símbolos de ticker e tipos de conta permanecem legíveis (são necessários para consultas do banco de dados), mas:
+
+- Valores em reais: criptografados
+- Quantidades e preços do portfólio: criptografados
+- Custo de aquisição, valor de mercado, lucro/prejuízo: criptografados
+- Renda, despesas, patrimônio líquido: criptografados
+- Números de conta: criptografados
+- Conteúdo de conversas e conselhos gerados pela IA: criptografados
+
+O único sistema que pode descriptografar esses dados é o próprio servidor da aplicação, autenticado com sua chave de criptografia. Nenhuma consulta de banco de dados, nenhum console administrativo, nenhuma exportação de banco de dados produz valores financeiros legíveis.
+
+É isso que chamamos de propriedade **Blind Admin**: seus dados financeiros estão protegidos mesmo das pessoas que operam o banco de dados.
+
 ---
 
 ## Parte 11: O Argumento de Valor — Por Que Vale a Pena Pagar {#parte-11}

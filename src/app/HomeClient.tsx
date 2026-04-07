@@ -5,7 +5,7 @@ import { Send, Loader2, RefreshCw, Users, Brain, ChevronDown, Check } from "luci
 import { PanelResponse } from "@/components/PanelResponse";
 import { ClientDossier } from "@/components/ClientDossier";
 import { TranscriptArchive } from "@/components/TranscriptArchive";
-import { personas, PersonaId } from "@/lib/personas";
+import { personas, PersonaId } from "@/lib/personas-data";
 import { PROMPT_TEMPLATES } from "@/lib/prompt-templates";
 import type { PersonaResponse, PersonaSummaryMap } from "@/types";
 

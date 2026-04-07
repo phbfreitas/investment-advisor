@@ -905,6 +905,27 @@ The platform runs on **AWS infrastructure** — specifically Amazon's serverless
 
 Your data is stored in the AWS region configured for your deployment. It does not leave that region without explicit configuration.
 
+### 10.5 — Application-Level Encryption: The Blind Admin Guarantee
+
+AWS-managed encryption (the AES-256 at rest mentioned above) protects your data if someone physically removes a storage device. It does not protect you from a scenario where someone with legitimate database credentials — a database administrator, a cloud infrastructure employee, or anyone who gains access to the database console — runs a query and reads your records directly.
+
+This platform goes further.
+
+Your financial numbers are encrypted by the application server **before they are written to the database**. This is not transit encryption — it is storage encryption at the application layer. When a dollar amount, a portfolio quantity, an account number, or a line of conversation is saved, the server encrypts it using AES-256-GCM with a key that never enters the database. What arrives in the database is ciphertext.
+
+**What this means in practice:** If anyone were to query the database directly — even a member of our own infrastructure team — they would see encrypted blobs where your financial data should be. The ticker symbols and account types remain readable (they are needed for database queries), but:
+
+- Dollar amounts: encrypted
+- Portfolio quantities and prices: encrypted
+- Book cost, market value, profit/loss: encrypted
+- Income, expenses, net worth: encrypted
+- Account numbers: encrypted
+- Conversation content and AI-generated advice: encrypted
+
+The only system that can decrypt this data is the application server itself, authenticated with its encryption key. No database query, no administrative console, no database export produces readable financial figures.
+
+This is what we call the **Blind Admin** property: your financial data is protected even from the people who operate the database.
+
 ---
 
 ## Part 11: The Value Argument — Why This Is Worth Paying For {#part-11}

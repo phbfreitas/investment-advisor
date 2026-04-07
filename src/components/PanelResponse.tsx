@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { personas, PersonaId } from "@/lib/personas";
+import { personas, PersonaId } from "@/lib/personas-data";
 import type { PersonaResponse } from "@/types";
 
 interface PanelResponseProps {

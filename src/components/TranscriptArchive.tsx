@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, ChevronRight, MessageSquare, Loader2 } from "lucide-react";
-import { personas, PersonaId } from "@/lib/personas";
+import { personas, PersonaId } from "@/lib/personas-data";
 import { PanelResponse } from "@/components/PanelResponse";
 import type { ChatExchange } from "@/types";
 

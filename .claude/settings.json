@@ -47,7 +47,15 @@
       "Bash(npm info:*)",
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)",
-      "Bash(node tmp/test-unpdf.js)"
+      "Bash(node tmp/test-unpdf.js)",
+      "Edit(~/.claude/skills/standalone-sales-manual/**)",
+      "Read(//c/Users/Paulo/.claude/**)",
+      "Skill(codex:setup)",
+      "Skill(codex:setup:*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_upgrade"
     ],
     "additionalDirectories": [
       "E:\\Paulo\\Projects\\investment-advisor\\$USERPROFILE\\.claude\\skills\\fullstack-saas-blueprint",
@@ -55,7 +63,10 @@
       "C:\\Users\\Paulo\\AppData\\Local\\Temp",
       "e:\\Paulo\\Projects\\investment-advisor\\$USERPROFILE\\.claude\\skills",
       "C:\\Users\\Paulo\\.claude\\skills\\fullstack-saas-blueprint-workspace",
-      "C:\\Users\\Paulo\\.claude\\plugins\\cache\\claude-plugins-official\\skill-creator\\79caa0d824ac\\skills\\skill-creator\\scripts"
+      "C:\\Users\\Paulo\\.claude\\plugins\\cache\\claude-plugins-official\\skill-creator\\79caa0d824ac\\skills\\skill-creator\\scripts",
+      "C:\\Users\\Paulo\\.claude\\skills\\standalone-sales-manual",
+      "C:\\Users\\Paulo\\.claude",
+      "C:\\Users\\Paulo\\.claude\\plans"
     ]
   }
 }

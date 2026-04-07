@@ -146,7 +146,7 @@ export async function POST(request: Request) {
 
         const model = genAI.getGenerativeModel({
           model: "gemini-2.5-flash",
-          systemInstruction: generateSystemPrompt(personaId as PersonaId, contextString, ragContext, personaSummaryText),
+          systemInstruction: await generateSystemPrompt(personaId as PersonaId, contextString, ragContext, personaSummaryText),
           tools: tools,
         });
 
