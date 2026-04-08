@@ -24,6 +24,7 @@ export async function GET() {
     return NextResponse.json({
       frequencyDays: item?.frequencyDays ?? 7,
       lastRefreshedAt: item?.lastRefreshedAt ?? null,
+      startedAt: item?.startedAt ?? null,
       status: item?.status ?? "pending",
       articleCount: item?.articleCount ?? 0,
     });

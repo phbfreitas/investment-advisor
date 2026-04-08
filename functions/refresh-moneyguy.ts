@@ -247,7 +247,8 @@ async function readConfigRow(): Promise<{
 }
 
 async function updateConfigRow(fields: {
-    status: 'success' | 'error' | 'pending';
+    status: 'success' | 'error' | 'pending' | 'refreshing';
+    startedAt?: string;
     lastRefreshedAt?: string;
     articleCount?: number;
     updatedAt: string;
@@ -264,6 +265,12 @@ async function updateConfigRow(fields: {
         ':status': { S: fields.status },
         ':updatedAt': { S: fields.updatedAt },
     };
+
+    if (fields.startedAt !== undefined) {
+        expressionParts.push('#startedAt = :startedAt');
+        names['#startedAt'] = 'startedAt';
+        values[':startedAt'] = { S: fields.startedAt };
+    }
 
     if (fields.lastRefreshedAt !== undefined) {
         expressionParts.push('#lastRefreshedAt = :lastRefreshedAt');
@@ -317,6 +324,18 @@ export const handler = async (): Promise<void> => {
     }
 
     console.log('[MoneyGuy] Proceeding with refresh.');
+
+    // 1b. MARK AS REFRESHING
+    try {
+        await updateConfigRow({
+            status: 'refreshing',
+            startedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        });
+        console.log('[MoneyGuy] Status set to "refreshing".');
+    } catch (err) {
+        console.warn(`[MoneyGuy] Could not set refreshing status: ${String(err)}`);
+    }
 
     // 2. FETCH RSS
     let articleUrls: string[];

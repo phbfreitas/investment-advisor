@@ -2,36 +2,86 @@
 
 import { useTheme } from "next-themes";
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { CheckCircle2 } from "lucide-react";
 import HouseholdSettings from "../profile/household/HouseholdSettings";
 import type { Session } from "next-auth";
+
+interface RefreshConfig {
+    frequencyDays: number;
+    lastRefreshedAt: string | null;
+    startedAt: string | null;
+    status: string;
+    articleCount: number;
+}
 
 export function SettingsClient({ user }: { user?: Session["user"] }) {
     const { theme, setTheme, systemTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    const [refreshConfig, setRefreshConfig] = useState<{
-        frequencyDays: number;
-        lastRefreshedAt: string | null;
-        status: string;
-        articleCount: number;
-    } | null>(null);
+    const [refreshConfig, setRefreshConfig] = useState<RefreshConfig | null>(null);
     const [refreshLoading, setRefreshLoading] = useState(false);
     const [triggerLoading, setTriggerLoading] = useState(false);
     const [triggerMessage, setTriggerMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [saveMessage, setSaveMessage] = useState<string | null>(null);
+    const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollCountRef = useRef(0);
 
     // Avoid hydration mismatch by waiting for client mount to read theme
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    useEffect(() => {
-        fetch('/api/settings/persona-refresh')
-            .then(r => r.json())
-            .then(setRefreshConfig)
-            .catch(() => {/* silently fail */});
+    const fetchRefreshConfig = useCallback(async (): Promise<RefreshConfig | null> => {
+        try {
+            const r = await fetch('/api/settings/persona-refresh');
+            if (!r.ok) return null;
+            return await r.json();
+        } catch {
+            return null;
+        }
     }, []);
+
+    useEffect(() => {
+        fetchRefreshConfig().then(data => { if (data) setRefreshConfig(data); });
+    }, [fetchRefreshConfig]);
+
+    const stopPolling = useCallback(() => {
+        if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+        }
+        pollCountRef.current = 0;
+    }, []);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => stopPolling();
+    }, [stopPolling]);
+
+    const startPolling = useCallback(() => {
+        stopPolling();
+        pollCountRef.current = 0;
+        pollingRef.current = setInterval(async () => {
+            pollCountRef.current += 1;
+            const data = await fetchRefreshConfig();
+            if (data) {
+                setRefreshConfig(data);
+                if (data.status !== "refreshing" || pollCountRef.current >= 30) {
+                    stopPolling();
+                    if (data.status === "success" && data.articleCount > 0) {
+                        setTriggerMessage({ type: "success", text: `Refresh complete \u2014 ${data.articleCount} articles indexed.` });
+                    } else if (data.status === "success" && data.articleCount === 0) {
+                        setTriggerMessage({ type: "error", text: "Refresh complete but no articles were found." });
+                    } else if (data.status === "error") {
+                        setTriggerMessage({ type: "error", text: "Refresh failed \u2014 check Lambda logs." });
+                    } else if (pollCountRef.current >= 30) {
+                        setTriggerMessage({ type: "error", text: "Polling timed out \u2014 refresh may still be running. Reload to check." });
+                    }
+                }
+            }
+        }, 10_000);
+    }, [fetchRefreshConfig, stopPolling]);
 
     const handleFrequencyChange = async (days: number) => {
         setRefreshLoading(true);
@@ -44,16 +94,19 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                setSaveMessage(`Error: ${(err as { error?: string }).error ?? res.statusText}`);
+                setSaveMessage({ type: "error", text: (err as { error?: string }).error ?? res.statusText });
+                setTimeout(() => setSaveMessage(null), 5000);
                 return;
             }
             setRefreshConfig(prev => prev ? { ...prev, frequencyDays: days } : null);
-            setSaveMessage("Saved");
+            setSaveMessage({ type: "success", text: "Saved" });
             setTimeout(() => setSaveMessage(null), 2500);
         } finally {
             setRefreshLoading(false);
         }
     };
+
+    const isPolling = pollingRef.current !== null;
 
     const handleTriggerRefresh = async () => {
         setTriggerLoading(true);
@@ -65,7 +118,9 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
                 setTriggerMessage({ type: "error", text: (err as { error?: string }).error ?? "Failed to trigger refresh." });
                 return;
             }
-            setTriggerMessage({ type: "success", text: "Refresh triggered — articles will be ready in a few minutes." });
+            setRefreshConfig(prev => prev ? { ...prev, status: "refreshing", startedAt: new Date().toISOString() } : null);
+            setTriggerMessage({ type: "success", text: "Refresh triggered \u2014 polling for completion..." });
+            startPolling();
         } finally {
             setTriggerLoading(false);
         }
@@ -74,6 +129,13 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
     const getActiveTheme = () => {
         if (theme === 'system') return systemTheme;
         return theme;
+    };
+
+    const getElapsedText = (startedAt: string | null) => {
+        if (!startedAt) return null;
+        const elapsed = Math.round((Date.now() - new Date(startedAt).getTime()) / 1000);
+        if (elapsed < 60) return `Started ${elapsed}s ago`;
+        return `Started ${Math.round(elapsed / 60)}m ago`;
     };
 
     return (
@@ -186,19 +248,29 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
                                         <span className="text-sm font-medium text-neutral-900 dark:text-white">Money Guy — The Financial Order of Operations</span>
                                     </div>
                                     <div className="shrink-0">
-                                        {refreshConfig.status === "success" && (
+                                        {refreshConfig.status === "refreshing" && (
+                                            <span className="inline-flex items-center rounded-md bg-blue-100 dark:bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-800 dark:text-blue-400 ring-1 ring-inset ring-blue-500/30 dark:ring-blue-500/20 animate-pulse">
+                                                Refreshing...
+                                            </span>
+                                        )}
+                                        {refreshConfig.status === "success" && refreshConfig.articleCount > 0 && (
                                             <span className="inline-flex items-center rounded-md bg-green-100 dark:bg-green-500/10 px-2 py-1 text-xs font-medium text-green-800 dark:text-green-400 ring-1 ring-inset ring-green-500/30 dark:ring-green-500/20">
                                                 Up to date
                                             </span>
                                         )}
-                                        {refreshConfig.status === "error" && (
+                                        {refreshConfig.status === "success" && refreshConfig.articleCount === 0 && (
                                             <span className="inline-flex items-center rounded-md bg-amber-100 dark:bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-800 dark:text-amber-400 ring-1 ring-inset ring-amber-500/30 dark:ring-amber-500/20">
-                                                Refresh error
+                                                No articles found
                                             </span>
                                         )}
-                                        {refreshConfig.status !== "success" && refreshConfig.status !== "error" && (
+                                        {refreshConfig.status === "error" && (
+                                            <span className="inline-flex items-center rounded-md bg-red-100 dark:bg-red-500/10 px-2 py-1 text-xs font-medium text-red-800 dark:text-red-400 ring-1 ring-inset ring-red-500/30 dark:ring-red-500/20">
+                                                Refresh failed
+                                            </span>
+                                        )}
+                                        {refreshConfig.status !== "success" && refreshConfig.status !== "error" && refreshConfig.status !== "refreshing" && (
                                             <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-2 py-1 text-xs font-medium text-neutral-600 dark:text-neutral-400 ring-1 ring-inset ring-neutral-500/30 dark:ring-neutral-500/20">
-                                                Pending first refresh
+                                                Never refreshed
                                             </span>
                                         )}
                                     </div>
@@ -206,66 +278,88 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
 
                                 {/* Stats row */}
                                 <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-                                    <span>
-                                        <span className="font-medium text-neutral-900 dark:text-white">{refreshConfig.articleCount}</span> articles indexed
-                                    </span>
-                                    <span>
-                                        Last updated:{" "}
-                                        <span className="font-medium text-neutral-900 dark:text-white">
-                                            {refreshConfig.lastRefreshedAt
-                                                ? new Date(refreshConfig.lastRefreshedAt).toLocaleDateString()
-                                                : "Never"}
+                                    {refreshConfig.status === "refreshing" ? (
+                                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                            {getElapsedText(refreshConfig.startedAt) ?? "Starting..."}
                                         </span>
-                                    </span>
+                                    ) : (
+                                        <>
+                                            <span>
+                                                <span className="font-medium text-neutral-900 dark:text-white">{refreshConfig.articleCount}</span> articles indexed
+                                            </span>
+                                            <span>
+                                                Last updated:{" "}
+                                                <span className="font-medium text-neutral-900 dark:text-white">
+                                                    {refreshConfig.lastRefreshedAt
+                                                        ? new Date(refreshConfig.lastRefreshedAt).toLocaleDateString()
+                                                        : "Never"}
+                                                </span>
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Frequency selector */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Refresh frequency</p>
-                                        {saveMessage && (
-                                            <span className={`text-xs font-medium ${saveMessage.startsWith("Error") ? "text-red-500" : "text-teal-600 dark:text-teal-400"}`}>
-                                                {saveMessage}
-                                            </span>
-                                        )}
-                                    </div>
+                                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Refresh frequency</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {[1, 3, 7, 14, 30].map((days) => (
-                                            <button
-                                                key={days}
-                                                onClick={() => handleFrequencyChange(days)}
-                                                disabled={refreshLoading}
-                                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                                                    refreshConfig.frequencyDays === days
-                                                        ? 'bg-teal-50 dark:bg-teal-500/10 border-teal-200 dark:border-teal-500/50 text-teal-700 dark:text-teal-400'
-                                                        : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
-                                                }`}
-                                            >
-                                                {days} {days === 1 ? "Day" : "Days"}
-                                            </button>
-                                        ))}
+                                        {[1, 3, 7, 14, 30].map((days) => {
+                                            const isActive = refreshConfig.frequencyDays === days;
+                                            return (
+                                                <button
+                                                    key={days}
+                                                    onClick={() => handleFrequencyChange(days)}
+                                                    disabled={refreshLoading}
+                                                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                        isActive
+                                                            ? 'bg-teal-50 dark:bg-teal-500/10 border-2 border-teal-500 dark:border-teal-400 text-teal-700 dark:text-teal-400'
+                                                            : 'bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
+                                                    }`}
+                                                >
+                                                    {isActive && <CheckCircle2 className="h-4 w-4" />}
+                                                    {days} {days === 1 ? "Day" : "Days"}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
+                                    {/* Save feedback */}
+                                    {saveMessage && (
+                                        <div className={`flex items-center gap-1.5 text-sm font-medium mt-1 ${
+                                            saveMessage.type === "error"
+                                                ? "text-red-600 dark:text-red-400 border-l-4 border-l-red-500 pl-3 py-1"
+                                                : "text-teal-600 dark:text-teal-400"
+                                        }`}>
+                                            {saveMessage.type === "success" && <CheckCircle2 className="h-4 w-4" />}
+                                            {saveMessage.text}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Manual trigger */}
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
+                                <div className="space-y-2 pt-1">
                                     <button
                                         onClick={handleTriggerRefresh}
-                                        disabled={triggerLoading}
+                                        disabled={triggerLoading || isPolling}
                                         className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 text-sm font-medium transition-all hover:bg-amber-100 dark:hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {triggerLoading ? "Triggering…" : "⚡ Trigger Refresh Now"}
+                                        {triggerLoading ? "Triggering\u2026" : isPolling ? "Refreshing\u2026" : "\u26A1 Trigger Refresh Now"}
                                     </button>
+                                    {/* Trigger feedback */}
                                     {triggerMessage && (
-                                        <span className={`text-xs leading-relaxed ${triggerMessage.type === "error" ? "text-red-500" : "text-teal-600 dark:text-teal-400"}`}>
+                                        <div className={`flex items-center gap-1.5 text-sm font-medium ${
+                                            triggerMessage.type === "error"
+                                                ? "text-red-600 dark:text-red-400 border-l-4 border-l-red-500 pl-3 py-1"
+                                                : "text-teal-600 dark:text-teal-400"
+                                        }`}>
+                                            {triggerMessage.type === "success" && <CheckCircle2 className="h-4 w-4" />}
                                             {triggerMessage.text}
-                                        </span>
+                                        </div>
                                     )}
                                 </div>
 
                                 {/* Helper text */}
                                 <p className="text-xs text-neutral-500 dark:text-neutral-500 leading-relaxed">
-                                    The advisor automatically fetches the latest articles from The Money Guy Show on the selected schedule. Use <strong className="text-neutral-600 dark:text-neutral-400">Trigger Refresh Now</strong> to run it immediately — the page will reflect the new article count within a few minutes.
+                                    The advisor automatically fetches the latest articles from The Money Guy Show on the selected schedule. Use <strong className="text-neutral-600 dark:text-neutral-400">Trigger Refresh Now</strong> to run it immediately.
                                 </p>
                             </div>
                         )}
