@@ -17,6 +17,9 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
         articleCount: number;
     } | null>(null);
     const [refreshLoading, setRefreshLoading] = useState(false);
+    const [triggerLoading, setTriggerLoading] = useState(false);
+    const [triggerMessage, setTriggerMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
     // Avoid hydration mismatch by waiting for client mount to read theme
     useEffect(() => {
@@ -32,15 +35,39 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
 
     const handleFrequencyChange = async (days: number) => {
         setRefreshLoading(true);
+        setSaveMessage(null);
         try {
-            await fetch('/api/settings/persona-refresh', {
+            const res = await fetch('/api/settings/persona-refresh', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ frequencyDays: days }),
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                setSaveMessage(`Error: ${(err as { error?: string }).error ?? res.statusText}`);
+                return;
+            }
             setRefreshConfig(prev => prev ? { ...prev, frequencyDays: days } : null);
+            setSaveMessage("Saved");
+            setTimeout(() => setSaveMessage(null), 2500);
         } finally {
             setRefreshLoading(false);
+        }
+    };
+
+    const handleTriggerRefresh = async () => {
+        setTriggerLoading(true);
+        setTriggerMessage(null);
+        try {
+            const res = await fetch('/api/settings/persona-refresh/trigger', { method: 'POST' });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                setTriggerMessage({ type: "error", text: (err as { error?: string }).error ?? "Failed to trigger refresh." });
+                return;
+            }
+            setTriggerMessage({ type: "success", text: "Refresh triggered — articles will be ready in a few minutes." });
+        } finally {
+            setTriggerLoading(false);
         }
     };
 
@@ -194,7 +221,14 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
 
                                 {/* Frequency selector */}
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Refresh frequency</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Refresh frequency</p>
+                                        {saveMessage && (
+                                            <span className={`text-xs font-medium ${saveMessage.startsWith("Error") ? "text-red-500" : "text-teal-600 dark:text-teal-400"}`}>
+                                                {saveMessage}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                         {[1, 3, 7, 14, 30].map((days) => (
                                             <button
@@ -213,9 +247,25 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
                                     </div>
                                 </div>
 
+                                {/* Manual trigger */}
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-1">
+                                    <button
+                                        onClick={handleTriggerRefresh}
+                                        disabled={triggerLoading}
+                                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 text-sm font-medium transition-all hover:bg-amber-100 dark:hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {triggerLoading ? "Triggering…" : "⚡ Trigger Refresh Now"}
+                                    </button>
+                                    {triggerMessage && (
+                                        <span className={`text-xs leading-relaxed ${triggerMessage.type === "error" ? "text-red-500" : "text-teal-600 dark:text-teal-400"}`}>
+                                            {triggerMessage.text}
+                                        </span>
+                                    )}
+                                </div>
+
                                 {/* Helper text */}
                                 <p className="text-xs text-neutral-500 dark:text-neutral-500 leading-relaxed">
-                                    The advisor automatically fetches the latest articles from The Money Guy Show on this schedule.
+                                    The advisor automatically fetches the latest articles from The Money Guy Show on the selected schedule. Use <strong className="text-neutral-600 dark:text-neutral-400">Trigger Refresh Now</strong> to run it immediately — the page will reflect the new article count within a few minutes.
                                 </p>
                             </div>
                         )}

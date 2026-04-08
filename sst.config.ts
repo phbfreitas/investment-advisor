@@ -73,6 +73,7 @@ export default $config({
                 NODE_ENV: "production",
                 KMS_KEY_ID: encryptionKey.id,
                 DYNAMIC_RAG_BUCKET: dynamicRagBucket.name,
+                MONEYGUY_REFRESH_LAMBDA_ARN: moneyGuyRefreshFn.arn,
             },
             permissions: [
                 {
@@ -91,6 +92,10 @@ export default $config({
                 {
                     actions: ["s3:GetObject"],
                     resources: [$interpolate`${dynamicRagBucket.arn}/*`],
+                },
+                {
+                    actions: ["lambda:InvokeFunction"],
+                    resources: [moneyGuyRefreshFn.arn],
                 },
             ],
             server: {
