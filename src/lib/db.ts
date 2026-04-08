@@ -24,6 +24,10 @@ const rawDb = DynamoDBDocumentClient.from(dynamoClient, {
 // Table Name constant
 export const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData";
 
+if (process.env.NODE_ENV !== "development" && !process.env.KMS_KEY_ID) {
+    throw new Error("KMS_KEY_ID must be set in non-development environments. Refusing to start without encryption.");
+}
+
 // When KMS_KEY_ID is set (staging/production): encrypt/decrypt transparently.
 // When KMS_KEY_ID is not set (local dev): bypass encryption entirely.
 export const db = process.env.KMS_KEY_ID

@@ -1,5 +1,3 @@
-import * as fs from "fs/promises";
-import * as path from "path";
 import { personas, PersonaId } from "./personas-data";
 
 export { personas };
@@ -17,23 +15,6 @@ export async function generateSystemPrompt(
     const persona = personas[personaId];
     if (!persona) throw new Error("Persona not found");
 
-    let coreRules = "";
-    if (persona.rulesFile) {
-        try {
-            const rulesPath = path.join(process.cwd(), "data", "personas", "rules", persona.rulesFile);
-            coreRules = await fs.readFile(rulesPath, "utf-8");
-        } catch (err) {
-            console.error(`Failed to load rules for ${personaId}:`, err);
-        }
-    }
-
-    const rulesSection = coreRules 
-        ? `
-### YOUR CORE DOGMATIC RULES (NON-NEGOTIABLE):
-${coreRules}
-`
-        : "";
-
     const memorySection = conversationSummary
         ? `
 ### YOUR MEMORY OF THIS USER (from prior conversations):
@@ -49,7 +30,6 @@ MEMORY USAGE RULES:
 
     return `
 ${persona.systemPrompt}
-${rulesSection}
 
 ${ragContext}
 ${memorySection}

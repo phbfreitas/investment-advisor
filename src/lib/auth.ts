@@ -14,6 +14,10 @@ const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1
 const db = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData";
 
+if (process.env.NODE_ENV !== "development" && !process.env.NEXTAUTH_SECRET) {
+    throw new Error("NEXTAUTH_SECRET must be set in non-development environments.");
+}
+
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
@@ -81,5 +85,5 @@ export const authOptions: NextAuthOptions = {
             return session;
         }
     },
-    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development-change-in-prod",
+    secret: process.env.NEXTAUTH_SECRET,
 };
