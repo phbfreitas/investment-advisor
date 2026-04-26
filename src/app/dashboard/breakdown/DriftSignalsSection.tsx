@@ -53,6 +53,7 @@ export function DriftSignalsSection({ signals }: DriftSignalsSectionProps) {
               type="button"
               aria-expanded={isOpen}
               aria-label={s.title}
+              aria-controls={`contributors-${s.id}`}
               onClick={() => setExpanded(prev => ({ ...prev, [s.id]: !prev[s.id] }))}
               className="w-full flex items-center gap-3 min-h-[44px] px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
             >
@@ -64,7 +65,7 @@ export function DriftSignalsSection({ signals }: DriftSignalsSectionProps) {
               <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden />
             </button>
             {isOpen && s.contributors.length > 0 && (
-              <ul className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
+              <ul id={`contributors-${s.id}`} className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
                 {s.contributors.map(c => (
                   <li key={c.label} className="flex justify-between text-xs text-neutral-600 dark:text-neutral-400">
                     <span>{c.label}</span>

@@ -29,7 +29,12 @@ function contributorsForField<K extends keyof Asset>(
   assets: Asset[], field: K, value: string, total: number
 ) {
   return assets
-    .filter(a => Number.isFinite(a.marketValue) && a.marketValue > 0 && (a[field] || "Uncategorized") === value)
+    .filter(a => {
+      if (!Number.isFinite(a.marketValue) || a.marketValue <= 0) return false;
+      const raw = a[field];
+      const label = typeof raw === "string" && raw.trim().length > 0 ? raw : "Uncategorized";
+      return label === value;
+    })
     .map(a => ({
       label: a.ticker,
       value: a.marketValue,
@@ -91,6 +96,8 @@ export function computeDriftSignals(assets: Asset[]): DriftSignal[] {
   }
 
   // Region concentration
+  // Note: unlike currency (where we skip the dominant "base" because non-base FX creates risk),
+  // region concentration is a risk regardless of which region is dominant — so we check ALL regions.
   const regions = sumByField(valid, "market");
   for (const [region, sum] of Object.entries(regions.sums)) {
     const ratio = sum / total;

@@ -58,7 +58,7 @@ export function ConcentrationSection({ topHoldings, weightedYield }: Concentrati
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0a0a0a] p-4">
         <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-2">Top 10 Holdings</h3>
-        <div style={{ width: "100%", height: Math.max(36 * rows.length + 40, 200) }}>
+        <div style={{ width: "100%", height: Math.max(44 * rows.length + 40, 200) }}>
           <ResponsiveContainer>
             <BarChart data={rows} layout="vertical" margin={{ left: 0, right: 24, top: 8, bottom: 8 }}>
               <XAxis type="number" hide />
@@ -81,7 +81,7 @@ export function ConcentrationSection({ topHoldings, weightedYield }: Concentrati
                 }}
                 cursor="pointer"
                 radius={[0, 4, 4, 0]}
-                barSize={28}
+                barSize={36}
               >
                 {rows.map((row) => (
                   <Cell
@@ -92,6 +92,19 @@ export function ConcentrationSection({ topHoldings, weightedYield }: Concentrati
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          <table className="sr-only">
+            <caption>Top 10 Holdings</caption>
+            <thead><tr><th>Ticker</th><th>Value</th><th>Percent</th></tr></thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.ticker}>
+                  <td>{r.ticker}</td>
+                  <td>{r.marketValue}</td>
+                  <td>{r.percent.toFixed(2)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
