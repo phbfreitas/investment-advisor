@@ -55,8 +55,10 @@ export function PortfolioTabs({ children }: PortfolioTabsProps) {
           return (
             <button
               key={id}
+              id={`tab-${id}`}
               role="tab"
               aria-selected={selected}
+              aria-controls={`tabpanel-${id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => setTab(id)}
               className={[
@@ -72,10 +74,10 @@ export function PortfolioTabs({ children }: PortfolioTabsProps) {
           );
         })}
       </div>
-      <div role="tabpanel" hidden={active !== "holdings"} className={active !== "holdings" ? "hidden" : undefined}>
+      <div id="tabpanel-holdings" role="tabpanel" aria-labelledby="tab-holdings" hidden={active !== "holdings"} className={active !== "holdings" ? "hidden" : undefined}>
         {holdingsPane}
       </div>
-      <div role="tabpanel" hidden={active !== "breakdown"} className={active !== "breakdown" ? "hidden" : undefined}>
+      <div id="tabpanel-breakdown" role="tabpanel" aria-labelledby="tab-breakdown" hidden={active !== "breakdown"} className={active !== "breakdown" ? "hidden" : undefined}>
         {breakdownPane}
       </div>
     </div>
