@@ -6,6 +6,7 @@ import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Tra
 import type { Asset, MarketData } from "@/types";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
+import { HoldingsTab } from "./HoldingsTab";
 
 export default function DashboardPage() {
   return (
@@ -534,6 +535,12 @@ function DashboardContent() {
         </div>
       </header>
 
+      <HoldingsTab
+        assets={assets}
+        isLoading={isLoading}
+        marketData={marketData}
+        isMarketLoading={isMarketLoading}
+      >
       <div className="w-full p-4 md:p-8">
         <div className="mx-auto space-y-8">
 
@@ -937,7 +944,8 @@ function DashboardContent() {
 
         </div>
       </div>
-      <TimeMachineDrawer 
+      </HoldingsTab>
+      <TimeMachineDrawer
         isOpen={isTimeMachineOpen} 
         onClose={() => setIsTimeMachineOpen(false)} 
         onRollbackComplete={fetchAssets}
