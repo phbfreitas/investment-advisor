@@ -7,6 +7,7 @@ import type { Asset, MarketData } from "@/types";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
+import { PortfolioTabs } from "./PortfolioTabs";
 
 export default function DashboardPage() {
   return (
@@ -535,6 +536,7 @@ function DashboardContent() {
         </div>
       </header>
 
+      <PortfolioTabs>
       <HoldingsTab
         assets={assets}
         isLoading={isLoading}
@@ -945,6 +947,8 @@ function DashboardContent() {
         </div>
       </div>
       </HoldingsTab>
+      <div className="p-8 text-center text-neutral-500">Breakdown coming soon…</div>
+      </PortfolioTabs>
       <TimeMachineDrawer
         isOpen={isTimeMachineOpen} 
         onClose={() => setIsTimeMachineOpen(false)} 
