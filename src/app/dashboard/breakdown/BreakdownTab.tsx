@@ -8,6 +8,7 @@ import { computeTopHoldings } from "./lib/computeTopHoldings";
 import { computeWeightedYield } from "./lib/computeWeightedYield";
 import { computeDriftSignals } from "./lib/computeDriftSignals";
 import { CompositionSection } from "./CompositionSection";
+import { ConcentrationSection } from "./ConcentrationSection";
 
 interface BreakdownTabProps {
   assets: Asset[];
@@ -61,7 +62,7 @@ export function BreakdownTab({ assets, isLoading, onSwitchToHoldings }: Breakdow
         <h2 id="concentration-heading" className="text-xs uppercase tracking-wider text-teal-600 dark:text-teal-400 font-semibold border-b border-neutral-200 dark:border-neutral-800 pb-2 mb-4">
           2 · Concentration
         </h2>
-        <div data-testid="concentration-placeholder">[Section placeholder — Task 11] {topHoldings.top.length} top holdings, {weightedYield.yieldPct.toFixed(2)}% yield</div>
+        <ConcentrationSection topHoldings={topHoldings} weightedYield={weightedYield} />
       </section>
 
       <section aria-labelledby="drift-heading">
