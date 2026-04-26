@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
+import { BreakdownTab } from "./breakdown/BreakdownTab";
 
 export default function DashboardPage() {
   return (
@@ -120,6 +121,11 @@ function DashboardContent() {
   };
 
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const switchToHoldings = useCallback(() => {
+    router.replace(pathname, { scroll: false });
+  }, [router, pathname]);
 
   useEffect(() => {
     fetchAssets();
@@ -947,7 +953,11 @@ function DashboardContent() {
         </div>
       </div>
       </HoldingsTab>
-      <div className="p-8 text-center text-neutral-500">Breakdown coming soon…</div>
+      <BreakdownTab
+        assets={assets}
+        isLoading={isLoading}
+        onSwitchToHoldings={switchToHoldings}
+      />
       </PortfolioTabs>
       <TimeMachineDrawer
         isOpen={isTimeMachineOpen} 
