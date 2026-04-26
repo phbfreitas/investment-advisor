@@ -291,7 +291,13 @@ export function SettingsClient({ user }: { user?: Session["user"] }) {
                                                 Last updated:{" "}
                                                 <span className="font-medium text-neutral-900 dark:text-white">
                                                     {refreshConfig.lastRefreshedAt
-                                                        ? new Date(refreshConfig.lastRefreshedAt).toLocaleDateString()
+                                                        ? new Date(refreshConfig.lastRefreshedAt).toLocaleString(undefined, {
+                                                            year: "numeric",
+                                                            month: "numeric",
+                                                            day: "numeric",
+                                                            hour: "numeric",
+                                                            minute: "2-digit",
+                                                        })
                                                         : "Never"}
                                                 </span>
                                             </span>

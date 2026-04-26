@@ -331,26 +331,37 @@ async function updateConfigRow(fields: {
 
 // ── Main handler ───────────────────────────────────────────────────────────
 
-export const handler = async (): Promise<void> => {
+interface RefreshEvent {
+    force?: boolean;
+}
+
+export const handler = async (event?: RefreshEvent): Promise<void> => {
     console.log('[MoneyGuy] Refresh Lambda started.');
 
-    // 1. FREQUENCY GATE
-    let configRow: { frequencyDays: number; lastRefreshedAt: string | null } | null = null;
-    try {
-        configRow = await readConfigRow();
-    } catch (err) {
-        console.warn(`[MoneyGuy] Could not read config row (continuing): ${String(err)}`);
+    const force = event?.force === true;
+    if (force) {
+        console.log('[MoneyGuy] force=true received — bypassing frequency gate.');
     }
 
-    if (configRow?.lastRefreshedAt) {
-        const frequencyMs = (configRow.frequencyDays ?? 7) * 24 * 60 * 60 * 1000;
-        const elapsed = Date.now() - new Date(configRow.lastRefreshedAt).getTime();
-        if (elapsed < frequencyMs) {
-            console.log(
-                `[MoneyGuy] Skipping refresh — last run was ${Math.round(elapsed / 3600000)}h ago, ` +
-                    `frequency is ${configRow.frequencyDays ?? 7} days.`
-            );
-            return;
+    // 1. FREQUENCY GATE (skipped on manual trigger)
+    if (!force) {
+        let configRow: { frequencyDays: number; lastRefreshedAt: string | null } | null = null;
+        try {
+            configRow = await readConfigRow();
+        } catch (err) {
+            console.warn(`[MoneyGuy] Could not read config row (continuing): ${String(err)}`);
+        }
+
+        if (configRow?.lastRefreshedAt) {
+            const frequencyMs = (configRow.frequencyDays ?? 7) * 24 * 60 * 60 * 1000;
+            const elapsed = Date.now() - new Date(configRow.lastRefreshedAt).getTime();
+            if (elapsed < frequencyMs) {
+                console.log(
+                    `[MoneyGuy] Skipping refresh — last run was ${Math.round(elapsed / 3600000)}h ago, ` +
+                        `frequency is ${configRow.frequencyDays ?? 7} days.`
+                );
+                return;
+            }
         }
     }
 

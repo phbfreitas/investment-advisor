@@ -26,6 +26,7 @@ export async function POST() {
             new InvokeCommand({
                 FunctionName: lambdaArn,
                 InvocationType: "Event", // async fire-and-forget — returns 202 immediately
+                Payload: Buffer.from(JSON.stringify({ force: true })), // bypass frequency gate for manual triggers
             })
         );
         return NextResponse.json({ triggered: true });
