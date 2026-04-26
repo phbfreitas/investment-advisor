@@ -36,16 +36,21 @@ const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' 
 
 // ── HTTP helper ────────────────────────────────────────────────────────────
 
-function fetchText(url: string): Promise<string> {
+const FETCH_TIMEOUT_MS = 30_000;
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_REDIRECTS = 3;
+
+function fetchText(url: string, redirectsRemaining: number = MAX_REDIRECTS): Promise<string> {
     return new Promise((resolve, reject) => {
         const lib = url.startsWith('https') ? https : http;
-        lib.get(
+        const req = lib.get(
             url,
             {
                 headers: {
                     'User-Agent':
                         'Mozilla/5.0 (compatible; InvestmentAdvisorBot/1.0)',
                 },
+                timeout: FETCH_TIMEOUT_MS,
             },
             (res) => {
                 if (
@@ -54,8 +59,11 @@ function fetchText(url: string): Promise<string> {
                     res.statusCode < 400 &&
                     res.headers.location
                 ) {
-                    // Follow a single redirect
-                    fetchText(res.headers.location).then(resolve).catch(reject);
+                    if (redirectsRemaining <= 0) {
+                        reject(new Error(`Too many redirects for ${url}`));
+                        return;
+                    }
+                    fetchText(res.headers.location, redirectsRemaining - 1).then(resolve).catch(reject);
                     return;
                 }
                 if (!res.statusCode || res.statusCode >= 400) {
@@ -63,11 +71,30 @@ function fetchText(url: string): Promise<string> {
                     return;
                 }
                 const chunks: Buffer[] = [];
-                res.on('data', (chunk: Buffer) => chunks.push(chunk));
-                res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+                let totalBytes = 0;
+                let aborted = false;
+                res.on('data', (chunk: Buffer) => {
+                    if (aborted) return;
+                    totalBytes += chunk.length;
+                    if (totalBytes > MAX_RESPONSE_BYTES) {
+                        aborted = true;
+                        req.destroy();
+                        reject(new Error(`Response exceeds ${MAX_RESPONSE_BYTES} bytes for ${url}`));
+                        return;
+                    }
+                    chunks.push(chunk);
+                });
+                res.on('end', () => {
+                    if (!aborted) resolve(Buffer.concat(chunks).toString('utf-8'));
+                });
                 res.on('error', reject);
             }
-        ).on('error', reject);
+        );
+        req.on('timeout', () => {
+            req.destroy();
+            reject(new Error(`Request timeout (${FETCH_TIMEOUT_MS}ms) for ${url}`));
+        });
+        req.on('error', reject);
     });
 }
 
@@ -329,18 +356,68 @@ export const handler = async (): Promise<void> => {
 
     console.log('[MoneyGuy] Proceeding with refresh.');
 
-    // 1b. MARK AS REFRESHING
-    try {
-        await updateConfigRow({
-            status: 'refreshing',
-            startedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        });
-        console.log('[MoneyGuy] Status set to "refreshing".');
-    } catch (err) {
-        console.warn(`[MoneyGuy] Could not set refreshing status: ${String(err)}`);
+    // 1b. ACQUIRE LOCK (conditional write — prevents concurrent runs;
+    //     stale lock from a crashed run is taken over after STALE_LOCK_MS)
+    const lockAcquired = await acquireRefreshLock();
+    if (!lockAcquired) {
+        console.log('[MoneyGuy] Another refresh is already in progress (lock held). Skipping.');
+        return;
     }
+    console.log('[MoneyGuy] Lock acquired, status set to "refreshing".');
 
+    // Wrap remaining work in try/catch so any uncaught error transitions
+    // the row out of "refreshing" instead of leaving the UI stuck on a spinner.
+    try {
+        await runRefreshPipeline();
+    } catch (err) {
+        console.error(`[MoneyGuy] Uncaught error during refresh: ${String(err)}`);
+        try {
+            await updateConfigRow({ status: 'error', updatedAt: new Date().toISOString() });
+        } catch (dbErr) {
+            console.error(`[DynamoDB] Failed to write error status after uncaught error: ${String(dbErr)}`);
+        }
+    }
+};
+
+const STALE_LOCK_MS = 10 * 60 * 1000;
+
+async function acquireRefreshLock(): Promise<boolean> {
+    const now = new Date().toISOString();
+    const staleCutoff = new Date(Date.now() - STALE_LOCK_MS).toISOString();
+    try {
+        await dynamo.send(
+            new UpdateItemCommand({
+                TableName: TABLE_NAME,
+                Key: {
+                    PK: { S: 'SYSTEM#CONFIG' },
+                    SK: { S: 'PERSONA_REFRESH#moneyguy' },
+                },
+                UpdateExpression: 'SET #status = :refreshing, #startedAt = :now, #updatedAt = :now',
+                ConditionExpression:
+                    'attribute_not_exists(#status) OR #status <> :refreshing OR attribute_not_exists(#startedAt) OR #startedAt < :staleCutoff',
+                ExpressionAttributeNames: {
+                    '#status': 'status',
+                    '#startedAt': 'startedAt',
+                    '#updatedAt': 'updatedAt',
+                },
+                ExpressionAttributeValues: {
+                    ':refreshing': { S: 'refreshing' },
+                    ':now': { S: now },
+                    ':staleCutoff': { S: staleCutoff },
+                },
+            })
+        );
+        return true;
+    } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'ConditionalCheckFailedException') {
+            return false;
+        }
+        console.error(`[MoneyGuy] Failed to acquire lock: ${String(err)}`);
+        return false;
+    }
+}
+
+async function runRefreshPipeline(): Promise<void> {
     // 2. DISCOVER ARTICLE URLs (via sitemap)
     let articleUrls: string[];
     try {
@@ -398,6 +475,23 @@ export const handler = async (): Promise<void> => {
     }
     console.log(`[Embed] Embedded ${chunks.length}/${rawChunks.length} chunks successfully.`);
 
+    // 5b. EMPTY-INDEX GUARD — if we ended up with no usable chunks (every scrape
+    //     failed, every embed failed, etc.), report this as an error rather than
+    //     silently overwriting S3 with [] and writing status=success.
+    if (chunks.length === 0) {
+        console.error(
+            `[MoneyGuy] Refresh produced 0 usable chunks ` +
+                `(urls=${articleUrls.length}, scraped=${articles.length}, rawChunks=${rawChunks.length}, embedded=${chunks.length}). ` +
+                `Marking status=error; existing S3 index preserved.`
+        );
+        try {
+            await updateConfigRow({ status: 'error', updatedAt: new Date().toISOString() });
+        } catch (dbErr) {
+            console.error(`[DynamoDB] Failed to update status to error: ${String(dbErr)}`);
+        }
+        return;
+    }
+
     // 6. WRITE TO S3
     try {
         await s3.send(
@@ -435,4 +529,4 @@ export const handler = async (): Promise<void> => {
     }
 
     console.log('[MoneyGuy] Refresh complete.');
-};
+}
