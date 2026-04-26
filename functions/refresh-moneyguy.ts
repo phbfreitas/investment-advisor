@@ -71,49 +71,53 @@ function fetchText(url: string): Promise<string> {
     });
 }
 
-// ── RSS parsing ────────────────────────────────────────────────────────────
+// ── Sitemap-based URL discovery ────────────────────────────────────────────
+// Note: moneyguy.com's WordPress RSS feed (/feed/) returns an empty channel
+// (0 items), so we discover content via their sitemap index instead.
 
-function parseLinksFromRss(xml: string): string[] {
-    const links: string[] = [];
-    // Match <item> blocks and extract the <link> inside each
-    const itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi;
-    let itemMatch: RegExpExecArray | null;
-    while ((itemMatch = itemRegex.exec(xml)) !== null) {
-        const itemContent = itemMatch[1];
-        // <link> may contain CDATA or plain URL; look for the first URL-like content
-        const linkMatch =
-            itemContent.match(/<link>(?:<!\[CDATA\[)?(https?:\/\/[^<\]]+?)(?:\]\]>)?<\/link>/i) ??
-            itemContent.match(/<link\s*\/>(https?:\/\/[^\s<]+)/i);
-        if (linkMatch) {
-            links.push(linkMatch[1].trim());
-        }
-    }
-    return links;
+const SITEMAP_URLS = [
+    'https://moneyguy.com/article-sitemap.xml',
+    'https://moneyguy.com/episode-sitemap.xml',
+];
+
+interface SitemapEntry {
+    url: string;
+    lastmod: string;
 }
 
-async function fetchRssLinks(maxItems: number = 30): Promise<string[]> {
-    const baseUrl = 'https://www.moneyguy.com/feed/';
-    let links: string[] = [];
+function parseSitemapEntries(xml: string): SitemapEntry[] {
+    const entries: SitemapEntry[] = [];
+    const urlRegex = /<url>[\s\S]*?<loc>([^<]+)<\/loc>(?:[\s\S]*?<lastmod>([^<]+)<\/lastmod>)?[\s\S]*?<\/url>/g;
+    let match: RegExpExecArray | null;
+    while ((match = urlRegex.exec(xml)) !== null) {
+        entries.push({ url: match[1].trim(), lastmod: (match[2] ?? '').trim() });
+    }
+    return entries;
+}
 
-    for (let page = 1; page <= 3 && links.length < maxItems; page++) {
-        const url = page === 1 ? baseUrl : `${baseUrl}?paged=${page}`;
+async function fetchLatestUrls(maxItems: number = 30): Promise<string[]> {
+    const allEntries: SitemapEntry[] = [];
+
+    for (const sitemapUrl of SITEMAP_URLS) {
         try {
-            const xml = await fetchText(url);
-            const pageLinks = parseLinksFromRss(xml);
-            if (pageLinks.length === 0) break; // No more pages
-            links = links.concat(pageLinks);
+            const xml = await fetchText(sitemapUrl);
+            const entries = parseSitemapEntries(xml);
+            console.log(`[Sitemap] ${sitemapUrl}: ${entries.length} URLs`);
+            allEntries.push(...entries);
         } catch (err) {
-            if (page === 1) {
-                // First page failure is fatal for RSS step
-                throw err;
-            }
-            // Subsequent page failures — stop paging
-            console.warn(`[RSS] Failed to fetch page ${page}: ${String(err)}`);
-            break;
+            console.warn(`[Sitemap] Failed to fetch ${sitemapUrl}: ${String(err)}`);
         }
     }
 
-    return links.slice(0, maxItems);
+    if (allEntries.length === 0) {
+        throw new Error('No URLs found across any sitemap');
+    }
+
+    // Sort by lastmod descending (newest first); empty lastmod sorts last
+    allEntries.sort((a, b) => b.lastmod.localeCompare(a.lastmod));
+    const top = allEntries.slice(0, maxItems);
+    console.log(`[Sitemap] Selected top ${top.length} URLs (newest first)`);
+    return top.map((e) => e.url);
 }
 
 // ── HTML → plain text (cheerio) ────────────────────────────────────────────
@@ -337,13 +341,13 @@ export const handler = async (): Promise<void> => {
         console.warn(`[MoneyGuy] Could not set refreshing status: ${String(err)}`);
     }
 
-    // 2. FETCH RSS
+    // 2. DISCOVER ARTICLE URLs (via sitemap)
     let articleUrls: string[];
     try {
-        articleUrls = await fetchRssLinks(30);
-        console.log(`[RSS] Found ${articleUrls.length} article URLs.`);
+        articleUrls = await fetchLatestUrls(30);
+        console.log(`[Sitemap] Found ${articleUrls.length} URLs.`);
     } catch (err) {
-        console.error(`[RSS] Failed to fetch RSS feed: ${String(err)}`);
+        console.error(`[Sitemap] Failed to discover URLs: ${String(err)}`);
         try {
             await updateConfigRow({ status: 'error', updatedAt: new Date().toISOString() });
         } catch (dbErr) {
