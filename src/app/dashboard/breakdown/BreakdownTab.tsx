@@ -9,6 +9,7 @@ import { computeWeightedYield } from "./lib/computeWeightedYield";
 import { computeDriftSignals } from "./lib/computeDriftSignals";
 import { CompositionSection } from "./CompositionSection";
 import { ConcentrationSection } from "./ConcentrationSection";
+import { DriftSignalsSection } from "./DriftSignalsSection";
 
 interface BreakdownTabProps {
   assets: Asset[];
@@ -69,7 +70,7 @@ export function BreakdownTab({ assets, isLoading, onSwitchToHoldings }: Breakdow
         <h2 id="drift-heading" className="text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold border-b border-neutral-200 dark:border-neutral-800 pb-2 mb-4">
           3 · Drift Signals
         </h2>
-        <div data-testid="drift-placeholder">[Section placeholder — Task 12] {driftSignals.length} signals</div>
+        <DriftSignalsSection signals={driftSignals} />
       </section>
     </div>
   );

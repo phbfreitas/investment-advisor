@@ -34,8 +34,8 @@ describe("BreakdownTab", () => {
 
   it("renders all three sections when healthy", () => {
     render(<BreakdownTab assets={[a({})]} isLoading={false} onSwitchToHoldings={() => {}} />);
-    expect(screen.getByText(/composition/i)).toBeInTheDocument();
-    expect(screen.getByText(/concentration/i)).toBeInTheDocument();
-    expect(screen.getByText(/drift signals/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 · Composition/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 · Concentration/i)).toBeInTheDocument();
+    expect(screen.getByText(/3 · Drift Signals/i)).toBeInTheDocument();
   });
 });
