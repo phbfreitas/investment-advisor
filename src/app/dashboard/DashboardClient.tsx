@@ -127,12 +127,19 @@ function DashboardContent() {
     router.replace(pathname, { scroll: false });
   }, [router, pathname]);
 
+  // Initial mount fetch — runs once
   useEffect(() => {
     fetchAssets();
-    if (searchParams.get("history") === "true") {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Open time machine drawer when ?history=true; depend only on the value, not the whole searchParams object
+  const historyParam = searchParams.get("history");
+  useEffect(() => {
+    if (historyParam === "true") {
       setIsTimeMachineOpen(true);
     }
-  }, [searchParams]);
+  }, [historyParam]);
 
   // Debounced live ticker fetch when editing ticker
   useEffect(() => {

@@ -126,4 +126,44 @@ describe("computeDriftSignals", () => {
   it("returns empty for empty input", () => {
     expect(computeDriftSignals([])).toEqual([]);
   });
+
+  it("aggregates single-stock concentration across accounts (4%+4%+4%=12% red flag)", () => {
+    const sigs = computeDriftSignals([
+      a({ ticker: "AAPL", account: "TFSA",   marketValue: 40 }),
+      a({ ticker: "AAPL", account: "RRSP",   marketValue: 40 }),
+      a({ ticker: "AAPL", account: "Margin", marketValue: 40 }),
+      a({ ticker: "OTHER", account: "TFSA",  marketValue: 880 }),
+    ]);
+    const aapl = sigs.find(s => s.title.includes("AAPL"));
+    expect(aapl?.severity).toBe("red");
+    // Combined 120/1000 = 12% of portfolio
+    expect(aapl?.title).toContain("12");
+    // Contributors should be 3 rows showing per-account breakdown
+    expect(aapl?.contributors).toHaveLength(3);
+    expect(aapl?.contributors[0].label).toMatch(/TFSA|RRSP|Margin/);
+  });
+
+  it("does not duplicate alerts when one ticker spans multiple accounts each above threshold", () => {
+    const sigs = computeDriftSignals([
+      a({ ticker: "AAPL", account: "TFSA", marketValue: 70 }),  // 7% alone
+      a({ ticker: "AAPL", account: "RRSP", marketValue: 70 }),  // 7% alone, 14% combined
+      a({ ticker: "X",                       marketValue: 860 }),
+    ]);
+    const aaplAlerts = sigs.filter(s => s.title.includes("AAPL"));
+    expect(aaplAlerts).toHaveLength(1);
+    expect(aaplAlerts[0].severity).toBe("red"); // 14% > 10% red threshold
+  });
+
+  it("treats single-row positions normally after aggregation refactor", () => {
+    // Regression check: a 12% AAPL position in one account should still flag red, contributors=1
+    const sigs = computeDriftSignals([
+      a({ ticker: "AAPL", account: "TFSA", marketValue: 120 }),
+      a({ ticker: "X",                       marketValue: 880 }),
+    ]);
+    const aapl = sigs.find(s => s.title.includes("AAPL"));
+    expect(aapl?.severity).toBe("red");
+    expect(aapl?.contributors).toHaveLength(1);
+    // Single-row case uses just the ticker label, not "(account)"
+    expect(aapl?.contributors[0].label).toBe("AAPL");
+  });
 });

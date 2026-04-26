@@ -117,7 +117,7 @@ export function ConcentrationSection({ topHoldings, weightedYield }: Concentrati
               Projected annual income: <span className="font-medium text-neutral-800 dark:text-neutral-200">{fmtCurrency(weightedYield.projectedAnnualIncome)}</span>
             </p>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              {fmtCurrency(weightedYield.projectedAnnualIncome)} income / {fmtCurrency(weightedYield.capital - weightedYield.projectedAnnualIncome)} capital
+              {fmtCurrency(weightedYield.projectedAnnualIncome)} income / {fmtCurrency(weightedYield.capital)} capital
             </p>
           </>
         ) : (

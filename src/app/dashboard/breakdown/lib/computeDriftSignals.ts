@@ -50,24 +50,43 @@ export function computeDriftSignals(assets: Asset[]): DriftSignal[] {
 
   const signals: DriftSignal[] = [];
 
-  // Single-stock concentration
+  // Single-stock concentration — aggregate by ticker so multi-account splits don't slip through
+  const byTicker = new Map<string, Asset[]>();
   for (const asset of valid) {
-    const ratio = asset.marketValue / total;
+    const ticker = typeof asset.ticker === "string" && asset.ticker.trim().length > 0 ? asset.ticker : "Uncategorized";
+    const existing = byTicker.get(ticker);
+    if (existing) existing.push(asset);
+    else byTicker.set(ticker, [asset]);
+  }
+
+  for (const [ticker, rows] of byTicker.entries()) {
+    const sum = rows.reduce((s, a) => s + a.marketValue, 0);
+    const ratio = sum / total;
+    const thresholdLabel = `threshold: ${pct(THRESHOLDS.singleStockRed)}% (red), ${pct(THRESHOLDS.singleStockWarn)}% (warn)`;
+    const contributors = rows
+      .map(a => ({
+        // Show account when the ticker is split across accounts; otherwise just the ticker
+        label: rows.length > 1 ? `${ticker} (${a.account || "no account"})` : ticker,
+        value: a.marketValue,
+        percent: (a.marketValue / total) * 100,
+      }))
+      .sort((a, b) => b.value - a.value);
+
     if (ratio > THRESHOLDS.singleStockRed) {
       signals.push({
-        id: `stock-red-${asset.ticker}`,
+        id: `stock-red-${ticker}`,
         severity: "red",
-        title: `${asset.ticker} is ${fmtPctLabel(ratio)} of portfolio`,
-        thresholdLabel: `threshold: ${pct(THRESHOLDS.singleStockRed)}% (red), ${pct(THRESHOLDS.singleStockWarn)}% (warn)`,
-        contributors: [{ label: asset.ticker, value: asset.marketValue, percent: ratio * 100 }],
+        title: `${ticker} is ${fmtPctLabel(ratio)} of portfolio`,
+        thresholdLabel,
+        contributors,
       });
     } else if (ratio > THRESHOLDS.singleStockWarn) {
       signals.push({
-        id: `stock-warn-${asset.ticker}`,
+        id: `stock-warn-${ticker}`,
         severity: "warning",
-        title: `${asset.ticker} is ${fmtPctLabel(ratio)} of portfolio`,
-        thresholdLabel: `threshold: ${pct(THRESHOLDS.singleStockRed)}% (red), ${pct(THRESHOLDS.singleStockWarn)}% (warn)`,
-        contributors: [{ label: asset.ticker, value: asset.marketValue, percent: ratio * 100 }],
+        title: `${ticker} is ${fmtPctLabel(ratio)} of portfolio`,
+        thresholdLabel,
+        contributors,
       });
     }
   }
