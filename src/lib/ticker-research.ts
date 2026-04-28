@@ -154,7 +154,7 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
     const beta = summary.defaultKeyStatistics?.beta3Year || summary.defaultKeyStatistics?.beta || 0;
 
     const name = (quote.shortName || quote.longName || ticker);
-    const isCallInName = /covered.?call|cc|max/i.test(name);
+    const isCallInName = /covered.?call|covered.?option/i.test(name);
     const isCallInDesc = /covered.?call|option.?writing|call.?options|yield.?enhancement/i.test(description);
 
     const securityType = normalizeSecurityType(quoteType);
