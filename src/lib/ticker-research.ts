@@ -1,7 +1,6 @@
 import YahooFinance from 'yahoo-finance2';
 import {
   normalizeSecurityType,
-  normalizeStrategyType,
   normalizeSector,
   normalizeMarket,
   normalizeCurrency,
@@ -149,7 +148,7 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
     const assetProfile = summary.assetProfile;
     const fundProfile = summary.fundProfile;
 
-    const dividendYield = summaryDetail?.dividendYield || summaryDetail?.yield || summary.defaultKeyStatistics?.yield || 0;
+    const dividendYield = summaryDetail?.dividendYield ?? summaryDetail?.yield ?? summary.defaultKeyStatistics?.yield ?? null;
     const description = (assetProfile?.longBusinessSummary) || (fundProfile?.description) || '';
     const quoteType = quote.quoteType || '';
     const beta = summary.defaultKeyStatistics?.beta3Year || summary.defaultKeyStatistics?.beta || 0;
@@ -161,16 +160,16 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
     const securityType = normalizeSecurityType(quoteType);
     const strategyType: StrategyType = securityType === "Not Found"
       ? "Not Found"
-      : classifyStrategyType(dividendYield, beta, description, securityType, name);
+      : classifyStrategyType(dividendYield ?? 0, beta, description, securityType, name);
 
     const result = {
       name,
       symbol: ticker,
       currentPrice: quote.regularMarketPrice || 0,
-      dividendYield: dividendYield || null,
+      dividendYield,
       securityType,
       strategyType,
-      call: (securityType === "Fund" && (isCallInName || isCallInDesc)) ? "Yes" as const : "No" as const,
+      call: ((securityType === "Fund" || securityType === "ETF") && (isCallInName || isCallInDesc)) ? "Yes" as const : "No" as const,
       sector: inferSector(description, assetProfile?.sector),
       market: normalizeMarket(quote.exchange, securityType),
       managementStyle: normalizeManagementStyle(
