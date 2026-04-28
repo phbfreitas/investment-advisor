@@ -148,7 +148,8 @@ export function Sidebar() {
                                             : "bg-teal-50 dark:bg-neutral-900 text-teal-700 dark:text-teal-400"
                                         : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900/50 hover:text-neutral-900 dark:hover:text-white",
                                     isUtility ? "md:hidden" : "",
-                                    "group flex flex-col md:flex-row items-center justify-center md:justify-start rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0"
+                                    "group flex flex-col md:flex-row items-center justify-center rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0",
+                                    isCollapsed ? "md:justify-center" : "md:justify-start"
                                 )}
                             >
                                 <item.icon
@@ -158,7 +159,8 @@ export function Sidebar() {
                                                 ? "text-amber-600 dark:text-amber-400"
                                                 : "text-teal-600 dark:text-teal-400"
                                             : "text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300",
-                                        "mb-1 md:mb-0 md:mr-3 h-5 w-5 shrink-0 transition-colors"
+                                        "mb-1 h-5 w-5 shrink-0 transition-colors",
+                                        isCollapsed ? "md:mb-0 md:mr-0" : "md:mb-0 md:mr-3"
                                     )}
                                     aria-hidden="true"
                                 />
@@ -184,13 +186,15 @@ export function Sidebar() {
                                     isActive
                                         ? "bg-teal-50 dark:bg-neutral-900 text-teal-700 dark:text-teal-400"
                                         : "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900/50 hover:text-neutral-900 dark:hover:text-white",
-                                    "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+                                    "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                    isCollapsed ? "justify-center" : ""
                                 )}
                             >
                                 <item.icon
                                     className={cn(
                                         isActive ? "text-teal-600 dark:text-teal-400" : "text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300",
-                                        "mr-3 h-5 w-5 shrink-0 transition-colors"
+                                        "h-5 w-5 shrink-0 transition-colors",
+                                        isCollapsed ? "mr-0" : "mr-3"
                                     )}
                                     aria-hidden="true"
                                 />
@@ -204,9 +208,15 @@ export function Sidebar() {
                 <div className="md:mt-auto border-l md:border-l-0 md:border-t border-neutral-200 dark:border-neutral-800 px-3 py-2 md:p-3 flex shrink-0 items-center justify-center transition-colors duration-300">
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="group flex flex-col md:flex-row items-center justify-center md:justify-start rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0 text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-neutral-900/50 hover:text-red-700 dark:hover:text-red-400"
+                        className={cn(
+                            "group flex flex-col md:flex-row items-center justify-center rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0 text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-neutral-900/50 hover:text-red-700 dark:hover:text-red-400",
+                            isCollapsed ? "md:justify-center" : "md:justify-start"
+                        )}
                     >
-                        <LogOut className="mb-1 md:mb-0 md:mr-3 h-5 w-5 shrink-0 transition-colors text-neutral-400 dark:text-neutral-500 group-hover:text-red-600 dark:group-hover:text-red-400" aria-hidden="true" />
+                        <LogOut className={cn(
+                            "mb-1 h-5 w-5 shrink-0 transition-colors text-neutral-400 dark:text-neutral-500 group-hover:text-red-600 dark:group-hover:text-red-400",
+                            isCollapsed ? "md:mb-0 md:mr-0" : "md:mb-0 md:mr-3"
+                        )} aria-hidden="true" />
                         <span className={cn(
                             "block text-[11px] md:text-sm text-center md:text-left whitespace-nowrap",
                             isCollapsed && "md:hidden"

@@ -63,4 +63,20 @@ describe("Sidebar collapse toggle", () => {
     const signoutSpan = screen.getByText("Sign Out");
     expect(signoutSpan.className).toContain("md:hidden");
   });
+
+  it("centers icons and zeros their right margin when collapsed", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar />);
+
+    await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
+
+    const portfolioLink = screen.getByRole("link", { name: /my investment portfolio/i });
+    expect(portfolioLink.className).toContain("md:justify-center");
+    expect(portfolioLink.className).not.toContain("md:justify-start");
+
+    const portfolioIcon = portfolioLink.querySelector("svg");
+    expect(portfolioIcon).not.toBeNull();
+    expect(portfolioIcon!.getAttribute("class")).toContain("md:mr-0");
+    expect(portfolioIcon!.getAttribute("class")).not.toContain("md:mr-3");
+  });
 });
