@@ -237,6 +237,22 @@ export function formatStrategyContext(profile: Partial<StrategyConfig>): string 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/**
+ * Format a nullable percent for AI prompt context.
+ * Renders "Not Found" when the value is null/undefined/non-numeric so the
+ * model can distinguish a genuinely missing metric from a 0%.
+ *
+ * Note: this function does NOT multiply by 100. It preserves the existing
+ * AI-context format (raw stored value + "%"). If yield/return units are
+ * later normalized to decimals everywhere, update this helper accordingly.
+ */
+function fmtPctOrNotFound(v: number | null | undefined, decimals = 2): string {
+    if (v === null || v === undefined) return "Not Found";
+    const n = Number(v);
+    if (!Number.isFinite(n)) return "Not Found";
+    return `${n.toFixed(decimals)}%`;
+}
+
 function p(val: any, fallback = 0): number {
     if (val == null || val === '') return fallback;
     const n = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : Number(val);
@@ -347,7 +363,7 @@ export function buildFullUserContext(profile: Record<string, any>, assets: any[]
         for (const a of assetsList) {
             const mv = Number(a.marketValue) || 0;
             const weight = totalMV > 0 ? ((mv / totalMV) * 100).toFixed(1) : '0.0';
-            sections.push(`- ${a.ticker} | ${a.quantity} shares @ $${Number(a.liveTickerPrice || 0).toFixed(2)} | MV: $${mv.toFixed(2)} (${weight}%) | BK: $${(Number(a.bookCost) || 0).toFixed(2)} | P/L: $${Number(a.profitLoss || 0).toFixed(2)} | Yield: ${Number(a.yield || 0).toFixed(2)}% | Beta: ${Number(a.beta || 0).toFixed(2)} | Strategy: ${a.strategyType || 'N/A'} | Sector: ${a.sector || 'N/A'} | Market: ${a.market || 'N/A'} | Acct: ${a.account || 'N/A'} (${a.accountType || 'N/A'}) | 1yr: ${Number(a.oneYearReturn || 0).toFixed(1)}% | Analyst: ${a.analystConsensus || 'N/A'}${a.riskFlag ? ' | RISK FLAG: ' + a.riskFlag : ''}`);
+            sections.push(`- ${a.ticker} | ${a.quantity} shares @ $${Number(a.liveTickerPrice || 0).toFixed(2)} | MV: $${mv.toFixed(2)} (${weight}%) | BK: $${(Number(a.bookCost) || 0).toFixed(2)} | P/L: $${Number(a.profitLoss || 0).toFixed(2)} | Yield: ${fmtPctOrNotFound(a.yield, 2)} | Beta: ${Number(a.beta || 0).toFixed(2)} | Strategy: ${a.strategyType || 'N/A'} | Sector: ${a.sector || 'N/A'} | Market: ${a.market || 'N/A'} | Acct: ${a.account || 'N/A'} (${a.accountType || 'N/A'}) | 1yr: ${fmtPctOrNotFound(a.oneYearReturn, 1)} | Analyst: ${a.analystConsensus || 'N/A'}${a.riskFlag ? ' | RISK FLAG: ' + a.riskFlag : ''}`);
         }
     } else {
         sections.push("No portfolio holdings documented.");
