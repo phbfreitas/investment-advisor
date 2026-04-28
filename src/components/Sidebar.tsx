@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target, BookOpen, Globe, Shield, Radio, RotateCcw } from "lucide-react";
+import { Users, LayoutDashboard, Settings, BrainCircuit, LogOut, Wallet, Target, BookOpen, Globe, Shield, Radio, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 
@@ -63,9 +63,19 @@ export function Sidebar() {
     return (
         <div className="flex fixed bottom-0 left-0 right-0 z-50 md:relative md:h-full w-full md:w-64 flex-row md:flex-col bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md md:bg-neutral-50 dark:md:bg-[#0a0a0a] border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 shrink-0 transition-colors duration-300">
             {/* Desktop header */}
-            <div className="md:h-16 shrink-0 items-center px-4 md:px-6 py-3 md:py-0 border-r md:border-r-0 md:border-b border-neutral-200 dark:border-neutral-800 hidden md:flex transition-colors duration-300">
-                <BrainCircuit className="h-6 w-6 text-teal-600 dark:text-teal-400 mr-3 shrink-0" />
-                <span className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 text-gradient shrink-0">InvestAI Panel</span>
+            <div className="md:h-16 shrink-0 items-center px-4 md:px-6 py-3 md:py-0 border-r md:border-r-0 md:border-b border-neutral-200 dark:border-neutral-800 hidden md:flex md:justify-between transition-colors duration-300">
+                <div className="flex items-center min-w-0">
+                    <BrainCircuit className="h-6 w-6 text-teal-600 dark:text-teal-400 mr-3 shrink-0" />
+                    <span className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 text-gradient shrink-0">InvestAI Panel</span>
+                </div>
+                <button
+                    type="button"
+                    aria-label="Collapse sidebar"
+                    aria-expanded={true}
+                    className="hidden md:flex items-center justify-center h-6 w-6 rounded text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
+                >
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
             </div>
 
             {/* Desktop pillar toggle */}
