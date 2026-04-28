@@ -187,3 +187,52 @@ describe("normalizeSector consolidation", () => {
     expect(normalizeSector("CONSUMER STAPLES")).toBe("Consumer Staples");
   });
 });
+
+import { normalizeMarket } from "../allowlists";
+
+describe("normalizeMarket", () => {
+  it("passes through canonical values", () => {
+    expect(normalizeMarket("USA")).toBe("USA");
+    expect(normalizeMarket("Canada")).toBe("Canada");
+    expect(normalizeMarket("North America")).toBe("North America");
+    expect(normalizeMarket("Global")).toBe("Global");
+  });
+
+  it("maps Yahoo US exchange codes to USA", () => {
+    expect(normalizeMarket("NYQ")).toBe("USA");
+    expect(normalizeMarket("NMS")).toBe("USA");
+    expect(normalizeMarket("NCM")).toBe("USA");
+    expect(normalizeMarket("NGM")).toBe("USA");
+    expect(normalizeMarket("ASE")).toBe("USA");
+    expect(normalizeMarket("PCX")).toBe("USA");
+    expect(normalizeMarket("BATS")).toBe("USA");
+  });
+
+  it("maps Canadian exchange codes to Canada", () => {
+    expect(normalizeMarket("TOR")).toBe("Canada");
+    expect(normalizeMarket("VAN")).toBe("Canada");
+    expect(normalizeMarket("CVE")).toBe("Canada");
+    expect(normalizeMarket("NEO")).toBe("Canada");
+  });
+
+  it("returns Global for non-NA exchanges", () => {
+    expect(normalizeMarket("LSE")).toBe("Global");
+    expect(normalizeMarket("FRA")).toBe("Global");
+    expect(normalizeMarket("HKG")).toBe("Global");
+  });
+
+  it("returns Not Found for empty/null", () => {
+    expect(normalizeMarket(null)).toBe("Not Found");
+    expect(normalizeMarket("")).toBe("Not Found");
+  });
+
+  it("for ETF/Fund types, defaults to Not Found regardless of exchange", () => {
+    expect(normalizeMarket("NYQ", "ETF")).toBe("Not Found");
+    expect(normalizeMarket("TOR", "Fund")).toBe("Not Found");
+  });
+
+  it("for Company type, uses exchange-based mapping", () => {
+    expect(normalizeMarket("NYQ", "Company")).toBe("USA");
+    expect(normalizeMarket("TOR", "Company")).toBe("Canada");
+  });
+});

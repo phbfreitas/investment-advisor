@@ -121,3 +121,37 @@ export function normalizeSector(raw: string | null | undefined): Sector {
   if (!v) return NOT_FOUND;
   return SECTOR_CONSOLIDATION_MAP[v] ?? NOT_FOUND;
 }
+
+const US_EXCHANGES = new Set(["nyq", "nms", "ncm", "ngm", "ase", "pcx", "bats"]);
+const CA_EXCHANGES = new Set(["tor", "van", "cve", "neo"]);
+
+const MARKET_CANONICAL: Record<string, Market> = {
+  "usa": "USA",
+  "canada": "Canada",
+  "north america": "North America",
+  "global": "Global",
+};
+
+export function normalizeMarket(
+  raw: string | null | undefined,
+  securityType?: string | null,
+): Market {
+  const v = casefold(raw);
+  if (!v) return NOT_FOUND;
+
+  // Canonical pass-through
+  if (MARKET_CANONICAL[v]) return MARKET_CANONICAL[v];
+
+  // For ETFs/Funds, exchange-based heuristic is unreliable (Phase 3 needs holdings lookup).
+  const sec = casefold(securityType);
+  if (sec === "etf" || sec === "fund" || sec === "mutualfund") return NOT_FOUND;
+
+  // Company / unspecified: best-effort exchange mapping.
+  if (US_EXCHANGES.has(v)) return "USA";
+  if (CA_EXCHANGES.has(v)) return "Canada";
+
+  // Recognized exchange code shape but unknown country → Global.
+  // Otherwise (truly empty/garbage) → Not Found.
+  if (/^[a-z]{2,5}$/.test(v)) return "Global";
+  return NOT_FOUND;
+}
