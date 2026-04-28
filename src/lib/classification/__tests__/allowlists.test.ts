@@ -103,3 +103,85 @@ describe("normalizeManagementStyle", () => {
     expect(normalizeManagementStyle("")).toBe("N/A");
   });
 });
+
+import { normalizeSector } from "../allowlists";
+
+describe("normalizeSector consolidation", () => {
+  const cases: Array<[string, string]> = [
+    // Financials
+    ["Banking", "Financials"],
+    ["Bank", "Financials"],
+    ["Financial Services", "Financials"],
+    ["Financials", "Financials"],
+    ["Insurance", "Financials"],
+    // Healthcare
+    ["Healthcare", "Healthcare"],
+    ["Health Care", "Healthcare"],
+    ["Pharmaceutical", "Healthcare"],
+    ["Biotechnology", "Healthcare"],
+    // IT
+    ["Technology", "IT"],
+    ["IT", "IT"],
+    ["Information Technology", "IT"],
+    ["Software", "IT"],
+    ["Semiconductor", "IT"],
+    ["Tech", "IT"],
+    // Energy
+    ["Energy", "Energy"],
+    ["Oil", "Energy"],
+    ["Gas", "Energy"],
+    ["Renewable", "Energy"],
+    // Real Estate
+    ["Real Estate", "Real Estate"],
+    ["REIT", "Real Estate"],
+    ["Realty", "Real Estate"],
+    // Consumer Discretionary
+    ["Consumer Discretionary", "Consumer Discretionary"],
+    ["Cyclical", "Consumer Discretionary"],
+    ["Retail", "Consumer Discretionary"],
+    // Consumer Staples
+    ["Consumer Staples", "Consumer Staples"],
+    ["Defensive", "Consumer Staples"],
+    // Materials
+    ["Mining", "Materials"],
+    ["Gold", "Materials"],
+    ["Precious Metals", "Materials"],
+    ["Materials", "Materials"],
+    ["Basic Materials", "Materials"],
+    // Industrials
+    ["Industrials", "Industrials"],
+    ["Industrial", "Industrials"],
+    // Communication
+    ["Communication", "Communication"],
+    ["Communication Services", "Communication"],
+    ["Telecom", "Communication"],
+    // Utilities
+    ["Utilities", "Utilities"],
+    ["Utility", "Utilities"],
+    // Diversified
+    ["Mix", "Diversified"],
+    ["Diversified", "Diversified"],
+    ["Multi-sector", "Diversified"],
+  ];
+
+  it.each(cases)("maps %s to %s", (raw, expected) => {
+    expect(normalizeSector(raw)).toBe(expected);
+  });
+
+  it("defaults plain 'Consumer' (no qualifier) to Consumer Discretionary", () => {
+    expect(normalizeSector("Consumer")).toBe("Consumer Discretionary");
+  });
+
+  it("returns Not Found for Global, Other, unknown, null, empty", () => {
+    expect(normalizeSector("Global")).toBe("Not Found");
+    expect(normalizeSector("Other")).toBe("Not Found");
+    expect(normalizeSector("Random Garbage")).toBe("Not Found");
+    expect(normalizeSector(null)).toBe("Not Found");
+    expect(normalizeSector("")).toBe("Not Found");
+  });
+
+  it("matches case-insensitively", () => {
+    expect(normalizeSector("banking")).toBe("Financials");
+    expect(normalizeSector("CONSUMER STAPLES")).toBe("Consumer Staples");
+  });
+});

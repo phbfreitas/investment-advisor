@@ -54,3 +54,68 @@ export function normalizeManagementStyle(raw: string | null | undefined): Manage
   if (v === "passive") return "Passive";
   return "N/A";
 }
+
+const SECTOR_CONSOLIDATION_MAP: Record<string, Sector> = {
+  // Financials
+  "banking": "Financials",
+  "bank": "Financials",
+  "financial services": "Financials",
+  "financials": "Financials",
+  "financial": "Financials",
+  "insurance": "Financials",
+  // Healthcare
+  "healthcare": "Healthcare",
+  "health care": "Healthcare",
+  "pharmaceutical": "Healthcare",
+  "biotechnology": "Healthcare",
+  // IT
+  "technology": "IT",
+  "it": "IT",
+  "information technology": "IT",
+  "software": "IT",
+  "semiconductor": "IT",
+  "tech": "IT",
+  // Energy
+  "energy": "Energy",
+  "oil": "Energy",
+  "gas": "Energy",
+  "renewable": "Energy",
+  // Real Estate
+  "real estate": "Real Estate",
+  "reit": "Real Estate",
+  "realty": "Real Estate",
+  // Consumer Discretionary
+  "consumer discretionary": "Consumer Discretionary",
+  "cyclical": "Consumer Discretionary",
+  "retail": "Consumer Discretionary",
+  "consumer": "Consumer Discretionary", // ambiguous default
+  // Consumer Staples
+  "consumer staples": "Consumer Staples",
+  "defensive": "Consumer Staples",
+  // Materials
+  "mining": "Materials",
+  "gold": "Materials",
+  "precious metals": "Materials",
+  "materials": "Materials",
+  "basic materials": "Materials",
+  // Industrials
+  "industrials": "Industrials",
+  "industrial": "Industrials",
+  // Communication
+  "communication": "Communication",
+  "communication services": "Communication",
+  "telecom": "Communication",
+  // Utilities
+  "utilities": "Utilities",
+  "utility": "Utilities",
+  // Diversified
+  "mix": "Diversified",
+  "diversified": "Diversified",
+  "multi-sector": "Diversified",
+};
+
+export function normalizeSector(raw: string | null | undefined): Sector {
+  const v = casefold(raw);
+  if (!v) return NOT_FOUND;
+  return SECTOR_CONSOLIDATION_MAP[v] ?? NOT_FOUND;
+}
