@@ -133,6 +133,8 @@ async function main() {
           asset.oneYearReturn === 0 ? null : (asset.oneYearReturn as number | null | undefined) ?? null,
         threeYearReturn:
           asset.threeYearReturn === 0 ? null : (asset.threeYearReturn as number | null | undefined) ?? null,
+        fiveYearReturn:
+          asset.fiveYearReturn === 0 ? null : (asset.fiveYearReturn as number | null | undefined) ?? null,
         // managementFee: only null if NOT a Company (Company keeps its 0)
         managementFee:
           normalizedSecurityType === "Company"
@@ -155,6 +157,7 @@ async function main() {
         "yield",
         "oneYearReturn",
         "threeYearReturn",
+        "fiveYearReturn",
         "managementFee",
       ] as const;
 
