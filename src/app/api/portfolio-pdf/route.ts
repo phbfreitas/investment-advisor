@@ -257,7 +257,11 @@ export async function POST(request: Request) {
 
             // --- AI ENRICHMENT (New Logic) ---
             // If asset is new OR has missing metadata, attempt enrichment
-            const needsMetadata = !existing || !existing.strategyType || !existing.sector || !existing.securityType;
+            const needsMetadata =
+                !existing ||
+                !existing.strategyType || existing.strategyType === "Not Found" ||
+                !existing.sector || existing.sector === "Not Found" ||
+                !existing.securityType || existing.securityType === "Not Found";
             let enrichedData = null;
             
             if (needsMetadata) {
@@ -278,7 +282,7 @@ export async function POST(request: Request) {
             const assetSK = `ASSET#${assetId}`;
 
             const securityType = normalizeSecurityType(
-                (existing?.securityType && existing.securityType !== "") ? existing.securityType : enrichedData?.securityType,
+                (existing?.securityType && existing.securityType !== "" && existing.securityType !== "Not Found") ? existing.securityType : enrichedData?.securityType,
             );
 
             const baseItem = {
@@ -303,20 +307,20 @@ export async function POST(request: Request) {
 
                 securityType,
                 strategyType: normalizeStrategyType(
-                    (existing?.strategyType && existing.strategyType !== "") ? existing.strategyType : enrichedData?.strategyType,
+                    (existing?.strategyType && existing.strategyType !== "" && existing.strategyType !== "Not Found") ? existing.strategyType : enrichedData?.strategyType,
                 ),
                 call: normalizeCall(
-                    (existing?.call && existing.call !== "" && existing.call !== "N/A") ? existing.call : enrichedData?.call,
+                    (existing?.call && existing.call !== "" && existing.call !== "N/A" && existing.call !== "Not Found") ? existing.call : enrichedData?.call,
                 ),
                 sector: normalizeSector(
-                    (existing?.sector && existing.sector !== "" && existing.sector !== "N/A") ? existing.sector : enrichedData?.sector,
+                    (existing?.sector && existing.sector !== "" && existing.sector !== "N/A" && existing.sector !== "Not Found") ? existing.sector : enrichedData?.sector,
                 ),
                 market: normalizeMarket(
-                    (existing?.market && existing.market !== "") ? existing.market : enrichedData?.market,
+                    (existing?.market && existing.market !== "" && existing.market !== "Not Found") ? existing.market : enrichedData?.market,
                     securityType,
                 ),
                 managementStyle: normalizeManagementStyle(
-                    (existing?.managementStyle && existing.managementStyle !== "") ? existing.managementStyle : enrichedData?.managementStyle,
+                    (existing?.managementStyle && existing.managementStyle !== "" && existing.managementStyle !== "Not Found") ? existing.managementStyle : enrichedData?.managementStyle,
                 ),
                 name: (existing?.name && existing.name !== "") ? existing.name : (enrichedData?.name ?? ""),
 
