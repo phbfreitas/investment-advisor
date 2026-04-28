@@ -797,15 +797,15 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
                           {/* 18. Yield % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("yield", false, [], "number") : <span>{Number(asset.yield || 0).toFixed(2)}%</span>}
+                            {isEditing ? renderField("yield", false, [], "number") : <span>{(Number(asset.yield || 0) * 100).toFixed(2)}%</span>}
                           </td>
                           {/* 19. 1YR Return % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("oneYearReturn", false, [], "number") : <span>{Number(asset.oneYearReturn || 0).toFixed(2)}%</span>}
+                            {isEditing ? renderField("oneYearReturn", false, [], "number") : <span>{(Number(asset.oneYearReturn || 0) * 100).toFixed(2)}%</span>}
                           </td>
                           {/* 20. 3YR Return % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number) ?? 0} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : naIndicator(Number(asset.threeYearReturn || asset.fiveYearReturn || 0) || null, "%")}
+                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number) ?? 0} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : naIndicator(((Number(asset.threeYearReturn || asset.fiveYearReturn) || 0) * 100) || null, "%")}
                           </td>
                           {/* 21. Risk */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
