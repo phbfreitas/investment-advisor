@@ -231,6 +231,12 @@ describe("normalizeMarket", () => {
     expect(normalizeMarket("TOR", "Fund")).toBe("Not Found");
   });
 
+  it("passes canonical values through even for ETF/Fund securityType", () => {
+    expect(normalizeMarket("Global", "ETF")).toBe("Global");
+    expect(normalizeMarket("USA", "Fund")).toBe("USA");
+    expect(normalizeMarket("North America", "MUTUALFUND")).toBe("North America");
+  });
+
   it("for Company type, uses exchange-based mapping", () => {
     expect(normalizeMarket("NYQ", "Company")).toBe("USA");
     expect(normalizeMarket("TOR", "Company")).toBe("Canada");
