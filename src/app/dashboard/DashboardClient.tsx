@@ -421,16 +421,13 @@ function DashboardContent() {
     </th>
   );
 
-  // Sticky classes for frozen columns (first 4)
+  // Sticky classes for frozen columns (Account + Ticker only)
   const stickyCol1 = "sticky left-0 z-10 bg-neutral-50 dark:bg-neutral-900/50";
-  const stickyCol2 = "sticky left-[120px] z-10 bg-neutral-50 dark:bg-neutral-900/50";
-  const stickyCol3 = "sticky left-[210px] z-10 bg-neutral-50 dark:bg-neutral-900/50";
-  const stickyCol4 = "sticky left-[290px] z-10 bg-neutral-50 dark:bg-neutral-900/50 border-r-2 border-neutral-300 dark:border-neutral-600";
+  const stickyCol2 = "sticky left-[120px] z-10 bg-neutral-50 dark:bg-neutral-900/50 border-r-2 border-neutral-300 dark:border-neutral-600";
   const stickyBodyCol1 = "sticky left-0 z-10 bg-white dark:bg-[#0a0a0a]";
-  const stickyBodyCol2 = "sticky left-[120px] z-10 bg-white dark:bg-[#0a0a0a]";
-  const stickyBodyCol3 = "sticky left-[210px] z-10 bg-white dark:bg-[#0a0a0a]";
-  const stickyBodyCol4 = "sticky left-[290px] z-10 bg-white dark:bg-[#0a0a0a] border-r-2 border-neutral-300 dark:border-neutral-600";
+  const stickyBodyCol2 = "sticky left-[120px] z-10 bg-white dark:bg-[#0a0a0a] border-r-2 border-neutral-300 dark:border-neutral-600";
   const stickyTotalsCol1 = "sticky left-0 z-10 bg-neutral-100 dark:bg-neutral-800/50";
+  const stickyTotalsCol2 = "sticky left-[120px] z-10 bg-neutral-100 dark:bg-neutral-800/50 border-r-2 border-neutral-300 dark:border-neutral-600";
 
   const renderFilterInput = (filterKey: string, widthClass = "w-20", extraClassName = "") => (
     <td key={filterKey} className={`px-2 py-2 ${extraClassName}`}>
@@ -610,9 +607,9 @@ function DashboardContent() {
                 <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-0 z-20">
                   <tr>
                     {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
-                    {renderSortableHeader("Acct Type", "accountType", `${stickyCol2} min-w-[90px]`)}
-                    {renderSortableHeader("Acct #", "accountNumber", `${stickyCol3} min-w-[80px]`)}
-                    {renderSortableHeader("Ticker", "ticker", `${stickyCol4} min-w-[90px]`)}
+                    {renderSortableHeader("Ticker", "ticker", `${stickyCol2} min-w-[90px]`)}
+                    {renderSortableHeader("Acct Type", "accountType", `min-w-[90px]`)}
+                    {renderSortableHeader("Acct #", "accountNumber", `min-w-[80px]`)}
                     {renderSortableHeader("Security Type", "securityType")}
                     {renderSortableHeader("Strategy Type", "strategyType")}
                     {renderSortableHeader("Call", "call")}
@@ -639,9 +636,9 @@ function DashboardContent() {
                   </tr>
                   <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
                     {renderFilterInput("account", "w-20", stickyCol1)}
-                    {renderFilterInput("accountType", "w-20", stickyCol2)}
-                    {renderFilterInput("accountNumber", "w-20", stickyCol3)}
-                    {renderFilterInput("ticker", "w-20", stickyCol4)}
+                    {renderFilterInput("ticker", "w-20", stickyCol2)}
+                    {renderFilterInput("accountType", "w-20")}
+                    {renderFilterInput("accountNumber", "w-20")}
                     {renderFilterInput("securityType", "w-24")}
                     {renderFilterInput("strategyType", "w-28")}
                     {renderFilterInput("call", "w-16")}
@@ -739,21 +736,21 @@ function DashboardContent() {
                               <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.account}</span>
                             )}
                           </td>
-                          {/* 2. Acct Type */}
-                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 ${stickyBodyCol2} min-w-[90px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
-                          </td>
-                          {/* 3. Acct # */}
-                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 ${stickyBodyCol3} min-w-[80px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
-                          </td>
-                          {/* 4. Ticker */}
-                          <td className={`px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100 ${stickyBodyCol4} min-w-[90px]`}>
+                          {/* 2. Ticker */}
+                          <td className={`px-3 py-3 font-bold text-neutral-900 dark:text-neutral-100 ${stickyBodyCol2} min-w-[90px]`}>
                             {isEditing ? (
                               <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.ticker as string) || ""} onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())} onBlur={() => handleTickerLookup(editForm.ticker || "")} />
                             ) : (
                               <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.ticker}</span>
                             )}
+                          </td>
+                          {/* 3. Acct Type */}
+                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[90px]`}>
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
+                          </td>
+                          {/* 4. Acct # */}
+                          <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[80px]`}>
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
                           </td>
                           {/* 5. Security Type */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
@@ -865,9 +862,9 @@ function DashboardContent() {
                   {(assets.length > 0 || editingId === "NEW") && (
                     <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
                       <td className={`px-3 py-4 ${stickyTotalsCol1}`}></td>
+                      <td className={`${stickyTotalsCol2}`}></td>
                       <td></td>
                       <td></td>
-                      <td className={`${stickyBodyCol4} bg-neutral-100 dark:bg-neutral-800/50`}></td>
                       <td colSpan={11} className="px-3 py-4 text-right">TOTAL:</td>
                       <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                       <td colSpan={5}></td>
