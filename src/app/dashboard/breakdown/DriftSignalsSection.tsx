@@ -18,6 +18,19 @@ interface DriftSignalsSectionProps {
   signals: DriftSignal[];
 }
 
+function ThresholdsList() {
+  return (
+    <ul className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 list-disc list-inside space-y-1">
+      <li>Single stock: warn &gt; {THRESHOLDS.singleStockWarn * 100}%, red &gt; {THRESHOLDS.singleStockRed * 100}%</li>
+      <li>Sector: warn &gt; {THRESHOLDS.sectorWarn * 100}%, red &gt; {THRESHOLDS.sectorRed * 100}%</li>
+      <li>Region: warn &gt; {THRESHOLDS.regionWarn * 100}%</li>
+      <li>Non-base currency: warn &gt; {THRESHOLDS.currencyNonBaseWarn * 100}%</li>
+      <li>Account skew: info &gt; {THRESHOLDS.accountSkewInfo * 100}%</li>
+      <li>Defensive sectors: info &gt; {THRESHOLDS.cashDragInfo * 100}%</li>
+    </ul>
+  );
+}
+
 export function DriftSignalsSection({ signals }: DriftSignalsSectionProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -29,54 +42,50 @@ export function DriftSignalsSection({ signals }: DriftSignalsSectionProps) {
         </p>
         <details className="mt-2">
           <summary className="text-xs text-neutral-500 cursor-pointer">Active thresholds</summary>
-          <ul className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 list-disc list-inside space-y-1">
-            <li>Single stock: warn &gt; {THRESHOLDS.singleStockWarn * 100}%, red &gt; {THRESHOLDS.singleStockRed * 100}%</li>
-            <li>Sector: warn &gt; {THRESHOLDS.sectorWarn * 100}%, red &gt; {THRESHOLDS.sectorRed * 100}%</li>
-            <li>Region: warn &gt; {THRESHOLDS.regionWarn * 100}%</li>
-            <li>Non-base currency: warn &gt; {THRESHOLDS.currencyNonBaseWarn * 100}%</li>
-            <li>Account skew: info &gt; {THRESHOLDS.accountSkewInfo * 100}%</li>
-            <li>Defensive sectors: info &gt; {THRESHOLDS.cashDragInfo * 100}%</li>
-          </ul>
+          <ThresholdsList />
         </details>
       </div>
     );
   }
 
   return (
-    <ul className="space-y-2">
-      {signals.map(s => {
-        const { icon: Icon, cls, iconCls } = SEVERITY_STYLES[s.severity];
-        const isOpen = !!expanded[s.id];
-        return (
-          <li key={s.id} className={`rounded-r-lg border-l-4 ${cls}`}>
-            <button
-              type="button"
-              aria-expanded={isOpen}
-              aria-label={s.title}
-              aria-controls={`contributors-${s.id}`}
-              onClick={() => setExpanded(prev => ({ ...prev, [s.id]: !prev[s.id] }))}
-              className="w-full flex items-center gap-3 min-h-[44px] px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-            >
-              <Icon className={`h-5 w-5 flex-none ${iconCls}`} aria-hidden />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{s.title}</div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate">{s.thresholdLabel}</div>
-              </div>
-              <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden />
-            </button>
-            {isOpen && s.contributors.length > 0 && (
-              <ul id={`contributors-${s.id}`} className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
-                {s.contributors.map(c => (
-                  <li key={c.label} className="flex justify-between text-xs text-neutral-600 dark:text-neutral-400">
-                    <span>{c.label}</span>
-                    <span>{fmtCurrency(c.value)} · {c.percent.toFixed(1)}%</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+    <div className="space-y-3">
+      <details>
+        <summary className="text-xs text-neutral-500 cursor-pointer">Active thresholds</summary>
+        <ThresholdsList />
+      </details>
+      <ul className="space-y-2">
+        {signals.map(s => {
+          const { icon: Icon, cls, iconCls } = SEVERITY_STYLES[s.severity];
+          const isOpen = !!expanded[s.id];
+          return (
+            <li key={s.id} className={`rounded-r-lg border-l-4 ${cls}`}>
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-label={s.title}
+                aria-controls={`contributors-${s.id}`}
+                onClick={() => setExpanded(prev => ({ ...prev, [s.id]: !prev[s.id] }))}
+                className="w-full flex items-center gap-3 min-h-[44px] px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+              >
+                <Icon className={`h-5 w-5 flex-none ${iconCls}`} aria-hidden />
+                <div className="flex-1 min-w-0 text-sm font-medium text-neutral-800 dark:text-neutral-200">{s.title}</div>
+                <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden />
+              </button>
+              {isOpen && s.contributors.length > 0 && (
+                <ul id={`contributors-${s.id}`} className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-800 space-y-1">
+                  {s.contributors.map(c => (
+                    <li key={c.label} className="flex justify-between text-xs text-neutral-600 dark:text-neutral-400">
+                      <span>{c.label}</span>
+                      <span>{fmtCurrency(c.value)} · {c.percent.toFixed(1)}%</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
