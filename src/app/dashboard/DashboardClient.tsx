@@ -4,6 +4,15 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw } from "lucide-react";
 import type { Asset, MarketData } from "@/types";
+import {
+  STRATEGY_TYPES,
+  SECURITY_TYPES,
+  CALL_VALUES,
+  SECTOR_VALUES,
+  MARKET_VALUES,
+  CANONICAL_CURRENCIES,
+  MGMT_STYLES,
+} from "@/lib/classification/allowlists";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
@@ -61,15 +70,21 @@ function DashboardContent() {
     setAuditToasts(prev => [...prev, { id, message, ticker }]);
   };
 
-  // Option lists derived from existing data
+  // Account list stays derived (it's user data, not classification)
   const accounts = useMemo(() => Array.from(new Set(assets.map(a => a.account).filter(Boolean))), [assets]);
-  const securityTypes = useMemo(() => Array.from(new Set(assets.map(a => a.securityType).filter(Boolean))), [assets]);
-  const strategyTypes = useMemo(() => Array.from(new Set(assets.map(a => a.strategyType).filter(Boolean))), [assets]);
-  const calls = useMemo(() => Array.from(new Set(assets.map(a => a.call).filter(Boolean))), [assets]);
-  const sectors = useMemo(() => Array.from(new Set(assets.map(a => a.sector).filter(Boolean))), [assets]);
-  const markets = useMemo(() => Array.from(new Set(assets.map(a => a.market).filter(Boolean))), [assets]);
-  const currencies = useMemo(() => Array.from(new Set(assets.map(a => a.currency).filter(Boolean))), [assets]);
-  const managementStyles = useMemo(() => Array.from(new Set(assets.map(a => a.managementStyle).filter(Boolean))), [assets]);
+
+  // Classification dropdowns: source-of-truth lists from allowlists module
+  const securityTypes = [...SECURITY_TYPES];
+  const strategyTypes = [...STRATEGY_TYPES];
+  const calls = [...CALL_VALUES];
+  const sectors = [...SECTOR_VALUES];
+  const markets = [...MARKET_VALUES];
+  // Currency: canonical USD/CAD plus any other ISO codes that already exist in user data
+  const currencies = useMemo(() => {
+    const fromData = assets.map(a => a.currency).filter(Boolean) as string[];
+    return Array.from(new Set([...CANONICAL_CURRENCIES, ...fromData])).filter(c => c !== "Not Found");
+  }, [assets]);
+  const managementStyles = [...MGMT_STYLES];
   const risks = useMemo(() => Array.from(new Set(assets.map(a => a.risk).filter(Boolean))), [assets]);
 
   const fetchMarketData = async (symbols: string[]) => {
