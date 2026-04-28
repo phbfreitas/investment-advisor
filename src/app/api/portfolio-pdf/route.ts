@@ -8,6 +8,16 @@ import { extractText, getDocumentProxy } from "unpdf";
 import { insertAuditLog } from "@/lib/auditLog";
 import { toSnapshot } from "@/lib/assetSnapshot";
 import { researchTicker } from '@/lib/ticker-research';
+import {
+  normalizeStrategyType,
+  normalizeSecurityType,
+  normalizeSector,
+  normalizeMarket,
+  normalizeCurrency,
+  normalizeManagementStyle,
+  normalizeCall,
+  applyCompanyAutoDefaults,
+} from '@/lib/classification/allowlists';
 import type { AuditMutation } from "@/types/audit";
 
 export const dynamic = "force-dynamic";
@@ -267,14 +277,18 @@ export async function POST(request: Request) {
             const assetId = existing ? existing.id : uuidv4();
             const assetSK = `ASSET#${assetId}`;
 
-            const newItem = {
+            const securityType = normalizeSecurityType(
+                (existing?.securityType && existing.securityType !== "") ? existing.securityType : enrichedData?.securityType,
+            );
+
+            const baseItem = {
                 PK: PROFILE_KEY,
                 SK: assetSK,
                 id: assetId,
                 profileId: PROFILE_KEY,
                 type: "ASSET",
                 ticker: h.ticker,
-                currency: h.currency || (enrichedData?.currency ?? (existing?.currency ?? "CAD")),
+                currency: normalizeCurrency(h.currency || enrichedData?.currency || existing?.currency || "CAD"),
                 quantity: h.quantity,
                 liveTickerPrice: pricePerShare > 0 ? pricePerShare : (enrichedData?.currentPrice ?? (existing?.liveTickerPrice ?? 0)),
                 bookCost: h.bookCost,
@@ -286,24 +300,32 @@ export async function POST(request: Request) {
                 updatedAt: new Date().toISOString(),
                 createdAt: existing?.createdAt ?? new Date().toISOString(),
                 account: h.accountNumber && accountMappings[h.accountNumber] ? accountMappings[h.accountNumber] : (existing?.account ?? ""),
-                
-                // Preserve User Intent: Only use AI data if existing field is empty/blank
-                securityType: (existing?.securityType && existing.securityType !== "") ? existing.securityType : (enrichedData?.securityType ?? ""),
-                strategyType: (existing?.strategyType && existing.strategyType !== "") ? existing.strategyType : (enrichedData?.strategyType ?? ""),
-                call: (existing?.call && existing.call !== "" && existing.call !== "N/A") ? existing.call : (enrichedData?.call ?? ""),
-                sector: (existing?.sector && existing.sector !== "" && existing.sector !== "N/A") ? existing.sector : (enrichedData?.sector ?? ""),
-                
-                market: (existing?.market && existing.market !== "") ? existing.market : (enrichedData?.market ?? ""),
-                managementStyle: (existing?.managementStyle && existing.managementStyle !== "") ? existing.managementStyle : (enrichedData?.managementStyle ?? ""),
+
+                securityType,
+                strategyType: normalizeStrategyType(
+                    (existing?.strategyType && existing.strategyType !== "") ? existing.strategyType : enrichedData?.strategyType,
+                ),
+                call: normalizeCall(
+                    (existing?.call && existing.call !== "" && existing.call !== "N/A") ? existing.call : enrichedData?.call,
+                ),
+                sector: normalizeSector(
+                    (existing?.sector && existing.sector !== "" && existing.sector !== "N/A") ? existing.sector : enrichedData?.sector,
+                ),
+                market: normalizeMarket(
+                    (existing?.market && existing.market !== "") ? existing.market : enrichedData?.market,
+                    securityType,
+                ),
+                managementStyle: normalizeManagementStyle(
+                    (existing?.managementStyle && existing.managementStyle !== "") ? existing.managementStyle : enrichedData?.managementStyle,
+                ),
                 name: (existing?.name && existing.name !== "") ? existing.name : (enrichedData?.name ?? ""),
-                
-                // Other fields
+
                 externalRating: existing?.externalRating ?? enrichedData?.externalRating ?? "",
-                managementFee: existing?.managementFee ?? enrichedData?.managementFee ?? 0,
-                yield: existing?.yield ?? enrichedData?.dividendYield ?? 0,
-                oneYearReturn: existing?.oneYearReturn ?? enrichedData?.oneYearReturn ?? 0,
-                fiveYearReturn: existing?.fiveYearReturn ?? 0,
-                threeYearReturn: existing?.threeYearReturn ?? enrichedData?.threeYearReturn ?? 0,
+                managementFee: existing?.managementFee ?? enrichedData?.managementFee ?? null,
+                yield: existing?.yield ?? enrichedData?.dividendYield ?? null,
+                oneYearReturn: existing?.oneYearReturn ?? enrichedData?.oneYearReturn ?? null,
+                fiveYearReturn: existing?.fiveYearReturn ?? null,
+                threeYearReturn: existing?.threeYearReturn ?? enrichedData?.threeYearReturn ?? null,
                 exDividendDate: existing?.exDividendDate ?? enrichedData?.exDividendDate ?? "",
                 analystConsensus: existing?.analystConsensus ?? enrichedData?.analystConsensus ?? "",
                 beta: existing?.beta ?? enrichedData?.beta ?? 0,
@@ -312,6 +334,8 @@ export async function POST(request: Request) {
                 volatility: existing?.volatility ?? enrichedData?.volatility ?? 0,
                 expectedAnnualDividends: existing?.expectedAnnualDividends ?? 0,
             };
+
+            const newItem = applyCompanyAutoDefaults(baseItem);
 
             writeRequests.push({ PutRequest: { Item: newItem } });
 
