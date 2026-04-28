@@ -238,19 +238,20 @@ export function formatStrategyContext(profile: Partial<StrategyConfig>): string 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 /**
- * Format a nullable percent for AI prompt context.
+ * Format a nullable decimal-stored ratio (e.g., 0.05 = 5%) as a percentage
+ * string for AI prompt context. Multiplies by 100 to convert decimal to percent.
  * Renders "Not Found" when the value is null/undefined/non-numeric so the
  * model can distinguish a genuinely missing metric from a 0%.
  *
- * Note: this function does NOT multiply by 100. It preserves the existing
- * AI-context format (raw stored value + "%"). If yield/return units are
- * later normalized to decimals everywhere, update this helper accordingly.
+ * Use only for fields stored as decimals: yield, oneYearReturn,
+ * threeYearReturn, fiveYearReturn. Do NOT use for managementFee (stored
+ * already-as-percent).
  */
 function fmtPctOrNotFound(v: number | null | undefined, decimals = 2): string {
     if (v === null || v === undefined) return "Not Found";
     const n = Number(v);
     if (!Number.isFinite(n)) return "Not Found";
-    return `${n.toFixed(decimals)}%`;
+    return `${(n * 100).toFixed(decimals)}%`;
 }
 
 function p(val: any, fallback = 0): number {
