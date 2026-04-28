@@ -161,7 +161,7 @@ export function calculatePerformanceEstimates(assets: Asset[]): PerformanceEstim
     }
 
     const weightedReturn = validAssets.reduce(
-        (sum, a) => sum + a.oneYearReturn * a.marketValue,
+        (sum, a) => sum + (a.oneYearReturn ?? 0) * a.marketValue,
         0
     );
     const estimatedAnnualReturn = Math.round((weightedReturn / totalValue) * 10) / 10;
