@@ -48,6 +48,7 @@ function getPillarForRoute(pathname: string): PillarId {
 export function Sidebar() {
     const pathname = usePathname();
     const [activePillar, setActivePillar] = useState<PillarId>(() => getPillarForRoute(pathname));
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     useEffect(() => {
         const pillarForRoute = getPillarForRoute(pathname);
@@ -61,7 +62,10 @@ export function Sidebar() {
     const isAmber = activePillar === "intelligence";
 
     return (
-        <div className="flex fixed bottom-0 left-0 right-0 z-50 md:relative md:h-full w-full md:w-64 flex-row md:flex-col bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md md:bg-neutral-50 dark:md:bg-[#0a0a0a] border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 shrink-0 transition-colors duration-300">
+        <div className={cn(
+            "flex fixed bottom-0 left-0 right-0 z-50 md:relative md:h-full w-full flex-row md:flex-col bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md md:bg-neutral-50 dark:md:bg-[#0a0a0a] border-t md:border-t-0 md:border-r border-neutral-200 dark:border-neutral-800 shrink-0 transition-colors duration-300 md:transition-[width] md:duration-200",
+            isCollapsed ? "md:w-16" : "md:w-64"
+        )}>
             {/* Desktop header */}
             <div className="md:h-16 shrink-0 items-center px-4 md:px-6 py-3 md:py-0 border-r md:border-r-0 md:border-b border-neutral-200 dark:border-neutral-800 hidden md:flex md:justify-between transition-colors duration-300">
                 <div className="flex items-center min-w-0">
@@ -70,11 +74,16 @@ export function Sidebar() {
                 </div>
                 <button
                     type="button"
-                    aria-label="Collapse sidebar"
-                    aria-expanded={true}
+                    onClick={() => setIsCollapsed(c => !c)}
+                    aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    aria-expanded={!isCollapsed}
                     className="hidden md:flex items-center justify-center h-6 w-6 rounded text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
                 >
-                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    {isCollapsed ? (
+                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    )}
                 </button>
             </div>
 

@@ -25,4 +25,20 @@ describe("Sidebar collapse toggle", () => {
     expect(toggle).toBeInTheDocument();
     expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
+
+  it("collapses the outer container when the toggle is clicked", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Sidebar />);
+
+    const outer = container.firstChild as HTMLElement;
+    expect(outer.className).toContain("md:w-64");
+    expect(outer.className).not.toContain("md:w-16");
+
+    await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
+
+    const expandToggle = screen.getByRole("button", { name: /expand sidebar/i });
+    expect(expandToggle).toHaveAttribute("aria-expanded", "false");
+    expect(outer.className).toContain("md:w-16");
+    expect(outer.className).not.toContain("md:w-64");
+  });
 });
