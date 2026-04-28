@@ -44,9 +44,9 @@ Driven by a single class toggle on the outer container — `md:w-64` (expanded) 
 | Element | Expanded | Collapsed |
 |---|---|---|
 | Outer container | `md:w-64` | `md:w-16` |
-| Header container | `md:flex md:items-center` (left-aligned with logo + label) | `md:flex md:items-center md:justify-between` (logo left, toggle right; label hidden) |
+| Header container | `md:flex md:items-center md:justify-between` (logo + label on the left, toggle on the right) | `md:flex md:items-center md:justify-center` (toggle alone, centered — logo and label both hidden so the 24px toggle has room in the 64px column) |
 | Header `<span>` "InvestAI Panel" | shown | `hidden` |
-| Header logo (BrainCircuit) | shown, `mr-3` | shown, no margin |
+| Header logo (BrainCircuit) wrapper | shown | `md:hidden` (the entire logo + label inner div hides on `md+` when collapsed) |
 | Toggle button (chevron) | top-right of header, `‹` | top-right of header, `›` |
 | Pillar toggle container | `flex-row` (Blueprint │ Markets) | `flex-col` (Blueprint stacked over Markets) |
 | Pillar button text | shown | `hidden` |
