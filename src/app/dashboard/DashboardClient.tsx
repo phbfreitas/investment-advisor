@@ -263,15 +263,15 @@ function DashboardContent() {
       currency: "",
       managementStyle: "",
       externalRating: "",
-      managementFee: 0,
+      managementFee: null,
       quantity: 0,
       liveTickerPrice: 0,
       bookCost: 0,
       marketValue: 0,
       profitLoss: 0,
-      yield: 0,
-      oneYearReturn: 0,
-      threeYearReturn: 0,
+      yield: null,
+      oneYearReturn: null,
+      threeYearReturn: null,
       exDividendDate: "",
       analystConsensus: "",
       beta: 0,
@@ -349,7 +349,8 @@ function DashboardContent() {
         const data = await res.json();
         const qty = editForm.quantity || 0;
         const price = data.currentPrice || 0;
-        const yieldPct = data.dividendYield || 0;
+        const dividendYieldRaw: number | null = data.dividendYield ?? null;
+        const yieldForCalc = dividendYieldRaw ?? 0;
         const bookCostNum = editForm.bookCost || 0;
         setEditForm(prev => ({
           ...prev,
@@ -357,21 +358,21 @@ function DashboardContent() {
           market: data.market || prev.market,
           securityType: data.securityType || prev.securityType,
           liveTickerPrice: price,
-          yield: yieldPct,
-          oneYearReturn: data.oneYearReturn || 0,
+          yield: dividendYieldRaw,
+          oneYearReturn: data.oneYearReturn ?? null,
           strategyType: data.strategyType || prev.strategyType,
           call: data.call || prev.call,
           managementStyle: data.managementStyle || prev.managementStyle,
-          managementFee: data.managementFee || 0,
+          managementFee: data.managementFee ?? null,
           exDividendDate: data.exDividendDate || "",
-          threeYearReturn: data.threeYearReturn || 0,
+          threeYearReturn: data.threeYearReturn ?? null,
           analystConsensus: data.analystConsensus || "",
           externalRating: data.externalRating || "",
           beta: data.beta || 0,
           riskFlag: data.riskFlag || "",
           marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
           profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
-          expectedAnnualDividends: qty > 0 && price > 0 && yieldPct > 0 ? qty * price * yieldPct : 0,
+          expectedAnnualDividends: qty > 0 && price > 0 && yieldForCalc > 0 ? qty * price * yieldForCalc : 0,
         }));
       }
     } catch (err) {
