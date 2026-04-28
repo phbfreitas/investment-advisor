@@ -162,3 +162,15 @@ export function normalizeCurrency(raw: string | null | undefined): string {
   if (/^[A-Z]{3}$/.test(v)) return v; // any valid 3-letter ISO 4217
   return NOT_FOUND;
 }
+
+export function applyCompanyAutoDefaults<
+  T extends { securityType?: string | null; call?: string | null; managementStyle?: string | null; managementFee?: number | null },
+>(asset: T): T {
+  if (asset.securityType !== "Company") return asset;
+  return {
+    ...asset,
+    call: "No",
+    managementStyle: "N/A",
+    managementFee: 0,
+  };
+}

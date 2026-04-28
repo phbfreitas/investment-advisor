@@ -7,6 +7,14 @@ import {
   CANONICAL_CURRENCIES,
   MGMT_STYLES,
   NOT_FOUND,
+  normalizeStrategyType,
+  normalizeSecurityType,
+  normalizeCall,
+  normalizeManagementStyle,
+  normalizeSector,
+  normalizeMarket,
+  normalizeCurrency,
+  applyCompanyAutoDefaults,
 } from "../allowlists";
 
 describe("allowlists barrel", () => {
@@ -26,13 +34,6 @@ describe("allowlists barrel", () => {
     expect(MGMT_STYLES).toEqual(["Active", "Passive", "N/A"]);
   });
 });
-
-import {
-  normalizeStrategyType,
-  normalizeSecurityType,
-  normalizeCall,
-  normalizeManagementStyle,
-} from "../allowlists";
 
 describe("normalizeStrategyType", () => {
   it("returns canonical when input is canonical", () => {
@@ -103,8 +104,6 @@ describe("normalizeManagementStyle", () => {
     expect(normalizeManagementStyle("")).toBe("N/A");
   });
 });
-
-import { normalizeSector } from "../allowlists";
 
 describe("normalizeSector consolidation", () => {
   const cases: Array<[string, string]> = [
@@ -188,8 +187,6 @@ describe("normalizeSector consolidation", () => {
   });
 });
 
-import { normalizeMarket } from "../allowlists";
-
 describe("normalizeMarket", () => {
   it("passes through canonical values", () => {
     expect(normalizeMarket("USA")).toBe("USA");
@@ -243,8 +240,6 @@ describe("normalizeMarket", () => {
   });
 });
 
-import { normalizeCurrency } from "../allowlists";
-
 describe("normalizeCurrency", () => {
   it("returns canonical USD/CAD as-is", () => {
     expect(normalizeCurrency("USD")).toBe("USD");
@@ -267,5 +262,60 @@ describe("normalizeCurrency", () => {
     expect(normalizeCurrency("dollars")).toBe("Not Found");
     expect(normalizeCurrency("XX")).toBe("Not Found");
     expect(normalizeCurrency("ABCDE")).toBe("Not Found");
+  });
+});
+
+describe("applyCompanyAutoDefaults", () => {
+  it("forces call=No, managementStyle=N/A, managementFee=0 for Company", () => {
+    const input = {
+      securityType: "Company",
+      call: "Yes",
+      managementStyle: "Active",
+      managementFee: 0.5,
+    };
+    expect(applyCompanyAutoDefaults(input)).toEqual({
+      securityType: "Company",
+      call: "No",
+      managementStyle: "N/A",
+      managementFee: 0,
+    });
+  });
+
+  it("does not modify ETF / Fund", () => {
+    const etf = {
+      securityType: "ETF",
+      call: "Yes",
+      managementStyle: "Passive",
+      managementFee: 0.06,
+    };
+    expect(applyCompanyAutoDefaults(etf)).toEqual(etf);
+    const fund = {
+      securityType: "Fund",
+      call: "No",
+      managementStyle: "Active",
+      managementFee: 1.5,
+    };
+    expect(applyCompanyAutoDefaults(fund)).toEqual(fund);
+  });
+
+  it("does not modify when securityType is missing or Not Found", () => {
+    const input = { securityType: "Not Found", call: "Yes", managementStyle: "Active", managementFee: 1 };
+    expect(applyCompanyAutoDefaults(input)).toEqual(input);
+  });
+
+  it("preserves other fields untouched", () => {
+    const input = {
+      ticker: "AAPL",
+      securityType: "Company",
+      call: "Yes",
+      managementStyle: "Active",
+      managementFee: 0,
+      sector: "IT",
+      yield: 0.005,
+    } as const;
+    const result = applyCompanyAutoDefaults({ ...input });
+    expect(result.ticker).toBe("AAPL");
+    expect(result.sector).toBe("IT");
+    expect(result.yield).toBe(0.005);
   });
 });
