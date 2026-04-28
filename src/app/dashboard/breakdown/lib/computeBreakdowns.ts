@@ -30,13 +30,28 @@ function group(assets: Asset[], field: keyof Asset): DimensionBreakdown {
     sums[label] = (sums[label] ?? 0) + mv;
     total += mv;
   }
-  const slices = Object.entries(sums)
+  const allSlices = Object.entries(sums)
     .map(([label, value]) => ({
       label,
       value,
       percent: total > 0 ? (value / total) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value);
+
+  const SMALL_SLICE_THRESHOLD = 5; // percent
+  const big = allSlices.filter(s => s.percent >= SMALL_SLICE_THRESHOLD);
+  const small = allSlices.filter(s => s.percent < SMALL_SLICE_THRESHOLD);
+
+  const slices = small.length > 0
+    ? [
+        ...big,
+        {
+          label: "Others",
+          value: small.reduce((sum, s) => sum + s.value, 0),
+          percent: small.reduce((sum, s) => sum + s.percent, 0),
+        },
+      ]
+    : big;
   const dim = DIMENSIONS.find(d => d.key === field);
   return {
     title: dim?.title ?? `By ${String(field)}`,

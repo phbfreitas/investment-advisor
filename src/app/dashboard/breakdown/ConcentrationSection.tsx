@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, LabelList } from "recharts";
 import type { TopHoldings } from "./lib/types";
-import { paletteFor, COLORS } from "./lib/colors";
+import { paletteByIndex } from "./lib/colors";
 
 const fmtCurrency = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -66,10 +66,10 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
                     );
                   }}
                 />
-                {rows.map((row) => (
+                {rows.map((row, idx) => (
                   <Cell
                     key={row.ticker}
-                    fill={paletteFor(row.call || row.ticker)}
+                    fill={paletteByIndex(idx)}
                   />
                 ))}
               </Bar>

@@ -3,7 +3,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import type { AllBreakdowns } from "./lib/computeBreakdowns";
 import type { DimensionBreakdown } from "./lib/types";
-import { paletteFor, COLORS } from "./lib/colors";
+import { paletteByIndex, COLORS } from "./lib/colors";
 
 const fmtCurrency = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -30,11 +30,40 @@ function Donut({ dim }: DonutProps) {
               outerRadius="85%"
               paddingAngle={1}
               isAnimationActive={false}
+              label={(entry: unknown) => {
+                const e = entry as { percent?: number; cx?: number; cy?: number; midAngle?: number; innerRadius?: number; outerRadius?: number };
+                if (!e || typeof e.percent !== "number") return null;
+                // Recharts passes percent as 0-1 fraction; threshold is 0.15 (= 15%)
+                if (e.percent < 0.15) return null;
+                const RADIAN = Math.PI / 180;
+                const innerR = e.innerRadius ?? 0;
+                const outerR = e.outerRadius ?? 0;
+                const radius = innerR + (outerR - innerR) * 0.5;
+                const x = (e.cx ?? 0) + radius * Math.cos(-(e.midAngle ?? 0) * RADIAN);
+                const y = (e.cy ?? 0) + radius * Math.sin(-(e.midAngle ?? 0) * RADIAN);
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    fill="white"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    style={{ fontSize: 11, fontWeight: 600, pointerEvents: "none" }}
+                  >
+                    {`${(e.percent * 100).toFixed(0)}%`}
+                  </text>
+                );
+              }}
+              labelLine={false}
             >
-              {data.map((entry) => (
+              {data.map((entry, idx) => (
                 <Cell
                   key={entry.name}
-                  fill={entry.name === "Uncategorized" ? COLORS.uncategorized : paletteFor(entry.name)}
+                  fill={
+                    entry.name === "Uncategorized" ? COLORS.uncategorized
+                    : entry.name === "Others" ? COLORS.uncategorized
+                    : paletteByIndex(idx)
+                  }
                 />
               ))}
             </Pie>

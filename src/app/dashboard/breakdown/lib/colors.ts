@@ -18,6 +18,18 @@ export function paletteFor(label: string | null | undefined): string {
   return PALETTE[hash(label) % PALETTE.length];
 }
 
+/**
+ * Returns the color for a slice at a given position within a chart.
+ * Sequential assignment guarantees no two slices in the same chart share a color
+ * (as long as N <= palette length). When a chart has more slices than palette
+ * colors, wraps via modulo — but combined with the <5% "Others" rollup in
+ * computeBreakdowns, this scenario rarely occurs in practice.
+ */
+export function paletteByIndex(index: number): string {
+  if (index < 0) return UNCATEGORIZED;
+  return PALETTE[index % PALETTE.length];
+}
+
 export const COLORS = {
   uncategorized: UNCATEGORIZED,
   severityRed: "#ef4444",

@@ -61,4 +61,18 @@ describe("computeBreakdowns", () => {
     const labels = computeBreakdowns(assets).sector.slices.map(s => s.label);
     expect(labels).toEqual(["Big", "Small"]);
   });
+
+  it("rolls up slices below 5% into 'Others'", () => {
+    const assets = [
+      a({ ticker: "X", sector: "Big",   marketValue: 920 }), // 92%
+      a({ ticker: "Y", sector: "Tiny1", marketValue: 30 }),  // 3% — should roll up
+      a({ ticker: "Z", sector: "Tiny2", marketValue: 30 }),  // 3% — should roll up
+      a({ ticker: "W", sector: "Tiny3", marketValue: 20 }),  // 2% — should roll up
+    ]; // total = 1000
+    const result = computeBreakdowns(assets).sector;
+    expect(result.slices.map(s => s.label)).toEqual(["Big", "Others"]);
+    const others = result.slices.find(s => s.label === "Others")!;
+    expect(others.value).toBe(80);
+    expect(others.percent).toBeCloseTo(8, 5);
+  });
 });
