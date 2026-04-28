@@ -242,3 +242,30 @@ describe("normalizeMarket", () => {
     expect(normalizeMarket("TOR", "Company")).toBe("Canada");
   });
 });
+
+import { normalizeCurrency } from "../allowlists";
+
+describe("normalizeCurrency", () => {
+  it("returns canonical USD/CAD as-is", () => {
+    expect(normalizeCurrency("USD")).toBe("USD");
+    expect(normalizeCurrency("CAD")).toBe("CAD");
+    expect(normalizeCurrency("usd")).toBe("USD");
+    expect(normalizeCurrency("cad")).toBe("CAD");
+  });
+
+  it("accepts other valid ISO 4217 3-letter codes", () => {
+    expect(normalizeCurrency("EUR")).toBe("EUR");
+    expect(normalizeCurrency("GBP")).toBe("GBP");
+    expect(normalizeCurrency("BRL")).toBe("BRL");
+    expect(normalizeCurrency("JPY")).toBe("JPY");
+    expect(normalizeCurrency("eur")).toBe("EUR");
+  });
+
+  it("returns Not Found for empty/null/garbage", () => {
+    expect(normalizeCurrency(null)).toBe("Not Found");
+    expect(normalizeCurrency("")).toBe("Not Found");
+    expect(normalizeCurrency("dollars")).toBe("Not Found");
+    expect(normalizeCurrency("XX")).toBe("Not Found");
+    expect(normalizeCurrency("ABCDE")).toBe("Not Found");
+  });
+});

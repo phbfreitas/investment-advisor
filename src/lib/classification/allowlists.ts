@@ -155,3 +155,10 @@ export function normalizeMarket(
   if (/^[a-z]{2,5}$/.test(v)) return "Global";
   return NOT_FOUND;
 }
+
+export function normalizeCurrency(raw: string | null | undefined): string {
+  const v = (raw ?? "").trim().toUpperCase();
+  if (!v) return NOT_FOUND;
+  if (/^[A-Z]{3}$/.test(v)) return v; // any valid 3-letter ISO 4217
+  return NOT_FOUND;
+}
