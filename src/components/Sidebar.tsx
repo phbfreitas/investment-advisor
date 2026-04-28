@@ -100,11 +100,9 @@ export function Sidebar() {
                 <button
                     type="button"
                     onClick={() => {
-                        setIsCollapsed(prev => {
-                            const next = !prev;
-                            writeStoredCollapsed(next);
-                            return next;
-                        });
+                        const next = !isCollapsed;
+                        setIsCollapsed(next);
+                        writeStoredCollapsed(next);
                     }}
                     title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
