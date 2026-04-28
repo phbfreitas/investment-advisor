@@ -392,12 +392,13 @@ function DashboardContent() {
       const str = String(v ?? '');
       return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
     };
+    const fmt = (v: number | null | undefined): string => v == null ? "Not Found" : String(v);
     const rows = assets.map(a => [
       a.account, a.ticker, a.securityType, a.strategyType, a.call,
-      a.sector, a.market, a.currency, a.managementStyle, a.managementFee,
+      a.sector, a.market, a.currency, a.managementStyle, fmt(a.managementFee),
       a.quantity, a.liveTickerPrice, (a.bookCost || 0),
       a.marketValue, totalMV > 0 ? ((a.marketValue || 0) / totalMV * 100).toFixed(1) + '%' : '0%',
-      a.profitLoss, a.yield, a.oneYearReturn, a.threeYearReturn || a.fiveYearReturn || 0,
+      a.profitLoss, fmt(a.yield), fmt(a.oneYearReturn), fmt(a.threeYearReturn ?? a.fiveYearReturn ?? null),
       a.exDividendDate, a.analystConsensus, a.externalRating,
       a.beta, a.riskFlag, a.volatility, a.expectedAnnualDividends,
       a.accountNumber, a.accountType,
