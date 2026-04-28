@@ -91,7 +91,10 @@ export function Sidebar() {
             </div>
 
             {/* Desktop pillar toggle */}
-            <div className="hidden md:flex mx-3 mt-3 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+            <div className={cn(
+                "hidden md:flex mx-3 mt-3 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
+                isCollapsed && "md:flex-col"
+            )}>
                 {pillars.map((pillar) => (
                     <button
                         key={pillar.id}
@@ -105,7 +108,7 @@ export function Sidebar() {
                                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                         )}
                     >
-                        <pillar.icon className="h-3.5 w-3.5" />
+                        <pillar.icon className={cn(isCollapsed ? "h-4 w-4" : "h-3.5 w-3.5")} />
                         <span className={cn(isCollapsed && "hidden")}>{pillar.name}</span>
                     </button>
                 ))}

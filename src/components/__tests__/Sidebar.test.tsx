@@ -79,4 +79,18 @@ describe("Sidebar collapse toggle", () => {
     expect(portfolioIcon!.getAttribute("class")).toContain("md:mr-0");
     expect(portfolioIcon!.getAttribute("class")).not.toContain("md:mr-3");
   });
+
+  it("stacks the pillar toggle vertically when collapsed", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar />);
+
+    const blueprintButton = screen.getByRole("button", { name: /my blueprint/i });
+    const pillarContainer = blueprintButton.parentElement!;
+
+    expect(pillarContainer.className).not.toContain("flex-col");
+
+    await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
+
+    expect(pillarContainer.className).toContain("flex-col");
+  });
 });
