@@ -41,4 +41,26 @@ describe("Sidebar collapse toggle", () => {
     expect(outer.className).toContain("md:w-16");
     expect(outer.className).not.toContain("md:w-64");
   });
+
+  it("hides the header logo wrapper and every text label when collapsed", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar />);
+
+    expect(screen.getByText("InvestAI Panel")).toBeVisible();
+    expect(screen.getByText("My Investment Portfolio")).toBeVisible();
+    expect(screen.getByText("Sign Out")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
+
+    // Using className inspection since jsdom doesn't load Tailwind CSS
+    const headerLabel = screen.getByText("InvestAI Panel");
+    const headerWrapper = headerLabel.parentElement!;
+    expect(headerWrapper.className).toContain("md:hidden");
+
+    const portfolioSpan = screen.getByText("My Investment Portfolio");
+    expect(portfolioSpan.className).toContain("md:hidden");
+
+    const signoutSpan = screen.getByText("Sign Out");
+    expect(signoutSpan.className).toContain("md:hidden");
+  });
 });

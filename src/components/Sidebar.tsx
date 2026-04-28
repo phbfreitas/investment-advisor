@@ -67,8 +67,11 @@ export function Sidebar() {
             isCollapsed ? "md:w-16" : "md:w-64"
         )}>
             {/* Desktop header */}
-            <div className="md:h-16 shrink-0 items-center px-4 md:px-6 py-3 md:py-0 border-r md:border-r-0 md:border-b border-neutral-200 dark:border-neutral-800 hidden md:flex md:justify-between transition-colors duration-300">
-                <div className="flex items-center min-w-0">
+            <div className={cn(
+                "md:h-16 shrink-0 items-center px-4 md:px-6 py-3 md:py-0 border-r md:border-r-0 md:border-b border-neutral-200 dark:border-neutral-800 hidden md:flex transition-colors duration-300",
+                isCollapsed ? "md:justify-center" : "md:justify-between"
+            )}>
+                <div className={cn("flex items-center min-w-0", isCollapsed && "md:hidden")}>
                     <BrainCircuit className="h-6 w-6 text-teal-600 dark:text-teal-400 mr-3 shrink-0" />
                     <span className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 text-gradient shrink-0">InvestAI Panel</span>
                 </div>
@@ -103,7 +106,7 @@ export function Sidebar() {
                         )}
                     >
                         <pillar.icon className="h-3.5 w-3.5" />
-                        {pillar.name}
+                        <span className={cn(isCollapsed && "hidden")}>{pillar.name}</span>
                     </button>
                 ))}
             </div>
@@ -159,7 +162,10 @@ export function Sidebar() {
                                     )}
                                     aria-hidden="true"
                                 />
-                                <span className="block text-[11px] md:text-sm text-center md:text-left whitespace-nowrap">{item.name}</span>
+                                <span className={cn(
+                                    "block text-[11px] md:text-sm text-center md:text-left whitespace-nowrap",
+                                    isCollapsed && "md:hidden"
+                                )}>{item.name}</span>
                             </Link>
                         );
                     })}
@@ -188,7 +194,7 @@ export function Sidebar() {
                                     )}
                                     aria-hidden="true"
                                 />
-                                <span className="whitespace-nowrap">{item.name}</span>
+                                <span className={cn("whitespace-nowrap", isCollapsed && "hidden")}>{item.name}</span>
                             </Link>
                         );
                     })}
@@ -201,7 +207,10 @@ export function Sidebar() {
                         className="group flex flex-col md:flex-row items-center justify-center md:justify-start rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0 text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-neutral-900/50 hover:text-red-700 dark:hover:text-red-400"
                     >
                         <LogOut className="mb-1 md:mb-0 md:mr-3 h-5 w-5 shrink-0 transition-colors text-neutral-400 dark:text-neutral-500 group-hover:text-red-600 dark:group-hover:text-red-400" aria-hidden="true" />
-                        <span className="block text-[11px] md:text-sm text-center md:text-left whitespace-nowrap">Sign Out</span>
+                        <span className={cn(
+                            "block text-[11px] md:text-sm text-center md:text-left whitespace-nowrap",
+                            isCollapsed && "md:hidden"
+                        )}>Sign Out</span>
                     </button>
                 </div>
             </div>
