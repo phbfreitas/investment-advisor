@@ -75,4 +75,17 @@ describe("computeTopHoldings", () => {
     const r = computeTopHoldings(assets);
     expect(r.top[0]).toMatchObject({ call: "Dividend", account: "TFSA", sector: "Banking", currency: "CAD" });
   });
+
+  it("aggregates same ticker across multiple accounts (12% combined > 5% in one row)", () => {
+    const r = computeTopHoldings([
+      a({ ticker: "AAPL", account: "TFSA",  marketValue: 60 }),
+      a({ ticker: "AAPL", account: "RRSP",  marketValue: 60 }),
+      a({ ticker: "OTHER", account: "TFSA", marketValue: 880 }),
+    ]);
+    expect(r.top).toHaveLength(2);
+    const aapl = r.top.find(h => h.ticker === "AAPL");
+    expect(aapl?.marketValue).toBe(120);
+    expect(aapl?.percent).toBeCloseTo(12, 1);
+    expect(aapl?.account).toBe("Multiple");
+  });
 });

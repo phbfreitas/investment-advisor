@@ -30,13 +30,3 @@ export interface TopHoldings {
   others: { count: number; marketValue: number; percent: number } | null;
   totalValue: number;
 }
-
-export interface WeightedYield {
-  /** Portfolio-weighted yield as a percent, e.g. 3.2. */
-  yieldPct: number;
-  /** Σ(marketValue × yield/100). */
-  projectedAnnualIncome: number;
-  /** Total marketValue. */
-  capital: number;
-  hasYieldData: boolean;
-}

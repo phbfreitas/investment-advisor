@@ -2,20 +2,20 @@ import type { Asset } from "@/types";
 import type { DimensionBreakdown } from "./types";
 
 const DIMENSIONS = [
-  { key: "market" as const,       title: "By Region" },
-  { key: "sector" as const,       title: "By Sector" },
-  { key: "call" as const,         title: "By Strategy" },
-  { key: "securityType" as const, title: "By Asset Type" },
-  { key: "risk" as const,         title: "By Risk" },
-  { key: "currency" as const,     title: "By Currency" },
+  { key: "market" as const,        title: "By Region" },
+  { key: "sector" as const,        title: "By Sector" },
+  { key: "strategyType" as const,  title: "By Strategy" },
+  { key: "securityType" as const,  title: "By Asset Type" },
+  { key: "call" as const,          title: "By Call" },
+  { key: "currency" as const,      title: "By Currency" },
 ];
 
 export interface AllBreakdowns {
   market: DimensionBreakdown;
   sector: DimensionBreakdown;
-  call: DimensionBreakdown;
+  strategyType: DimensionBreakdown;
   securityType: DimensionBreakdown;
-  risk: DimensionBreakdown;
+  call: DimensionBreakdown;
   currency: DimensionBreakdown;
 }
 
@@ -48,11 +48,11 @@ function group(assets: Asset[], field: keyof Asset): DimensionBreakdown {
 
 export function computeBreakdowns(assets: Asset[]): AllBreakdowns {
   return {
-    market:       group(assets, "market"),
-    sector:       group(assets, "sector"),
-    call:         group(assets, "call"),
-    securityType: group(assets, "securityType"),
-    risk:         group(assets, "risk"),
-    currency:     group(assets, "currency"),
+    market:        group(assets, "market"),
+    sector:        group(assets, "sector"),
+    strategyType:  group(assets, "strategyType"),
+    securityType:  group(assets, "securityType"),
+    call:          group(assets, "call"),
+    currency:      group(assets, "currency"),
   };
 }
