@@ -19,3 +19,38 @@ export type CallValue = typeof CALL_VALUES[number];
 export type Sector = typeof SECTOR_VALUES[number];
 export type Market = typeof MARKET_VALUES[number];
 export type ManagementStyle = typeof MGMT_STYLES[number];
+
+function casefold(raw: string | null | undefined): string {
+  return (raw ?? "").trim().toLowerCase();
+}
+
+export function normalizeStrategyType(raw: string | null | undefined): StrategyType {
+  const v = casefold(raw);
+  if (!v) return NOT_FOUND;
+  if (v === "dividend" || v === "pure dividend") return "Dividend";
+  if (v === "growth" || v === "pure growth") return "Growth";
+  if (v === "mix" || v === "the mix") return "Mix";
+  return NOT_FOUND;
+}
+
+export function normalizeSecurityType(raw: string | null | undefined): SecurityType {
+  const v = casefold(raw);
+  if (!v) return NOT_FOUND;
+  if (v === "company" || v === "equity" || v === "closed_end_fund") return "Company";
+  if (v === "etf") return "ETF";
+  if (v === "fund" || v === "mutualfund") return "Fund";
+  return NOT_FOUND;
+}
+
+export function normalizeCall(raw: string | null | undefined): CallValue {
+  const v = casefold(raw);
+  if (v === "yes") return "Yes";
+  return "No";
+}
+
+export function normalizeManagementStyle(raw: string | null | undefined): ManagementStyle {
+  const v = casefold(raw);
+  if (v === "active") return "Active";
+  if (v === "passive") return "Passive";
+  return "N/A";
+}
