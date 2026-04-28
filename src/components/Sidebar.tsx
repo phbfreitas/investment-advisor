@@ -78,6 +78,7 @@ export function Sidebar() {
                 <button
                     type="button"
                     onClick={() => setIsCollapsed(c => !c)}
+                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-expanded={!isCollapsed}
                     className="hidden md:flex items-center justify-center h-6 w-6 rounded text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
@@ -99,6 +100,7 @@ export function Sidebar() {
                     <button
                         key={pillar.id}
                         onClick={() => setActivePillar(pillar.id)}
+                        title={pillar.name}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-semibold transition-all",
                             activePillar === pillar.id
@@ -121,6 +123,7 @@ export function Sidebar() {
                         <button
                             key={pillar.id}
                             onClick={() => setActivePillar(pillar.id)}
+                            title={pillar.name}
                             className={cn(
                                 "p-2 rounded-md transition-all",
                                 activePillar === pillar.id
@@ -144,6 +147,7 @@ export function Sidebar() {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                title={item.name}
                                 className={cn(
                                     isActive
                                         ? isAmber && !isUtility
@@ -185,6 +189,7 @@ export function Sidebar() {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                title={item.name}
                                 className={cn(
                                     isActive
                                         ? "bg-teal-50 dark:bg-neutral-900 text-teal-700 dark:text-teal-400"
@@ -211,6 +216,7 @@ export function Sidebar() {
                 <div className="md:mt-auto border-l md:border-l-0 md:border-t border-neutral-200 dark:border-neutral-800 px-3 py-2 md:p-3 flex shrink-0 items-center justify-center transition-colors duration-300">
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
+                        title="Sign Out"
                         className={cn(
                             "group flex flex-col md:flex-row items-center justify-center rounded-lg px-3 py-2 md:px-3 md:py-2 text-xs md:text-sm font-medium transition-colors md:w-auto shrink-0 text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-neutral-900/50 hover:text-red-700 dark:hover:text-red-400",
                             isCollapsed ? "md:justify-center" : "md:justify-start"

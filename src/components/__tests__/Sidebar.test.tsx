@@ -84,7 +84,9 @@ describe("Sidebar collapse toggle", () => {
     const user = userEvent.setup();
     render(<Sidebar />);
 
-    const blueprintButton = screen.getByRole("button", { name: /my blueprint/i });
+    // Get the desktop pillar button (the one with flex-1 class, inside the desktop toggle)
+    const blueprintButtons = screen.getAllByRole("button", { name: /my blueprint/i });
+    const blueprintButton = blueprintButtons.find(btn => btn.className.includes("flex-1"))!;
     const pillarContainer = blueprintButton.parentElement!;
 
     expect(pillarContainer.className).not.toContain("flex-col");
@@ -92,5 +94,35 @@ describe("Sidebar collapse toggle", () => {
     await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
 
     expect(pillarContainer.className).toContain("flex-col");
+  });
+
+  it("sets a title attribute on every interactive sidebar element", () => {
+    render(<Sidebar />);
+
+    // Check all nav links have title attributes
+    const portfolioLink = screen.getByRole("link", { name: /my investment portfolio/i });
+    expect(portfolioLink).toHaveAttribute("title", "My Investment Portfolio");
+
+    // Check utilities links have title attributes (getAllByRole since they appear twice)
+    const userGuideLinks = screen.getAllByRole("link", { name: /user guide/i });
+    userGuideLinks.forEach(link => {
+      expect(link).toHaveAttribute("title", "User Guide");
+    });
+
+    // Check sign out button has title
+    expect(
+        screen.getByRole("button", { name: /sign out/i })
+    ).toHaveAttribute("title", "Sign Out");
+
+    // Check pillar buttons have title (getAllByRole since they appear twice: desktop + mobile)
+    const blueprintButtons = screen.getAllByRole("button", { name: /my blueprint/i });
+    blueprintButtons.forEach(button => {
+      expect(button).toHaveAttribute("title", "My Blueprint");
+    });
+
+    const marketIntelligenceButtons = screen.getAllByRole("button", { name: /market intelligence/i });
+    marketIntelligenceButtons.forEach(button => {
+      expect(button).toHaveAttribute("title", "Market Intelligence");
+    });
   });
 });
