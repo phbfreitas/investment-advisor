@@ -1,13 +1,35 @@
 /**
  * One-time cleanup of legacy bad classification values.
- * Run with --dry-run first to preview changes; without flag to apply.
  *
- *   AWS_PROFILE=... npx tsx scripts/migrate-cleanup-allowlist.ts --dry-run
- *   AWS_PROFILE=... npx tsx scripts/migrate-cleanup-allowlist.ts
+ * Production data is encrypted via the "Blind Admin" KMS scheme — this script
+ * uses EncryptedDocumentClient directly so encrypted fields round-trip safely.
+ *
+ * Required env vars:
+ *   KMS_KEY_ID            — production KMS key ID (alias: investment-advisor-production)
+ *   DYNAMODB_TABLE_NAME   — table name (default: InvestmentAdvisorData)
+ *   AWS_ACCESS_KEY_ID     — AWS credentials
+ *   AWS_SECRET_ACCESS_KEY — AWS credentials
+ *   AWS_REGION            — defaults to us-east-1
+ *
+ * Usage:
+ *   KMS_KEY_ID=<id> AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \
+ *     npx tsx scripts/migrate-cleanup-allowlist.ts --dry-run
+ *
+ *   KMS_KEY_ID=<id> AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \
+ *     npx tsx scripts/migrate-cleanup-allowlist.ts
+ *
+ * Run --dry-run first to preview changes; without flag to apply.
+ *
+ * The script is safe to re-run — it's idempotent: anything already canonical
+ * stays canonical, anything still bad gets normalized.
  */
 
-import { db, TABLE_NAME } from "../src/lib/db";
-import { ScanCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { KMSClient } from "@aws-sdk/client-kms";
+import { EncryptedDocumentClient } from "../src/lib/encryption/encrypted-client";
+import { createKeyProvider } from "../src/lib/encryption/key-provider";
+import { FIELD_CLASSIFICATIONS } from "../src/lib/encryption/field-classification";
 import {
   normalizeStrategyType,
   normalizeSecurityType,
@@ -21,6 +43,38 @@ import {
 import { insertAuditLog } from "../src/lib/auditLog";
 import { toSnapshot } from "../src/lib/assetSnapshot";
 import type { AssetSnapshot } from "../src/types/audit";
+
+const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "InvestmentAdvisorData";
+const KMS_KEY_ID = process.env.KMS_KEY_ID;
+const AWS_REGION = process.env.AWS_REGION || "us-east-1";
+
+if (!KMS_KEY_ID) {
+  console.error(
+    "ERROR: KMS_KEY_ID env var is required for production runs.\n" +
+    "Production data is encrypted at rest. Without the KMS key, the script\n" +
+    "would either skip changes or corrupt encrypted fields.\n\n" +
+    "Get the KMS key ID from the AWS console (KMS → Keys → alias 'investment-advisor-production')\n" +
+    "or via 'sst secret list', then run:\n" +
+    "  KMS_KEY_ID=<id> DYNAMODB_TABLE_NAME=<table> AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \\\n" +
+    "    npx tsx scripts/migrate-cleanup-allowlist.ts --dry-run\n"
+  );
+  process.exit(1);
+}
+
+const dynamoClient = new DynamoDBClient({ region: AWS_REGION });
+const rawDb = DynamoDBDocumentClient.from(dynamoClient, {
+  marshallOptions: { removeUndefinedValues: true },
+});
+const kmsClient = new KMSClient({ region: AWS_REGION });
+const db = new EncryptedDocumentClient(
+  rawDb,
+  createKeyProvider(
+    { kmsKeyId: KMS_KEY_ID, tableName: TABLE_NAME },
+    rawDb,
+    kmsClient,
+  ),
+  FIELD_CLASSIFICATIONS,
+);
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
