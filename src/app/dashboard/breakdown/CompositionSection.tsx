@@ -33,8 +33,8 @@ function Donut({ dim }: DonutProps) {
               label={(entry: unknown) => {
                 const e = entry as { percent?: number; cx?: number; cy?: number; midAngle?: number; innerRadius?: number; outerRadius?: number };
                 if (!e || typeof e.percent !== "number") return null;
-                // Recharts passes percent as 0-1 fraction; threshold is 0.15 (= 15%)
-                if (e.percent < 0.15) return null;
+                // Our data carries percent in 0-100 scale (computeBreakdowns); threshold is 15 (= 15%)
+                if (e.percent < 15) return null;
                 const RADIAN = Math.PI / 180;
                 const innerR = e.innerRadius ?? 0;
                 const outerR = e.outerRadius ?? 0;
@@ -50,7 +50,7 @@ function Donut({ dim }: DonutProps) {
                     dominantBaseline="central"
                     style={{ fontSize: 11, fontWeight: 600, pointerEvents: "none" }}
                   >
-                    {`${(e.percent * 100).toFixed(0)}%`}
+                    {`${e.percent.toFixed(0)}%`}
                   </text>
                 );
               }}
