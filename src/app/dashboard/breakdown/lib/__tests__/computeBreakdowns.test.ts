@@ -75,4 +75,28 @@ describe("computeBreakdowns", () => {
     expect(others.value).toBe(80);
     expect(others.percent).toBeCloseTo(8, 5);
   });
+
+  it("preserves Not Found slices (does not silently filter them)", () => {
+    const assets: Asset[] = [
+      a({ ticker: "X", sector: "Financials", marketValue: 100 }),
+      a({ ticker: "Y", sector: "Not Found", marketValue: 50 }),
+      a({ ticker: "Z", sector: "IT", marketValue: 50 }),
+    ];
+    const result = computeBreakdowns(assets);
+    const labels = result.sector.slices.map(s => s.label);
+    expect(labels).toContain("Not Found");
+    const notFound = result.sector.slices.find(s => s.label === "Not Found");
+    expect(notFound?.value).toBe(50);
+    expect(notFound?.percent).toBe(25);
+  });
+
+  it("renders Not Found slice even if it would be < 5% (does not roll into Others)", () => {
+    const assets: Asset[] = [
+      a({ ticker: "A", sector: "Financials", marketValue: 1000 }),
+      a({ ticker: "B", sector: "Not Found",  marketValue: 30 }),
+    ];
+    const result = computeBreakdowns(assets);
+    const labels = result.sector.slices.map(s => s.label);
+    expect(labels).toContain("Not Found"); // even though < 5%
+  });
 });

@@ -39,8 +39,9 @@ function group(assets: Asset[], field: keyof Asset): DimensionBreakdown {
     .sort((a, b) => b.value - a.value);
 
   const SMALL_SLICE_THRESHOLD = 5; // percent
-  const big = allSlices.filter(s => s.percent >= SMALL_SLICE_THRESHOLD);
-  const small = allSlices.filter(s => s.percent < SMALL_SLICE_THRESHOLD);
+  const PRESERVE_LABELS = new Set(["Not Found", "Uncategorized"]);
+  const big = allSlices.filter(s => s.percent >= SMALL_SLICE_THRESHOLD || PRESERVE_LABELS.has(s.label));
+  const small = allSlices.filter(s => s.percent < SMALL_SLICE_THRESHOLD && !PRESERVE_LABELS.has(s.label));
 
   const slices = small.length > 0
     ? [

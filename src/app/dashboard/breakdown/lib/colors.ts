@@ -15,6 +15,7 @@ function hash(s: string): number {
 
 export function paletteFor(label: string | null | undefined): string {
   if (!label) return UNCATEGORIZED;
+  if (label === "Not Found" || label === "Uncategorized") return UNCATEGORIZED;
   return PALETTE[hash(label) % PALETTE.length];
 }
 

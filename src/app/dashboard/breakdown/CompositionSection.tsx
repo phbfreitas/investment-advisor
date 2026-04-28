@@ -61,6 +61,7 @@ function Donut({ dim }: DonutProps) {
                   key={entry.name}
                   fill={
                     entry.name === "Uncategorized" ? COLORS.uncategorized
+                    : entry.name === "Not Found" ? COLORS.uncategorized
                     : entry.name === "Others" ? COLORS.uncategorized
                     : paletteByIndex(idx)
                   }
