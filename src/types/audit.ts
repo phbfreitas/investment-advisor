@@ -15,11 +15,11 @@ export interface AssetSnapshot {
   call: string;
   managementStyle: string;
   externalRating: string;
-  managementFee: number;
-  yield: number;
-  oneYearReturn: number;
-  threeYearReturn: number;
-  fiveYearReturn: number;
+  managementFee: number | null;
+  yield: number | null;
+  oneYearReturn: number | null;
+  threeYearReturn: number | null;
+  fiveYearReturn: number | null;
   exDividendDate: string;
   analystConsensus: string;
   beta: number;

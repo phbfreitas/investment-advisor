@@ -1,5 +1,8 @@
 import type { AssetSnapshot } from "@/types/audit";
 
+const numOrNull = (v: unknown): number | null =>
+  v === null || v === undefined ? null : Number(v);
+
 /**
  * Extracts an AssetSnapshot from a DynamoDB asset record.
  * Used by audit logging to capture before/after state.
@@ -22,11 +25,11 @@ export function toSnapshot(asset: Record<string, unknown>): AssetSnapshot {
     call: String(asset.call || ""),
     managementStyle: String(asset.managementStyle || ""),
     externalRating: String(asset.externalRating || ""),
-    managementFee: Number(asset.managementFee) || 0,
-    yield: Number(asset.yield) || 0,
-    oneYearReturn: Number(asset.oneYearReturn) || 0,
-    threeYearReturn: Number(asset.threeYearReturn) || 0,
-    fiveYearReturn: Number(asset.fiveYearReturn) || 0,
+    managementFee: numOrNull(asset.managementFee),
+    yield: numOrNull(asset.yield),
+    oneYearReturn: numOrNull(asset.oneYearReturn),
+    threeYearReturn: numOrNull(asset.threeYearReturn),
+    fiveYearReturn: numOrNull(asset.fiveYearReturn),
     exDividendDate: String(asset.exDividendDate || ""),
     analystConsensus: String(asset.analystConsensus || ""),
     beta: Number(asset.beta) || 0,
