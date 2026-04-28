@@ -1,4 +1,20 @@
 import YahooFinance from 'yahoo-finance2';
+import {
+  normalizeSecurityType,
+  normalizeStrategyType,
+  normalizeSector,
+  normalizeMarket,
+  normalizeCurrency,
+  normalizeManagementStyle,
+  normalizeCall,
+  applyCompanyAutoDefaults,
+  type StrategyType,
+  type SecurityType,
+  type Sector,
+  type Market,
+  type ManagementStyle,
+  type CallValue,
+} from "./classification/allowlists";
 
 const yahooFinance = new YahooFinance();
 
@@ -11,17 +27,17 @@ const PASSIVE_FAMILIES = [
 export interface TickerMetadata {
   name: string;
   symbol: string;
-  securityType: string;
-  strategyType: string;
-  call: string;
-  sector: string;
-  market: string;
-  managementStyle: string;
-  managementFee: number;
-  dividendYield: number;
+  securityType: SecurityType;
+  strategyType: StrategyType;
+  call: CallValue;
+  sector: Sector;
+  market: Market;
+  managementStyle: ManagementStyle;
+  managementFee: number | null;
+  dividendYield: number | null;
   exDividendDate: string;
-  oneYearReturn: number;
-  threeYearReturn: number;
+  oneYearReturn: number | null;
+  threeYearReturn: number | null;
   analystConsensus: string;
   externalRating: string;
   beta: number;
@@ -31,16 +47,16 @@ export interface TickerMetadata {
   currentPrice: number;
 }
 
-export function classifyStrategyType(yieldDecimal: number, beta: number, description: string = '', securityType: string = '', name: string = ''): string {
+export function classifyStrategyType(yieldDecimal: number, beta: number, description: string = '', securityType: string = '', name: string = ''): StrategyType {
   const combinedText = (description + ' ' + name).toLowerCase();
-  
+
   // 1. Pure Growth (Crescimento Puro)
   // Yield: 0.0% to 2.0%
   // Keywords: Index, S&P 500, Nasdaq, Capital Appreciation
   if (yieldDecimal <= 0.02) {
     const growthKeywords = ['index', 's&p 500', 'nasdaq', 'capital appreciation', 'growth', 'equity growth'];
     if (growthKeywords.some(k => combinedText.includes(k))) {
-      return 'Pure Growth';
+      return 'Growth';
     }
   }
 
@@ -50,7 +66,7 @@ export function classifyStrategyType(yieldDecimal: number, beta: number, descrip
   if (yieldDecimal > 0.08) {
     const optionsKeywords = ['options', 'covered call', 'derivative', 'distribution', 'yield enhancement', 'income generation', 'high yield', 'global strategic', 'enhanced income', 'financials high income'];
     if (optionsKeywords.some(k => combinedText.includes(k))) {
-      return 'The Mix';
+      return 'Mix';
     }
   }
 
@@ -60,32 +76,38 @@ export function classifyStrategyType(yieldDecimal: number, beta: number, descrip
   if (yieldDecimal > 0.02 && yieldDecimal <= 0.08 && beta < 1.0) {
     const dividendKeywords = ['dividend', 'distribution', 'realty', 'utility', 'real estate', 'bank', 'financial', 'insurance', 'trust'];
     if (dividendKeywords.some(k => combinedText.includes(k)) || securityType === 'Company') {
-      return 'Pure Dividend';
+      return 'Dividend';
     }
   }
 
   // 4. The Mix - Path B: Hybrid Risk
   // Yield 2.1% to 8.0% AND Beta >= 1.0
   if (yieldDecimal > 0.02 && yieldDecimal <= 0.08 && beta >= 1.0) {
-    return 'The Mix';
+    return 'Mix';
   }
 
   // Fallback: If AI is uncertain, Mix should be the default fallback.
-  return 'The Mix';
+  return 'Mix';
 }
 
-export function inferSector(description: string = '', currentSector: string = ''): string {
-  if (currentSector && currentSector.trim() !== '' && currentSector !== 'N/A') return currentSector;
-  
+export function inferSector(description: string = '', currentSector: string = ''): Sector {
+  if (currentSector && currentSector.trim() !== '' && currentSector !== 'N/A') {
+    const normalized = normalizeSector(currentSector);
+    if (normalized !== "Not Found") return normalized;
+  }
   const desc = description.toLowerCase();
-  if (/nasdaq.?100|technology|software|semiconductor|computing/i.test(desc)) return 'IT';
-  if (/financial services|banks?|insurance|investment/i.test(desc)) return 'Finance';
-  if (/healthcare|biotechnology|pharmaceutical/i.test(desc)) return 'Healthcare';
-  if (/energy|oil|gas|renewable/i.test(desc)) return 'Energy';
-  if (/real estate|reit/i.test(desc)) return 'Real Estate';
-  if (/consumer|retail/i.test(desc)) return 'Consumer';
-  
-  return 'Global/Diversified';
+  if (/nasdaq.?100|technology|software|semiconductor|computing/i.test(desc)) return "IT";
+  if (/financial services|banks?|insurance|investment/i.test(desc)) return "Financials";
+  if (/healthcare|biotechnology|pharmaceutical/i.test(desc)) return "Healthcare";
+  if (/energy|oil|gas|renewable/i.test(desc)) return "Energy";
+  if (/real estate|reit/i.test(desc)) return "Real Estate";
+  if (/consumer staples|defensive/i.test(desc)) return "Consumer Staples";
+  if (/consumer|retail|cyclical/i.test(desc)) return "Consumer Discretionary";
+  if (/mining|metals|gold/i.test(desc)) return "Materials";
+  if (/utility|utilities/i.test(desc)) return "Utilities";
+  if (/telecom|communication/i.test(desc)) return "Communication";
+  if (/industrial/i.test(desc)) return "Industrials";
+  return "Not Found";
 }
 
 export async function researchTicker(symbol: string): Promise<Partial<TickerMetadata> | null> {
@@ -102,7 +124,7 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
         throw e;
       }
     }
-    
+
     let summary: any = {};
     try {
       summary = await yahooFinance.quoteSummary(ticker, {
@@ -126,38 +148,45 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
     const summaryDetail = summary.summaryDetail;
     const assetProfile = summary.assetProfile;
     const fundProfile = summary.fundProfile;
-    
+
     const dividendYield = summaryDetail?.dividendYield || summaryDetail?.yield || summary.defaultKeyStatistics?.yield || 0;
     const description = (assetProfile?.longBusinessSummary) || (fundProfile?.description) || '';
     const quoteType = quote.quoteType || '';
     const beta = summary.defaultKeyStatistics?.beta3Year || summary.defaultKeyStatistics?.beta || 0;
-    
+
     const name = (quote.shortName || quote.longName || ticker);
     const isCallInName = /covered.?call|cc|max/i.test(name);
     const isCallInDesc = /covered.?call|option.?writing|call.?options|yield.?enhancement/i.test(description);
-    
-    const securityType = (quoteType === 'EQUITY' || (quoteType as string) === 'CLOSED_END_FUND') ? 'Company' : (quoteType === 'ETF' || quoteType === 'MUTUALFUND' ? 'Fund' : quoteType);
 
-    return {
+    const securityType = normalizeSecurityType(quoteType);
+    const strategyType: StrategyType = securityType === "Not Found"
+      ? "Not Found"
+      : classifyStrategyType(dividendYield, beta, description, securityType, name);
+
+    const result = {
       name,
       symbol: ticker,
       currentPrice: quote.regularMarketPrice || 0,
-      dividendYield,
+      dividendYield: dividendYield || null,
       securityType,
-      strategyType: classifyStrategyType(dividendYield, beta, description, securityType, name),
-      call: (securityType === 'Fund' && (isCallInName || isCallInDesc)) ? 'Yes' : 'No',
+      strategyType,
+      call: (securityType === "Fund" && (isCallInName || isCallInDesc)) ? "Yes" as const : "No" as const,
       sector: inferSector(description, assetProfile?.sector),
-      market: quote.exchange || '',
-      managementStyle: (assetProfile?.longBusinessSummary || '').toLowerCase().includes('index') ? 'Passive' : 'Active',
-      managementFee: summaryDetail?.managementFee || 0,
-      exDividendDate: summaryDetail?.exDividendDate?.toISOString() || '',
-      oneYearReturn: summary.fundPerformance?.trailingReturns?.oneYear || 0,
-      threeYearReturn: summary.fundPerformance?.trailingReturns?.threeYear || 0,
-      analystConsensus: summary.recommendationTrend?.trend?.[0]?.recommendationMean || 'N/A',
-      volatility: 0, 
-      riskFlag: 'Normal',
-      currency: quote.currency || 'USD'
+      market: normalizeMarket(quote.exchange, securityType),
+      managementStyle: normalizeManagementStyle(
+        (assetProfile?.longBusinessSummary || "").toLowerCase().includes("index") ? "Passive" : "Active"
+      ),
+      managementFee: summaryDetail?.managementFee ?? null,
+      exDividendDate: summaryDetail?.exDividendDate?.toISOString() || "",
+      oneYearReturn: summary.fundPerformance?.trailingReturns?.oneYear ?? null,
+      threeYearReturn: summary.fundPerformance?.trailingReturns?.threeYear ?? null,
+      analystConsensus: summary.recommendationTrend?.trend?.[0]?.recommendationMean || "N/A",
+      volatility: 0,
+      riskFlag: "Normal",
+      currency: normalizeCurrency(quote.currency || "USD"),
     };
+
+    return applyCompanyAutoDefaults(result);
   } catch (error) {
     console.error(`Error researching ${ticker}:`, error);
     return null;
