@@ -6,6 +6,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { insertAuditLog } from "@/lib/auditLog";
 import { toSnapshot } from "@/lib/assetSnapshot";
+import {
+  normalizeStrategyType,
+  normalizeSecurityType,
+  normalizeSector,
+  normalizeMarket,
+  normalizeCurrency,
+  normalizeManagementStyle,
+  normalizeCall,
+  applyCompanyAutoDefaults,
+} from "@/lib/classification/allowlists";
 
 export const dynamic = "force-dynamic";
 
@@ -34,34 +44,35 @@ export async function POST(request: Request) {
         const assetId = uuidv4();
         const assetSK = `ASSET#${assetId}`;
 
-        const asset = {
+        const securityType = normalizeSecurityType(data.securityType);
+        const baseAsset = {
             PK: PROFILE_KEY,
             SK: assetSK,
             id: assetId,
             profileId: PROFILE_KEY,
-            type: "ASSET",
+            type: "ASSET" as const,
 
             account: data.account || "",
             ticker: data.ticker || "",
-            securityType: data.securityType || "",
-            strategyType: data.strategyType || "",
-            call: data.call || "",
-            sector: data.sector || "",
-            market: data.market || "",
-            currency: data.currency || "",
-            managementStyle: data.managementStyle || "",
+            securityType,
+            strategyType: normalizeStrategyType(data.strategyType),
+            call: normalizeCall(data.call),
+            sector: normalizeSector(data.sector),
+            market: normalizeMarket(data.market, securityType),
+            currency: normalizeCurrency(data.currency),
+            managementStyle: normalizeManagementStyle(data.managementStyle),
             externalRating: data.externalRating || "",
 
-            managementFee: parseFloat(data.managementFee) || 0,
+            managementFee: data.managementFee != null && data.managementFee !== "" ? parseFloat(data.managementFee) : null,
             quantity: parseFloat(data.quantity) || 0,
             liveTickerPrice: parseFloat(data.liveTickerPrice) || 0,
             bookCost: parseFloat(data.bookCost) || 0,
             marketValue: parseFloat(data.marketValue) || (parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0),
             profitLoss: parseFloat(data.profitLoss) || ((parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0)) - (parseFloat(data.bookCost) || 0),
-            yield: parseFloat(data.yield) || 0,
-            oneYearReturn: parseFloat(data.oneYearReturn) || 0,
-            fiveYearReturn: parseFloat(data.fiveYearReturn) || 0,
-            threeYearReturn: parseFloat(data.threeYearReturn) || 0,
+            yield: data.yield != null && data.yield !== "" ? parseFloat(data.yield) : null,
+            oneYearReturn: data.oneYearReturn != null && data.oneYearReturn !== "" ? parseFloat(data.oneYearReturn) : null,
+            fiveYearReturn: data.fiveYearReturn != null && data.fiveYearReturn !== "" ? parseFloat(data.fiveYearReturn) : null,
+            threeYearReturn: data.threeYearReturn != null && data.threeYearReturn !== "" ? parseFloat(data.threeYearReturn) : null,
             exDividendDate: data.exDividendDate || "",
             analystConsensus: data.analystConsensus || "",
             beta: parseFloat(data.beta) || 0,
@@ -74,6 +85,8 @@ export async function POST(request: Request) {
 
             updatedAt: new Date().toISOString(),
         };
+
+        const asset = applyCompanyAutoDefaults(baseAsset);
 
         await db.send(
             new PutCommand({
