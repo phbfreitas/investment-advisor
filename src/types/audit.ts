@@ -40,7 +40,7 @@ export interface AuditMutation {
   after: AssetSnapshot | null;
 }
 
-export type AuditSource = 'PDF_IMPORT' | 'MANUAL_EDIT' | 'ROLLBACK';
+export type AuditSource = 'PDF_IMPORT' | 'MANUAL_EDIT' | 'ROLLBACK' | 'MIGRATION_PHASE2_CLEANUP';
 
 export interface AuditLog {
   PK: string;
