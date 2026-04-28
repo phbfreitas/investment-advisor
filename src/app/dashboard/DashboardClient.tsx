@@ -14,6 +14,7 @@ import {
   MGMT_STYLES,
 } from "@/lib/classification/allowlists";
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
+import { NotFoundCell } from "@/components/NotFoundCell";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
@@ -696,6 +697,30 @@ function DashboardContent() {
                     [...sortedAssets, ...(editingId === "NEW" ? [editForm as Asset] : [])].map((asset) => {
                       const isEditing = editingId === asset.id;
 
+                      // Helper that renders a value or NotFoundCell when missing.
+                      // For numbers, treat null as missing; 0 is valid.
+                      // For strings, treat "", null, undefined, or "Not Found" as missing.
+                      const renderText = (value: string | null | undefined) => {
+                        if (value === null || value === undefined || value === "" || value === "Not Found") {
+                          return <NotFoundCell />;
+                        }
+                        return <span>{value}</span>;
+                      };
+
+                      const renderNumber = (value: number | null | undefined, suffix = "", decimals = 2) => {
+                        if (value === null || value === undefined) {
+                          return <NotFoundCell />;
+                        }
+                        return <span>{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
+                      };
+
+                      const renderPercent = (value: number | null | undefined) => {
+                        if (value === null || value === undefined) {
+                          return <NotFoundCell />;
+                        }
+                        return <span>{(value * 100).toFixed(2)}%</span>;
+                      };
+
                       const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
                         if (isEditing) {
                           if (isSelect) {
@@ -716,21 +741,29 @@ function DashboardContent() {
                             <input
                               type={type}
                               className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
-                              value={(editForm[field] as string | number) ?? ""}
+                              value={(editForm[field] as string | number | null) ?? ""}
                               onChange={(e) => handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
                             />
                           );
                         }
 
-                        // Display mode
-                        const displayValue = asset[field] as string | number;
+                        // Display mode — delegate Not Found / null cases to NotFoundCell while
+                        // preserving bgClass pill styling for canonical values.
+                        const displayValue = asset[field] as string | number | null | undefined;
                         if (type === 'number') {
-                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{Number(displayValue || 0)?.toLocaleString()}</span>;
+                          if (displayValue === null || displayValue === undefined || typeof displayValue !== 'number') {
+                            return <NotFoundCell />;
+                          }
+                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue.toLocaleString()}</span>;
+                        }
+                        if (displayValue === null || displayValue === undefined || displayValue === "" || displayValue === "Not Found") {
+                          return <NotFoundCell />;
                         }
                         return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue}</span>;
                       };
 
-                      // Visual indicator for fields that couldn't be auto-calculated
+                      // Legacy "—" indicator kept for ext-rating, ex-div date, analyst, beta where
+                      // a softer dash is preferable to the prominent yellow NotFoundCell.
                       const naIndicator = (value: string | number | null | undefined, suffix = "") => {
                         if (value === null || value === undefined || value === "" || value === 0) {
                           return <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>;
@@ -783,9 +816,9 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : <span>{asset.managementStyle || "N/A"}</span>}
                           </td>
-                          {/* 12. Mgt Fee % — N/A if missing */}
+                          {/* 12. Mgt Fee % — Companies are legitimately 0; otherwise NotFoundCell when null */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementFee", false, [], "number") : <span>{asset.managementFee != null && asset.managementFee !== 0 ? `${Number(asset.managementFee).toFixed(2)}%` : "N/A"}</span>}
+                            {isEditing ? renderField("managementFee", false, [], "number") : (asset.securityType === "Company" ? <span>0.00%</span> : renderNumber(asset.managementFee, "%", 2))}
                           </td>
                           {/* 13. Quantity */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
@@ -809,15 +842,15 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
                           {/* 18. Yield % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("yield", false, [], "number") : <span>{(Number(asset.yield || 0) * 100).toFixed(2)}%</span>}
+                            {isEditing ? renderField("yield", false, [], "number") : renderPercent(asset.yield)}
                           </td>
                           {/* 19. 1YR Return % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("oneYearReturn", false, [], "number") : <span>{(Number(asset.oneYearReturn || 0) * 100).toFixed(2)}%</span>}
+                            {isEditing ? renderField("oneYearReturn", false, [], "number") : renderPercent(asset.oneYearReturn)}
                           </td>
                           {/* 20. 3YR Return % */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number) ?? 0} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : naIndicator(((Number(asset.threeYearReturn || asset.fiveYearReturn) || 0) * 100) || null, "%")}
+                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : renderPercent(asset.threeYearReturn ?? asset.fiveYearReturn ?? null)}
                           </td>
                           {/* 21. Risk */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
