@@ -125,4 +125,46 @@ describe("Sidebar collapse toggle", () => {
       expect(button).toHaveAttribute("title", "Market Intelligence");
     });
   });
+
+  const STORAGE_KEY = "investmentAdvisor.sidebar.collapsed";
+
+  it("starts collapsed when localStorage has 'true'", () => {
+    localStorage.setItem(STORAGE_KEY, "true");
+    const { container } = render(<Sidebar />);
+    const outer = container.firstChild as HTMLElement;
+    expect(outer.className).toContain("md:w-16");
+    expect(
+        screen.getByRole("button", { name: /expand sidebar/i })
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("writes the new value to localStorage when toggled", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar />);
+
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /collapse sidebar/i }));
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("true");
+
+    await user.click(screen.getByRole("button", { name: /expand sidebar/i }));
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("false");
+  });
+
+  it("does not crash if localStorage.setItem throws", async () => {
+    const setItemSpy = jest.spyOn(Storage.prototype, "setItem")
+        .mockImplementation(() => { throw new Error("quota exceeded"); });
+
+    const user = userEvent.setup();
+    const { container } = render(<Sidebar />);
+
+    await expect(
+        user.click(screen.getByRole("button", { name: /collapse sidebar/i }))
+    ).resolves.not.toThrow();
+
+    const outer = container.firstChild as HTMLElement;
+    expect(outer.className).toContain("md:w-16");
+
+    setItemSpy.mockRestore();
+  });
 });

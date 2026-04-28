@@ -9,6 +9,24 @@ import { signOut } from "next-auth/react";
 
 type PillarId = "blueprint" | "intelligence";
 
+const STORAGE_KEY = "investmentAdvisor.sidebar.collapsed";
+
+function readStoredCollapsed(): boolean {
+    try {
+        return typeof window !== "undefined" && window.localStorage.getItem(STORAGE_KEY) === "true";
+    } catch {
+        return false;
+    }
+}
+
+function writeStoredCollapsed(value: boolean): void {
+    try {
+        window.localStorage.setItem(STORAGE_KEY, value ? "true" : "false");
+    } catch {
+        // Ignore — private browsing, quota, etc.
+    }
+}
+
 const pillars = [
     {
         id: "blueprint" as PillarId,
@@ -51,6 +69,10 @@ export function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     useEffect(() => {
+        setIsCollapsed(readStoredCollapsed());
+    }, []);
+
+    useEffect(() => {
         const pillarForRoute = getPillarForRoute(pathname);
         const allPillarRoutes = pillars.flatMap(p => p.items.map(i => i.href));
         if (allPillarRoutes.some(route => route === "/" ? pathname === "/" : pathname.startsWith(route))) {
@@ -77,7 +99,13 @@ export function Sidebar() {
                 </div>
                 <button
                     type="button"
-                    onClick={() => setIsCollapsed(c => !c)}
+                    onClick={() => {
+                        setIsCollapsed(prev => {
+                            const next = !prev;
+                            writeStoredCollapsed(next);
+                            return next;
+                        });
+                    }}
                     title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     aria-expanded={!isCollapsed}
