@@ -137,10 +137,12 @@ describe("normalizeSector consolidation", () => {
     ["Realty", "Real Estate"],
     // Consumer Discretionary
     ["Consumer Discretionary", "Consumer Discretionary"],
+    ["Consumer Cyclical", "Consumer Discretionary"],
     ["Cyclical", "Consumer Discretionary"],
     ["Retail", "Consumer Discretionary"],
     // Consumer Staples
     ["Consumer Staples", "Consumer Staples"],
+    ["Consumer Defensive", "Consumer Staples"],
     ["Defensive", "Consumer Staples"],
     // Materials
     ["Mining", "Materials"],

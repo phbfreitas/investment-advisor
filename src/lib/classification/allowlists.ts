@@ -86,11 +86,13 @@ const SECTOR_CONSOLIDATION_MAP: Record<string, Sector> = {
   "realty": "Real Estate",
   // Consumer Discretionary
   "consumer discretionary": "Consumer Discretionary",
+  "consumer cyclical": "Consumer Discretionary",
   "cyclical": "Consumer Discretionary",
   "retail": "Consumer Discretionary",
   "consumer": "Consumer Discretionary", // ambiguous default
   // Consumer Staples
   "consumer staples": "Consumer Staples",
+  "consumer defensive": "Consumer Staples",
   "defensive": "Consumer Staples",
   // Materials
   "mining": "Materials",
