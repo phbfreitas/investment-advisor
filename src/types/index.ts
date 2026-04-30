@@ -1,3 +1,13 @@
+export type LockableField =
+    | "sector"
+    | "market"
+    | "securityType"
+    | "strategyType"
+    | "call"
+    | "managementStyle"
+    | "currency"
+    | "managementFee";
+
 export interface Asset {
     PK: string;
     SK: string;
@@ -34,6 +44,7 @@ export interface Asset {
     volatility: number;
     expectedAnnualDividends: number;
     updatedAt: string;
+    userOverrides?: Partial<Record<LockableField, boolean>>;
 }
 
 export interface MarketData {

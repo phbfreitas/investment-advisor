@@ -40,5 +40,8 @@ export function toSnapshot(asset: Record<string, unknown>): AssetSnapshot {
     importSource: String(asset.importSource || ""),
     createdAt: String(asset.createdAt || ""),
     updatedAt: String(asset.updatedAt || ""),
+    userOverrides: (asset.userOverrides && typeof asset.userOverrides === "object")
+        ? (asset.userOverrides as unknown) as AssetSnapshot["userOverrides"]
+        : undefined,
   };
 }
