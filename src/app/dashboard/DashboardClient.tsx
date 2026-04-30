@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw } from "lucide-react";
+import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
 import type { Asset, LockableField, MarketData } from "@/types";
 import {
   STRATEGY_TYPES,
@@ -24,6 +24,40 @@ import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
   LOCKABLE_FIELD_SET.has(field as string);
+
+const LOCKABLE_FIELD_LABELS: Record<LockableField, string> = {
+  sector: "Sector",
+  market: "Market",
+  securityType: "Type",
+  strategyType: "Strategy",
+  call: "Call",
+  managementStyle: "Mgmt Style",
+  currency: "Currency",
+  managementFee: "Mgmt Fee",
+};
+
+function LockedFieldIcon({
+  isLocked,
+  onUnlock,
+  label,
+}: {
+  isLocked: boolean;
+  onUnlock: () => void;
+  label: string;
+}) {
+  if (!isLocked) return null;
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onUnlock(); }}
+      aria-label={`${label} locked — click to unlock`}
+      title={`${label} locked — click to unlock`}
+      className="inline-flex items-center justify-center w-6 h-6 -ml-0.5 mr-1 rounded text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+    >
+      <Lock className="h-3 w-3" aria-hidden="true" />
+    </button>
+  );
+}
 
 export default function DashboardPage() {
   return (
@@ -212,6 +246,29 @@ function DashboardContent() {
       [field]: value,
       userOverrides: { ...prev.userOverrides, [field]: true },
     }));
+  };
+
+  const handleUnlockEditMode = (field: LockableField) => {
+    setEditForm(prev => ({
+      ...prev,
+      userOverrides: { ...prev.userOverrides, [field]: false },
+    }));
+  };
+
+  const handleUnlockField = async (asset: Asset, field: LockableField) => {
+    const nextOverrides = { ...asset.userOverrides, [field]: false };
+    try {
+      const res = await fetch(`/api/assets/${asset.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...asset, userOverrides: nextOverrides }),
+      });
+      if (!res.ok) throw new Error("Failed to unlock field");
+      fetchAssets();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to unlock field";
+      setMessage({ text: message, type: "error" });
+    }
   };
 
   const saveEdit = async () => {
@@ -726,9 +783,13 @@ function DashboardContent() {
                       };
 
                       const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
+                        const lockable = isLockableField(field);
+                        const lockableField = lockable ? (field as LockableField) : null;
+
                         if (isEditing) {
+                          let control: ReactNode;
                           if (isSelect) {
-                            return (
+                            control = (
                               <select
                                 className={`w-28 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 ${bgClass}`}
                                 value={(editForm[field] as string | number) || ""}
@@ -746,42 +807,73 @@ function DashboardContent() {
                                 ))}
                               </select>
                             );
-                          }
-                          return (
-                            <input
-                              type={type}
-                              className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
-                              value={(editForm[field] as string | number | null) ?? ""}
-                              onChange={(e) => {
-                                if (isLockableField(field)) {
-                                  if (type === 'number') {
-                                    const parsed = e.target.value === "" ? null : parseFloat(e.target.value);
-                                    const safe = parsed === null ? null : (Number.isNaN(parsed) ? null : parsed);
-                                    setFieldWithLock(field, safe as Asset[typeof field]);
+                          } else {
+                            control = (
+                              <input
+                                type={type}
+                                className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
+                                value={(editForm[field] as string | number | null) ?? ""}
+                                onChange={(e) => {
+                                  if (isLockableField(field)) {
+                                    if (type === 'number') {
+                                      const parsed = e.target.value === "" ? null : parseFloat(e.target.value);
+                                      const safe = parsed === null ? null : (Number.isNaN(parsed) ? null : parsed);
+                                      setFieldWithLock(field, safe as Asset[typeof field]);
+                                    } else {
+                                      setFieldWithLock(field, e.target.value as Asset[typeof field]);
+                                    }
                                   } else {
-                                    setFieldWithLock(field, e.target.value as Asset[typeof field]);
+                                    handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value);
                                   }
-                                } else {
-                                  handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value);
-                                }
-                              }}
-                            />
-                          );
+                                }}
+                              />
+                            );
+                          }
+
+                          if (lockableField) {
+                            return (
+                              <div className="flex items-center">
+                                <LockedFieldIcon
+                                  isLocked={editForm.userOverrides?.[lockableField] === true}
+                                  onUnlock={() => handleUnlockEditMode(lockableField)}
+                                  label={LOCKABLE_FIELD_LABELS[lockableField]}
+                                />
+                                {control}
+                              </div>
+                            );
+                          }
+                          return control;
                         }
 
                         // Display mode — delegate Not Found / null cases to NotFoundCell while
                         // preserving bgClass pill styling for canonical values.
                         const displayValue = asset[field] as string | number | null | undefined;
+                        let content: ReactNode;
                         if (type === 'number') {
                           if (displayValue === null || displayValue === undefined || typeof displayValue !== 'number') {
-                            return <NotFoundCell />;
+                            content = <NotFoundCell />;
+                          } else {
+                            content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue.toLocaleString()}</span>;
                           }
-                          return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue.toLocaleString()}</span>;
+                        } else if (displayValue === null || displayValue === undefined || displayValue === "" || displayValue === "Not Found") {
+                          content = <NotFoundCell />;
+                        } else {
+                          content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue}</span>;
                         }
-                        if (displayValue === null || displayValue === undefined || displayValue === "" || displayValue === "Not Found") {
-                          return <NotFoundCell />;
+
+                        if (lockableField) {
+                          return (
+                            <span className="inline-flex items-center">
+                              <LockedFieldIcon
+                                isLocked={asset.userOverrides?.[lockableField] === true}
+                                onUnlock={() => handleUnlockField(asset, lockableField)}
+                                label={LOCKABLE_FIELD_LABELS[lockableField]}
+                              />
+                              {content}
+                            </span>
+                          );
                         }
-                        return <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue}</span>;
+                        return content;
                       };
 
                       // Legacy "—" indicator kept for ext-rating, ex-div date, analyst, beta where
@@ -836,11 +928,29 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
                           {/* 11. Mgt Style — N/A if missing */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : <span>{asset.managementStyle || "N/A"}</span>}
+                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
+                              <span className="inline-flex items-center">
+                                <LockedFieldIcon
+                                  isLocked={asset.userOverrides?.managementStyle === true}
+                                  onUnlock={() => handleUnlockField(asset, "managementStyle")}
+                                  label={LOCKABLE_FIELD_LABELS.managementStyle}
+                                />
+                                <span>{asset.managementStyle || "N/A"}</span>
+                              </span>
+                            )}
                           </td>
                           {/* 12. Mgt Fee % — Companies are legitimately 0; otherwise NotFoundCell when null */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementFee", false, [], "number") : (asset.securityType === "Company" ? <span>0.00%</span> : renderNumber(asset.managementFee, "%", 2))}
+                            {isEditing ? renderField("managementFee", false, [], "number") : (
+                              <span className="inline-flex items-center">
+                                <LockedFieldIcon
+                                  isLocked={asset.userOverrides?.managementFee === true}
+                                  onUnlock={() => handleUnlockField(asset, "managementFee")}
+                                  label={LOCKABLE_FIELD_LABELS.managementFee}
+                                />
+                                {asset.securityType === "Company" ? <span>0.00%</span> : renderNumber(asset.managementFee, "%", 2)}
+                              </span>
+                            )}
                           </td>
                           {/* 13. Quantity */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
