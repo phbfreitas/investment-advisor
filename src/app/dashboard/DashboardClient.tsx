@@ -20,6 +20,7 @@ import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
+import { detectAnomaly } from "./lib/priceAnomaly";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
@@ -76,6 +77,7 @@ function DashboardContent() {
   // Market data is now optional/helper since the table uses DB values, but we still fetch it for live updates
   const [marketData, setMarketData] = useState<Record<string, MarketData>>({});
   const [isMarketLoading, setIsMarketLoading] = useState(false);
+  const [anomalies, setAnomalies] = useState<Record<string, { prior: number; next: number; deltaPct: number }>>({});
 
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -141,14 +143,40 @@ function DashboardContent() {
 
       const results = await Promise.all(promises);
       const newMarketData: Record<string, MarketData> = {};
+      const newAnomalies: Record<string, { prior: number; next: number; deltaPct: number }> = {};
 
       results.forEach(data => {
         if (data && data.ticker && !data.error) {
           newMarketData[data.ticker] = data as MarketData;
+
+          const asset = assets.find(a => a.ticker === data.ticker);
+          const prior = asset?.liveTickerPrice ?? 0;
+          const next = data.currentPrice ?? 0;
+          const { isAnomaly, deltaPct } = detectAnomaly(prior, next);
+
+          if (isAnomaly && asset) {
+            newAnomalies[data.ticker] = { prior, next, deltaPct };
+            // Fire-and-forget — logging is best-effort instrumentation.
+            fetch("/api/price-anomaly-log", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ticker: data.ticker,
+                assetId: asset.id,
+                priorPrice: prior,
+                newPrice: next,
+                deltaPct,
+                deltaAbs: next - prior,
+                source: "refresh",
+                rawYahooQuote: data,
+              }),
+            }).catch(() => { /* swallow */ });
+          }
         }
       });
 
       setMarketData(prev => ({ ...prev, ...newMarketData }));
+      setAnomalies(prev => ({ ...prev, ...newAnomalies }));
     } catch (error) {
       console.error("Failed to load market data", error);
     } finally {
