@@ -102,4 +102,29 @@ VFV.TO 100 50.00 5500.00 CAD/USD
         expect(holdings).toHaveLength(1);
         expect(holdings[0].currency).toBe("USD");
     });
+
+    it("applies full precedence inline > section > document default in a TFSA-style mixed statement", () => {
+        const text = `
+Account No. TFSA12345
+
+Canadian Dollar Holdings
+VFV.TO 100 50.00 5500.00
+XEQT.TO 50 30.00 1600.00
+
+U.S. Dollar Holdings
+SPY 25 400.00 10500.00
+QQQ 10 350.00 3700.00
+
+VEA.TO 5 10.00 55.00 USD
+        `.trim();
+
+        const holdings = parseHoldings(text);
+
+        const byTicker = Object.fromEntries(holdings.map(h => [h.ticker, h]));
+        expect(byTicker["VFV.TO"].currency).toBe("CAD");
+        expect(byTicker["XEQT.TO"].currency).toBe("CAD");
+        expect(byTicker["SPY"].currency).toBe("USD");
+        expect(byTicker["QQQ"].currency).toBe("USD");
+        expect(byTicker["VEA.TO"]?.currency).toBe("USD");
+    });
 });
