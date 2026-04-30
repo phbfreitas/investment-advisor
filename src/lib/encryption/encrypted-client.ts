@@ -6,6 +6,7 @@ import {
   ScanCommand,
   DeleteCommand,
   BatchWriteCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { encryptField, decryptField, isEncrypted } from './crypto';
 import { getClassification, FieldClassification } from './field-classification';
@@ -17,7 +18,8 @@ type AnyCommand =
   | QueryCommand
   | ScanCommand
   | DeleteCommand
-  | BatchWriteCommand;
+  | BatchWriteCommand
+  | UpdateCommand;
 
 export class EncryptedDocumentClient {
   constructor(

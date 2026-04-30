@@ -256,14 +256,22 @@ function DashboardContent() {
   };
 
   const handleUnlockField = async (asset: Asset, field: LockableField) => {
-    const nextOverrides = { ...asset.userOverrides, [field]: false };
     try {
-      const res = await fetch(`/api/assets/${asset.id}`, {
-        method: "PUT",
+      const res = await fetch(`/api/assets/${asset.id}/lock`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...asset, userOverrides: nextOverrides }),
+        body: JSON.stringify({
+          field,
+          locked: false,
+          expectedUpdatedAt: asset.updatedAt,
+        }),
       });
-      if (!res.ok) throw new Error("Failed to unlock field");
+      if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error("This asset was changed elsewhere. Refresh and try again.");
+        }
+        throw new Error("Failed to unlock field");
+      }
       fetchAssets();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to unlock field";
