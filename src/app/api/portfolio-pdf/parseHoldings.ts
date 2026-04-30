@@ -8,6 +8,44 @@ export interface ParsedHolding {
     currency: string;
 }
 
+type CurrencyCode = "USD" | "CAD";
+
+type CurrencyConfig = {
+    code: CurrencyCode;
+    sectionRegex: RegExp;
+    inlineToken: RegExp;
+    documentRegex: RegExp;
+};
+
+const CURRENCY_CONFIGS: CurrencyConfig[] = [
+    {
+        code: "CAD",
+        sectionRegex: /Canadian\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+        inlineToken: /\bCAD\b/i,
+        documentRegex: /CAD|Canadian/i,
+    },
+    {
+        code: "USD",
+        sectionRegex: /U\.?S\.?\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+        inlineToken: /\bUSD\b/i,
+        documentRegex: /USD|U\.?S\.?\s*Dollar/i,
+    },
+];
+
+function detectDocumentDefaultCurrency(text: string): CurrencyCode {
+    for (const cfg of CURRENCY_CONFIGS) {
+        if (cfg.documentRegex.test(text)) return cfg.code;
+    }
+    return "USD";
+}
+
+function detectSectionCurrency(line: string): CurrencyCode | null {
+    for (const cfg of CURRENCY_CONFIGS) {
+        if (cfg.sectionRegex.test(line)) return cfg.code;
+    }
+    return null;
+}
+
 // Detect account type from text context
 function classifyAccountType(text: string): string {
     const upper = text.toUpperCase();
@@ -42,7 +80,8 @@ export function parseHoldings(text: string): ParsedHolding[] {
     const accountType = classifyAccountType(text);
 
     // Detect currency from document
-    const currency = /CAD|Canadian/i.test(text) ? "CAD" : "USD";
+    const documentDefault = detectDocumentDefaultCurrency(text);
+    let sectionCurrency: CurrencyCode | null = null;
 
     // Split into lines for row-by-row parsing
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -57,6 +96,13 @@ export function parseHoldings(text: string): ParsedHolding[] {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
+        // Check for section header to update currency context
+        const headerMatch = detectSectionCurrency(line);
+        if (headerMatch !== null) {
+            sectionCurrency = headerMatch;
+            continue;
+        }
+
         // 1. Try generic safe pattern
         const match = line.match(holdingPattern);
         if (match) {
@@ -67,7 +113,7 @@ export function parseHoldings(text: string): ParsedHolding[] {
 
             if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
                 if (!holdings.some(h => h.ticker === ticker)) {
-                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
+                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: sectionCurrency ?? documentDefault });
                 }
             }
             continue;
@@ -102,7 +148,7 @@ export function parseHoldings(text: string): ParsedHolding[] {
 
                 if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
                     if (!holdings.some(h => h.ticker === ticker)) {
-                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
+                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: sectionCurrency ?? documentDefault });
                     }
                 }
             }
