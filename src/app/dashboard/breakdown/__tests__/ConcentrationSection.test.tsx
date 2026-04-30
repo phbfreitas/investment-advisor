@@ -16,7 +16,7 @@ const makeTopHoldings = (rows: Array<{ ticker: string; percent: number }>): TopH
         currency: "USD",
     })),
     others: null,
-    totalValue: rows.reduce((sum, r) => sum + 1000, 0),
+    totalValue: rows.length * 1000,
 });
 
 describe("ConcentrationSection title", () => {
