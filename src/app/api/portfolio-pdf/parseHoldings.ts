@@ -46,9 +46,26 @@ function detectSectionCurrency(line: string): CurrencyCode | null {
     return null;
 }
 
+// NOTE: When adding a new lockable currency to CURRENCY_CONFIGS (e.g., EUR, GBP), update the
+// `(USD|CAD)` alternation in this function as well. The `inlineToken` field on the config is
+// no longer the source of truth — this helper hardcodes the alternation for stricter matching.
 function detectInlineCurrency(line: string): CurrencyCode | null {
-    const matches = CURRENCY_CONFIGS.filter(cfg => cfg.inlineToken.test(line));
-    return matches.length === 1 ? matches[0].code : null;
+    // Look for a currency token at the trailing column position (after the numeric values).
+    // Rationale: narrative text like "USD Settled" or "CAD Hedged ETF" can appear mid-line
+    // and would spoof the row's currency under a permissive regex. Real brokerage statements
+    // put the currency token at the end of the holding line (trailing column), so we anchor
+    // detection to that position.
+    const trailingMatch = line.match(/\b(USD|CAD)\b\s*\W*$/i);
+    if (!trailingMatch) return null;
+
+    // Defense in depth: require a numeric value somewhere before the token, so a header line
+    // like "U.S. Dollar Holdings" — which lacks numerics — won't be misread as inline.
+    const beforeToken = line.slice(0, line.lastIndexOf(trailingMatch[0]));
+    if (!/\d/.test(beforeToken)) return null;
+
+    const code = trailingMatch[1].toUpperCase();
+    if (code === "USD" || code === "CAD") return code;
+    return null;
 }
 
 // Detect account type from text context

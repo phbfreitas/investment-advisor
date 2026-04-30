@@ -127,4 +127,47 @@ VEA.TO 5 10.00 55.00 USD
         expect(byTicker["QQQ"].currency).toBe("USD");
         expect(byTicker["VEA.TO"]?.currency).toBe("USD");
     });
+
+    it("rejects mid-line narrative USD tokens (spoof guard) — token must be at trailing position", () => {
+        // Document defaults to USD (no Canadian markers). The holding line has a "USD" token
+        // mid-line in the asset description ("USD-priced"), followed by non-currency text.
+        // The currency token is NOT at the trailing position. With the stricter parser,
+        // mid-line tokens are ignored.
+        const text = `
+Account No. ABC123 TFSA
+
+AAPL 100 150.00 15000.00 USD-priced Class A
+    `.trim();
+
+        const holdings = parseHoldings(text);
+
+        expect(holdings).toHaveLength(1);
+        expect(holdings[0].ticker).toBe("AAPL");
+        // "USD" appears mid-line followed by "-priced Class A", so it's not at trailing position.
+        // OLD permissive regex: \bUSD\b would match anywhere, tag as USD via inline.
+        // NEW stricter regex: requires USD at trailing position (end of line, after numerics).
+        // This line ends with "A" (word chars), not the currency token. Regex fails,
+        // falls through to document default: USD.
+        expect(holdings[0].currency).toBe("USD");
+    });
+
+    it("does not let a mid-line USD token in a CAD-default document spoof the row to USD", () => {
+        const text = `
+Account No. ABC123 TFSA
+Canadian Dollar Holdings
+
+AAPL 100 150.00 15000.00 USD-denominated share class
+    `.trim();
+
+        const holdings = parseHoldings(text);
+
+        expect(holdings).toHaveLength(1);
+        expect(holdings[0].ticker).toBe("AAPL");
+        // "USD" appears mid-line in "USD-denominated share class", followed by a hyphen and text.
+        // Document context: "Canadian Dollar Holdings" sets section currency to CAD.
+        // OLD permissive regex: \bUSD\b would match anywhere, tag as USD via inline.
+        // NEW stricter regex: requires USD at trailing position. This line ends with "class"
+        // (word chars after "USD-"), so regex fails. Falls through to section default: CAD.
+        expect(holdings[0].currency).toBe("CAD");
+    });
 });
