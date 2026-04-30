@@ -97,8 +97,10 @@ VFV.TO 100 50.00 5500.00 CAD/USD
 
         const holdings = parseHoldings(text);
 
-        // Both inline tokens present → detectInlineCurrency returns null → falls
-        // through to sectionCurrency (USD), NOT the first-matched config.
+        // With the stricter regex: CAD/USD ends with "USD" at the trailing position.
+        // detectInlineCurrency now correctly identifies USD (not returning null for ambiguity).
+        // The section header also says USD, so the result is USD either way.
+        // If this line were under a CAD section, the inline-detected USD would correctly override it.
         expect(holdings).toHaveLength(1);
         expect(holdings[0].currency).toBe("USD");
     });
