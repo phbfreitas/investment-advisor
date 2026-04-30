@@ -88,4 +88,18 @@ SPY 25 400.00 10500.00 USD
         expect(byTicker["VFV.TO"].currency).toBe("CAD");
         expect(byTicker["SPY"].currency).toBe("USD");
     });
+
+    it("falls through to section/default when a row contains both USD and CAD tokens (ambiguous)", () => {
+        const text = `
+U.S. Dollar Holdings
+VFV.TO 100 50.00 5500.00 CAD/USD
+        `.trim();
+
+        const holdings = parseHoldings(text);
+
+        // Both inline tokens present → detectInlineCurrency returns null → falls
+        // through to sectionCurrency (USD), NOT the first-matched config.
+        expect(holdings).toHaveLength(1);
+        expect(holdings[0].currency).toBe("USD");
+    });
 });
