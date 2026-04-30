@@ -43,4 +43,20 @@ describe("detectAnomaly", () => {
         expect(detectAnomaly(100, 105, 0.05).isAnomaly).toBe(true);
         expect(detectAnomaly(100, 104.99, 0.05).isAnomaly).toBe(false);
     });
+
+    it("returns isAnomaly=false when prior is NaN", () => {
+        expect(detectAnomaly(NaN, 100).isAnomaly).toBe(false);
+    });
+
+    it("returns isAnomaly=false when prior is Infinity", () => {
+        expect(detectAnomaly(Infinity, 100).isAnomaly).toBe(false);
+    });
+
+    it("returns isAnomaly=false when next is Infinity", () => {
+        expect(detectAnomaly(100, Infinity).isAnomaly).toBe(false);
+    });
+
+    it("returns isAnomaly=false when prior is negative", () => {
+        expect(detectAnomaly(-100, 100).isAnomaly).toBe(false);
+    });
 });
