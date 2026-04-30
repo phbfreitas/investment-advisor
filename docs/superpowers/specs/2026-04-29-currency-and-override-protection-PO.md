@@ -149,16 +149,22 @@ A few choices we made that you should know about:
 
 ---
 
-## Questions for you to answer before we build
+## Questions you've already answered
 
-If anything in here surprises you or feels wrong, let me know now — easier to change the design than to rebuild after it ships.
+These are now locked into the design:
 
-A few specific things to confirm:
+1. **Eight lockable fields — too many? Too few?** No feedback received → we'll proceed with the eight as listed: sector, market, securityType, strategyType, call, managementStyle, currency, managementFee. If any feel wrong once you're using it live, easy to add/drop later.
+2. **Lock icon visibility** — no feedback received → "only shows when locked" stays as the default. (Speak up if you'd rather see a faint icon on every cell.)
+3. **Tap confirmation on unlock** — **No confirmation prompt.** Single tap unlocks. If you accidentally unlock something, the field will pick up Yahoo's value on the next refresh — but you can also just tap to re-edit and re-lock immediately.
+4. **Currency parser headers** — Today's parser will match common phrasings: "Canadian Dollar Holdings", "Canadian Dollar Securities", "Canadian Dollar Account" (and the U.S. equivalents). If your brokerage uses different wording, send us a screenshot and we'll add the pattern.
 
-1. **Eight lockable fields — too many? Too few?** The list is: sector, market, securityType, strategyType, call, managementStyle, currency, managementFee. Anything you'd add or drop?
-2. **Lock icon visibility** — happy with "only shows when locked"? Or do you want a faint icon always visible so you don't forget the feature exists?
-3. **Tap target on mobile** — is one tap on the icon enough to unlock, or do you want a confirmation ("Are you sure you want to unlock this?") to prevent accidental taps?
-4. **The currency parser's section-header detection** — if your brokerage uses a different phrasing than "Canadian Dollar Holdings" (e.g., "CAD Securities", "Canadian Account"), let us know so the parser can match it.
+### Future-proofing for other currencies
+
+You mentioned that if the product is sold to other users in the future, we might need to support currencies beyond USD and CAD (Euros, Pounds, Brazilian Reais, etc.). Good catch.
+
+The parser is built as a small list of currency rules — one entry per supported currency, each with its own header pattern and inline tag. Today's list ships with two entries (USD and CAD), which covers your portfolio. Adding more later is a single-line addition per currency, no rewrite needed.
+
+The Phase 2 work already established the underlying allowlist of acceptable ISO currency codes (USD, CAD canonical, plus EUR/GBP/BRL/etc. accepted when reported by a broker). So the foundation is in place — we just turn on detection for new currencies as new users need them.
 
 ---
 

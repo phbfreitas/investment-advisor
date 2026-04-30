@@ -116,7 +116,7 @@ The implementation plan will identify and audit all currently-existing write pat
 - **Placement:** inline-left of the cell value, with a 4px gap. Layout: `<span class="inline-flex items-center gap-1"><Lock /><CellValue /></span>`.
 - **Visibility:** rendered only when `asset.userOverrides?.[field] === true`. No icon = no chrome.
 - **Tap target:** padded to 24×24 (mobile-first project convention); the icon itself stays 12px visually.
-- **Display mode:** clicking the icon toggles the lock immediately (PATCH the asset). No confirmation dialog.
+- **Display mode:** clicking the icon toggles the lock immediately (PATCH the asset). **No confirmation dialog** — confirmed by PO. A single tap is enough; an accidental unlock is recoverable by tapping the field to lock again, so the friction of a confirmation prompt isn't justified.
 - **Edit mode:** clicking the icon toggles the lock in `editForm` state; saved on form submit.
 - **Accessibility:** `aria-label="Field locked — click to unlock"`. `title` attribute matches for hover tooltip.
 
@@ -128,19 +128,51 @@ Replace the document-level detection at `src/app/api/portfolio-pdf/route.ts:69`:
 const currency = /CAD|Canadian/i.test(text) ? "CAD" : "USD";
 ```
 
-with a per-row resolver. Strategy: **section header → inline token → document default**.
+with a data-driven, per-row resolver. Strategy: **section header → inline token → document default**.
+
+#### Currency configuration table
+
+Define a list of supported currencies with their detection patterns. Ships with USD and CAD entries (Simone's only use case today); adding more is a one-line append:
+
+```typescript
+type CurrencyConfig = {
+  code: "USD" | "CAD" | "EUR" | "GBP" | "BRL"; // extend as needed
+  sectionRegex: RegExp;
+  inlineToken: RegExp;
+  documentRegex: RegExp; // for the document-level fallback
+};
+
+const CURRENCY_CONFIGS: CurrencyConfig[] = [
+  {
+    code: "CAD",
+    sectionRegex: /Canadian\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+    inlineToken: /\bCAD\b/i,
+    documentRegex: /CAD|Canadian/i,
+  },
+  {
+    code: "USD",
+    sectionRegex: /U\.?S\.?\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+    inlineToken: /\bUSD\b/i,
+    documentRegex: /USD|U\.?S\.?\s*Dollar/i,
+  },
+];
+```
+
+Per the PO, only USD and CAD are needed today. The list shape is forward-compatible: adding EUR/GBP/BRL would be a single new entry, and they're already in the Phase 2 currency allowlist.
+
+#### Resolver logic
 
 Inside `parseHoldings`:
 
-1. Compute `documentDefault` (existing logic, kept as fallback).
-2. Track `sectionCurrency: "USD" | "CAD" | null`. Initial value `null`. While iterating lines, when a line matches a section-header pattern (`/U\.?S\.?\s*Dollar\s*(?:Holdings|Securities)?/i` for USD, `/Canadian\s*Dollar\s*(?:Holdings|Securities)?/i` for CAD), update `sectionCurrency`.
+1. Compute `documentDefault` by matching each config's `documentRegex` against the full text. First match wins; default to USD if none match (matches today's behavior).
+2. Track `sectionCurrency: CurrencyCode | null`, initial value `null`. While iterating lines, if a line matches any config's `sectionRegex`, set `sectionCurrency` to that config's `code`. (Headers are sticky: the section currency stays in effect until another header overrides it.)
 3. For each successfully parsed holding line, compute `rowCurrency` in this order:
-   - Inline token: if the line contains `\bUSD\b` (case-insensitive) and not `\bCAD\b`, → `USD`. If it contains `\bCAD\b` and not `\bUSD\b`, → `CAD`.
-   - Else: `sectionCurrency` if non-null.
-   - Else: `documentDefault`.
+   - **Inline token first:** check each config's `inlineToken` against the line. If exactly one matches, use it. (Inline beats section so a single misplaced row in a "CAD section" can correctly self-identify as USD.)
+   - **Section second:** if no unique inline match, use `sectionCurrency` if non-null.
+   - **Document default last:** otherwise use `documentDefault`.
 4. Each `holdings.push(...)` uses the resolved `rowCurrency` instead of the document-level value.
 
-The state machine is local to `parseHoldings` — no new module.
+The state machine and the config list are local to `parseHoldings` — no new module. Extending to new currencies in the future means adding a row to `CURRENCY_CONFIGS`.
 
 ### 8. Files Affected
 
