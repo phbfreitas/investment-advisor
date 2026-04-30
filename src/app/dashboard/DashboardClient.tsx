@@ -19,6 +19,7 @@ import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
+import { applyLookupRespectingLocks } from "@/app/dashboard/lib/applyLookupRespectingLocks";
 
 export default function DashboardPage() {
   return (
@@ -349,31 +350,20 @@ function DashboardContent() {
         const data = await res.json();
         const qty = editForm.quantity || 0;
         const price = data.currentPrice || 0;
-        const dividendYieldRaw: number | null = data.dividendYield ?? null;
-        const yieldForCalc = dividendYieldRaw ?? 0;
+        const yieldForCalc = data.dividendYield ?? 0;
         const bookCostNum = editForm.bookCost || 0;
-        setEditForm(prev => ({
-          ...prev,
-          sector: data.sector || prev.sector,
-          market: data.market || prev.market,
-          securityType: data.securityType || prev.securityType,
-          liveTickerPrice: price,
-          yield: dividendYieldRaw,
-          oneYearReturn: data.oneYearReturn ?? null,
-          strategyType: data.strategyType || prev.strategyType,
-          call: data.call || prev.call,
-          managementStyle: data.managementStyle || prev.managementStyle,
-          managementFee: data.managementFee ?? null,
-          exDividendDate: data.exDividendDate || "",
-          threeYearReturn: data.threeYearReturn ?? null,
-          analystConsensus: data.analystConsensus || "",
-          externalRating: data.externalRating || "",
-          beta: data.beta || 0,
-          riskFlag: data.riskFlag || "",
-          marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
-          profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
-          expectedAnnualDividends: qty > 0 && price > 0 && yieldForCalc > 0 ? qty * price * yieldForCalc : 0,
-        }));
+
+        setEditForm(prev => {
+          const lookupPatch = applyLookupRespectingLocks(prev, data);
+          return {
+            ...prev,
+            ...lookupPatch,
+            // Computed fields derived from quantity * price * yield — always recomputed.
+            marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
+            profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
+            expectedAnnualDividends: qty > 0 && price > 0 && yieldForCalc > 0 ? qty * price * yieldForCalc : 0,
+          };
+        });
       }
     } catch (err) {
       console.error('Ticker lookup failed:', err);
