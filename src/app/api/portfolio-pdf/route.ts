@@ -19,7 +19,18 @@ import {
   applyCompanyAutoDefaults,
 } from '@/lib/classification/allowlists';
 import type { AuditMutation } from "@/types/audit";
+import type { LockableField } from "@/types";
 import { parseHoldings, extractAccountNumber } from "./parseHoldings";
+
+function pickWithLock<T>(
+    existing: { userOverrides?: Partial<Record<LockableField, boolean>> } | null | undefined,
+    field: LockableField,
+    existingValue: T | undefined,
+    fallback: T | undefined,
+): T | undefined {
+    if (existing?.userOverrides?.[field] === true) return existingValue;
+    return fallback;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -170,7 +181,12 @@ export async function POST(request: Request) {
             const assetSK = `ASSET#${assetId}`;
 
             const securityType = normalizeSecurityType(
-                (existing?.securityType && existing.securityType !== "" && existing.securityType !== "Not Found") ? existing.securityType : enrichedData?.securityType,
+                pickWithLock(
+                    existing,
+                    "securityType",
+                    existing?.securityType,
+                    (existing?.securityType && existing.securityType !== "" && existing.securityType !== "Not Found") ? existing.securityType : enrichedData?.securityType,
+                ),
             );
 
             const baseItem = {
@@ -180,7 +196,14 @@ export async function POST(request: Request) {
                 profileId: PROFILE_KEY,
                 type: "ASSET",
                 ticker: h.ticker,
-                currency: normalizeCurrency(h.currency || enrichedData?.currency || existing?.currency || "CAD"),
+                currency: normalizeCurrency(
+                    pickWithLock(
+                        existing,
+                        "currency",
+                        existing?.currency,
+                        h.currency || enrichedData?.currency || existing?.currency || "CAD",
+                    ),
+                ),
                 quantity: h.quantity,
                 liveTickerPrice: pricePerShare > 0 ? pricePerShare : (enrichedData?.currentPrice ?? (existing?.liveTickerPrice ?? 0)),
                 bookCost: h.bookCost,
@@ -195,25 +218,56 @@ export async function POST(request: Request) {
 
                 securityType,
                 strategyType: normalizeStrategyType(
-                    (existing?.strategyType && existing.strategyType !== "" && existing.strategyType !== "Not Found") ? existing.strategyType : enrichedData?.strategyType,
+                    pickWithLock(
+                        existing,
+                        "strategyType",
+                        existing?.strategyType,
+                        (existing?.strategyType && existing.strategyType !== "" && existing.strategyType !== "Not Found") ? existing.strategyType : enrichedData?.strategyType,
+                    ),
                 ),
                 call: normalizeCall(
-                    (existing?.call && existing.call !== "" && existing.call !== "N/A" && existing.call !== "Not Found") ? existing.call : enrichedData?.call,
+                    pickWithLock(
+                        existing,
+                        "call",
+                        existing?.call,
+                        (existing?.call && existing.call !== "" && existing.call !== "N/A" && existing.call !== "Not Found") ? existing.call : enrichedData?.call,
+                    ),
                 ),
                 sector: normalizeSector(
-                    (existing?.sector && existing.sector !== "" && existing.sector !== "N/A" && existing.sector !== "Not Found") ? existing.sector : enrichedData?.sector,
+                    pickWithLock(
+                        existing,
+                        "sector",
+                        existing?.sector,
+                        (existing?.sector && existing.sector !== "" && existing.sector !== "N/A" && existing.sector !== "Not Found") ? existing.sector : enrichedData?.sector,
+                    ),
                 ),
                 market: normalizeMarket(
-                    (existing?.market && existing.market !== "" && existing.market !== "Not Found") ? existing.market : enrichedData?.market,
+                    pickWithLock(
+                        existing,
+                        "market",
+                        existing?.market,
+                        (existing?.market && existing.market !== "" && existing.market !== "Not Found") ? existing.market : enrichedData?.market,
+                    ),
                     securityType,
                 ),
                 managementStyle: normalizeManagementStyle(
-                    (existing?.managementStyle && existing.managementStyle !== "" && existing.managementStyle !== "Not Found") ? existing.managementStyle : enrichedData?.managementStyle,
+                    pickWithLock(
+                        existing,
+                        "managementStyle",
+                        existing?.managementStyle,
+                        (existing?.managementStyle && existing.managementStyle !== "" && existing.managementStyle !== "Not Found") ? existing.managementStyle : enrichedData?.managementStyle,
+                    ),
                 ),
                 name: (existing?.name && existing.name !== "") ? existing.name : (enrichedData?.name ?? ""),
 
                 externalRating: existing?.externalRating ?? enrichedData?.externalRating ?? "",
-                managementFee: existing?.managementFee ?? enrichedData?.managementFee ?? null,
+                managementFee: pickWithLock(
+                    existing,
+                    "managementFee",
+                    existing?.managementFee,
+                    existing?.managementFee ?? enrichedData?.managementFee ?? null,
+                ) ?? null,
+                userOverrides: existing?.userOverrides,
                 yield: existing?.yield ?? enrichedData?.dividendYield ?? null,
                 oneYearReturn: existing?.oneYearReturn ?? enrichedData?.oneYearReturn ?? null,
                 fiveYearReturn: existing?.fiveYearReturn ?? null,
