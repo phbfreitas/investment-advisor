@@ -157,26 +157,30 @@ function DashboardContent() {
           if (isAnomaly && asset) {
             newAnomalies[data.ticker] = { prior, next, deltaPct };
             // Fire-and-forget — logging is best-effort instrumentation.
-            fetch("/api/price-anomaly-log", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ticker: data.ticker,
-                assetId: asset.id,
-                priorPrice: prior,
-                newPrice: next,
-                deltaPct,
-                deltaAbs: next - prior,
-                source: "refresh",
-                rawYahooQuote: data,
-              }),
-            }).catch(() => { /* swallow */ });
+            try {
+              fetch("/api/price-anomaly-log", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ticker: data.ticker,
+                  assetId: asset.id,
+                  priorPrice: prior,
+                  newPrice: next,
+                  deltaPct,
+                  deltaAbs: next - prior,
+                  source: "refresh",
+                  rawYahooQuote: data,
+                }),
+              }).catch(() => { /* swallow */ });
+            } catch {
+              // JSON.stringify can throw on BigInt or circular refs — swallow.
+            }
           }
         }
       });
 
       setMarketData(prev => ({ ...prev, ...newMarketData }));
-      setAnomalies(prev => ({ ...prev, ...newAnomalies }));
+      setAnomalies(newAnomalies);
     } catch (error) {
       console.error("Failed to load market data", error);
     } finally {
