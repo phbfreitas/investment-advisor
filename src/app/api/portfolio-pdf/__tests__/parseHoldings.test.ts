@@ -72,4 +72,20 @@ QQQ 10 350.00 3700.00
         // regex (pre-fix), QQQ would be tagged CAD. Anchored regex keeps it USD.
         expect(byTicker["QQQ"]?.currency).toBe("USD");
     });
+
+    it("uses an inline USD/CAD token in a row to override the section/document default", () => {
+        const text = `
+Canadian portfolio summary.
+
+VFV.TO 100 50.00 5500.00 CAD
+SPY 25 400.00 10500.00 USD
+        `.trim();
+
+        const holdings = parseHoldings(text);
+
+        expect(holdings).toHaveLength(2);
+        const byTicker = Object.fromEntries(holdings.map(h => [h.ticker, h]));
+        expect(byTicker["VFV.TO"].currency).toBe("CAD");
+        expect(byTicker["SPY"].currency).toBe("USD");
+    });
 });

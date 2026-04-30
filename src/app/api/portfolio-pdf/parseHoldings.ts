@@ -46,6 +46,11 @@ function detectSectionCurrency(line: string): CurrencyCode | null {
     return null;
 }
 
+function detectInlineCurrency(line: string): CurrencyCode | null {
+    const matches = CURRENCY_CONFIGS.filter(cfg => cfg.inlineToken.test(line));
+    return matches.length === 1 ? matches[0].code : null;
+}
+
 // Detect account type from text context
 function classifyAccountType(text: string): string {
     const upper = text.toUpperCase();
@@ -113,7 +118,7 @@ export function parseHoldings(text: string): ParsedHolding[] {
 
             if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
                 if (!holdings.some(h => h.ticker === ticker)) {
-                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: sectionCurrency ?? documentDefault });
+                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault });
                 }
             }
             continue;
@@ -148,7 +153,7 @@ export function parseHoldings(text: string): ParsedHolding[] {
 
                 if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
                     if (!holdings.some(h => h.ticker === ticker)) {
-                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: sectionCurrency ?? documentDefault });
+                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault });
                     }
                 }
             }
