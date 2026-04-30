@@ -20,13 +20,13 @@ type CurrencyConfig = {
 const CURRENCY_CONFIGS: CurrencyConfig[] = [
     {
         code: "CAD",
-        sectionRegex: /Canadian\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+        sectionRegex: /^Canadian\s*Dollar\s*(?:Holdings|Securities|Account)?(?:\s*\([^)]*\))?\s*$/i,
         inlineToken: /\bCAD\b/i,
         documentRegex: /CAD|Canadian/i,
     },
     {
         code: "USD",
-        sectionRegex: /U\.?S\.?\s*Dollar\s*(?:Holdings|Securities|Account)?/i,
+        sectionRegex: /^U\.?S\.?\s*Dollar\s*(?:Holdings|Securities|Account)?(?:\s*\([^)]*\))?\s*$/i,
         inlineToken: /\bUSD\b/i,
         documentRegex: /USD|U\.?S\.?\s*Dollar/i,
     },
@@ -100,7 +100,7 @@ export function parseHoldings(text: string): ParsedHolding[] {
         const headerMatch = detectSectionCurrency(line);
         if (headerMatch !== null) {
             sectionCurrency = headerMatch;
-            continue;
+            // Fall through — header line might also contain a holding pattern.
         }
 
         // 1. Try generic safe pattern

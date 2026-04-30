@@ -50,4 +50,26 @@ QQQ 10 350.00 3700.00
         expect(byTicker["SPY"].currency).toBe("USD");
         expect(byTicker["QQQ"].currency).toBe("USD");
     });
+
+    it("does NOT switch section currency from a narrative/footer line", () => {
+        const text = `
+Account No. ABC123 TFSA
+
+U.S. Dollar Holdings
+SPY 25 400.00 10500.00
+
+Total Canadian Dollar Holdings: $0.00
+QQQ 10 350.00 3700.00
+        `.trim();
+
+        const holdings = parseHoldings(text);
+        const byTicker = Object.fromEntries(holdings.map(h => [h.ticker, h]));
+
+        // SPY clearly under USD section.
+        expect(byTicker["SPY"]?.currency).toBe("USD");
+        // QQQ comes AFTER "Total Canadian Dollar Holdings: $0.00" — that line
+        // is a totals footer, not a real section header. Under the unanchored
+        // regex (pre-fix), QQQ would be tagged CAD. Anchored regex keeps it USD.
+        expect(byTicker["QQQ"]?.currency).toBe("USD");
+    });
 });
