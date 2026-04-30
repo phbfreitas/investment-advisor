@@ -27,7 +27,12 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
   return (
     <div>
       <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0a0a0a] p-4">
-        <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-2">Top 10 Holdings</h3>
+        <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-2">
+          Top {rows.length} Holdings
+          <span className="text-neutral-500 dark:text-neutral-400 font-normal">
+            {" · "}{rows.reduce((sum, r) => sum + (r.percent ?? 0), 0).toFixed(1)}% of portfolio
+          </span>
+        </h3>
         <div style={{ width: "100%", height: Math.max(44 * rows.length + 40, 200) }}>
           <ResponsiveContainer>
             <BarChart data={rows} layout="vertical" margin={{ left: 0, right: 120, top: 8, bottom: 8 }}>
@@ -76,7 +81,7 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
             </BarChart>
           </ResponsiveContainer>
           <table className="sr-only">
-            <caption>Top 10 Holdings</caption>
+            <caption>Top {rows.length} Holdings · {rows.reduce((sum, r) => sum + (r.percent ?? 0), 0).toFixed(1)}% of portfolio</caption>
             <thead><tr><th>Ticker</th><th>Value</th><th>Percent</th></tr></thead>
             <tbody>
               {rows.map(r => (
