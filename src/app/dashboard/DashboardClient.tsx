@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw } from "lucide-react";
-import type { Asset, MarketData } from "@/types";
+import type { Asset, LockableField, MarketData } from "@/types";
 import {
   STRATEGY_TYPES,
   SECURITY_TYPES,
@@ -19,7 +19,11 @@ import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
-import { applyLookupRespectingLocks } from "@/app/dashboard/lib/applyLookupRespectingLocks";
+import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
+
+const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
+const isLockableField = (field: keyof Asset): field is LockableField =>
+  LOCKABLE_FIELD_SET.has(field as string);
 
 export default function DashboardPage() {
   return (
@@ -200,6 +204,14 @@ function DashboardContent() {
 
   const handleEditChange = (field: keyof Asset, value: string | number) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const setFieldWithLock = <F extends LockableField>(field: F, value: Asset[F]) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value,
+      userOverrides: { ...prev.userOverrides, [field]: true },
+    }));
   };
 
   const saveEdit = async () => {
@@ -720,7 +732,13 @@ function DashboardContent() {
                               <select
                                 className={`w-28 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 ${bgClass}`}
                                 value={(editForm[field] as string | number) || ""}
-                                onChange={(e) => handleEditChange(field, e.target.value)}
+                                onChange={(e) => {
+                                  if (isLockableField(field)) {
+                                    setFieldWithLock(field, e.target.value as Asset[typeof field]);
+                                  } else {
+                                    handleEditChange(field, e.target.value);
+                                  }
+                                }}
                               >
                                 <option value=""></option>
                                 {options.map(o => (
@@ -734,7 +752,19 @@ function DashboardContent() {
                               type={type}
                               className={`w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900`}
                               value={(editForm[field] as string | number | null) ?? ""}
-                              onChange={(e) => handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
+                              onChange={(e) => {
+                                if (isLockableField(field)) {
+                                  if (type === 'number') {
+                                    const parsed = e.target.value === "" ? null : parseFloat(e.target.value);
+                                    const safe = parsed === null ? null : (Number.isNaN(parsed) ? null : parsed);
+                                    setFieldWithLock(field, safe as Asset[typeof field]);
+                                  } else {
+                                    setFieldWithLock(field, e.target.value as Asset[typeof field]);
+                                  }
+                                } else {
+                                  handleEditChange(field, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value);
+                                }
+                              }}
                             />
                           );
                         }
