@@ -1028,7 +1028,25 @@ function DashboardContent() {
                               (() => {
                                 const price = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
                                 const numPrice = Number(price);
-                                return isNaN(numPrice) ? "N/A" : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                const formatted = isNaN(numPrice)
+                                  ? "N/A"
+                                  : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                const anomaly = anomalies[asset.ticker];
+                                return (
+                                  <span className="inline-flex items-center gap-1">
+                                    <span>{formatted}</span>
+                                    {anomaly && (
+                                      <span
+                                        title={`Changed from $${anomaly.prior.toFixed(2)} (${anomaly.deltaPct >= 0 ? "+" : ""}${anomaly.deltaPct.toFixed(1)}%)`}
+                                        aria-label={`Price changed by ${anomaly.deltaPct.toFixed(1)} percent`}
+                                        className="text-neutral-400 dark:text-neutral-500 text-xs cursor-help select-none px-1"
+                                        data-testid={`price-anomaly-flag-${asset.ticker}`}
+                                      >
+                                        ?
+                                      </span>
+                                    )}
+                                  </span>
+                                );
                               })()
                             )}
                           </td>
