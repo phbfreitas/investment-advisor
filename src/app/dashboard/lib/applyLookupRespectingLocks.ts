@@ -52,16 +52,18 @@ export function applyLookupRespectingLocks(
         currency: isLocked("currency") ? prev.currency : (data.currency || prev.currency),
         managementFee: isLocked("managementFee") ? prev.managementFee : (data.managementFee ?? prev.managementFee),
 
-        // Live data — never locked, always taken from lookup if present.
-        liveTickerPrice: data.currentPrice ?? prev.liveTickerPrice,
-        yield: data.dividendYield ?? null,
-        oneYearReturn: data.oneYearReturn ?? null,
-        threeYearReturn: data.threeYearReturn ?? null,
-        exDividendDate: data.exDividendDate ?? "",
-        analystConsensus: data.analystConsensus ?? "",
-        externalRating: data.externalRating ?? "",
-        beta: data.beta ?? 0,
-        riskFlag: data.riskFlag ?? "",
+        // Live data — never locked. Lookup wins when it returns a value;
+        // otherwise the previous edit-form value is preserved (so a
+        // partial lookup doesn't wipe manually-entered values).
+        liveTickerPrice: data.currentPrice ?? prev.liveTickerPrice ?? 0,
+        yield: data.dividendYield ?? prev.yield ?? null,
+        oneYearReturn: data.oneYearReturn ?? prev.oneYearReturn ?? null,
+        threeYearReturn: data.threeYearReturn ?? prev.threeYearReturn ?? null,
+        exDividendDate: data.exDividendDate ?? prev.exDividendDate ?? "",
+        analystConsensus: data.analystConsensus ?? prev.analystConsensus ?? "",
+        externalRating: data.externalRating ?? prev.externalRating ?? "",
+        beta: data.beta ?? prev.beta ?? 0,
+        riskFlag: data.riskFlag ?? prev.riskFlag ?? "",
 
         // userOverrides itself is never written by the lookup.
     };

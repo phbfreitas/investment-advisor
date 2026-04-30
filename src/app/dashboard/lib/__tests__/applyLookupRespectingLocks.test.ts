@@ -87,4 +87,32 @@ describe("applyLookupRespectingLocks", () => {
 
         expect(next.sector).toBe("OldSector");
     });
+
+    it("preserves previous live-data values when the lookup is silent on those fields", () => {
+        const prev = {
+            yield: 0.055,
+            oneYearReturn: 0.12,
+            threeYearReturn: 0.30,
+            beta: 1.1,
+            exDividendDate: "2026-03-15",
+            analystConsensus: "Buy",
+            externalRating: "AA",
+            riskFlag: "Medium",
+            liveTickerPrice: 100,
+        };
+        // Lookup returns ONLY classification (no live data fields).
+        const data: LookupData = { sector: "Healthcare" };
+
+        const next = applyLookupRespectingLocks(prev, data);
+
+        expect(next.yield).toBe(0.055);
+        expect(next.oneYearReturn).toBe(0.12);
+        expect(next.threeYearReturn).toBe(0.30);
+        expect(next.beta).toBe(1.1);
+        expect(next.exDividendDate).toBe("2026-03-15");
+        expect(next.analystConsensus).toBe("Buy");
+        expect(next.externalRating).toBe("AA");
+        expect(next.riskFlag).toBe("Medium");
+        expect(next.liveTickerPrice).toBe(100);
+    });
 });
