@@ -236,13 +236,39 @@ function DashboardContent() {
           const res = await fetch(`/api/market-data?ticker=${editForm.ticker}`);
           const data = await res.json();
           if (data && !data.error && data.currentPrice) {
+            const prior = editForm.liveTickerPrice ?? 0;
+            const next = data.currentPrice;
+            const { isAnomaly, deltaPct } = detectAnomaly(prior, next);
+
+            if (isAnomaly && editingId !== "NEW") {
+              // Edit-form anomaly: log only, do NOT render `?` (active input field).
+              try {
+                fetch("/api/price-anomaly-log", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    ticker: editForm.ticker,
+                    assetId: editingId,
+                    priorPrice: prior,
+                    newPrice: next,
+                    deltaPct,
+                    deltaAbs: next - prior,
+                    source: "edit-form-lookup",
+                    rawYahooQuote: data,
+                  }),
+                }).catch(() => { /* swallow */ });
+              } catch {
+                // JSON.stringify can throw on BigInt or circular refs — swallow.
+              }
+            }
+
             setEditForm(prev => ({
               ...prev,
-              liveTickerPrice: data.currentPrice
+              liveTickerPrice: data.currentPrice,
             }));
           }
         } catch (e) {
-          // ignore 
+          // ignore
         }
       }, 1000);
       return () => clearTimeout(timer);
