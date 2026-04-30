@@ -15,7 +15,7 @@ describe("buildPriceAnomalyItem", () => {
     it("constructs a PK/SK keyed to the household and ticker", () => {
         const item = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T12:00:00.000Z");
         expect(item.PK).toBe("HOUSEHOLD#hh-123");
-        expect(item.SK).toBe("ANOMALY#2026-04-29T12:00:00.000Z#JEPQ");
+        expect(item.SK).toMatch(/^ANOMALY#2026-04-29T12:00:00\.000Z#JEPQ#[0-9a-f-]{36}$/);
         expect(item.type).toBe("PRICE_ANOMALY");
     });
 
@@ -31,5 +31,8 @@ describe("buildPriceAnomalyItem", () => {
             currency: "USD",
             symbol: "JEPQ",
         });
+        expect(item.deltaAbs).toBe(58.28);
+        expect(item.assetId).toBe("asset-uuid-1");
+        expect(item.source).toBe("refresh");
     });
 });

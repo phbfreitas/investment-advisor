@@ -1,6 +1,7 @@
 import { db, TABLE_NAME } from "@/lib/db";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import type { PriceAnomalyPayload, PriceAnomalyRecord } from "@/types/priceAnomaly";
+import { randomUUID } from "crypto";
 
 /**
  * Build the DynamoDB item from an anomaly payload. Pure function for testability.
@@ -12,7 +13,7 @@ export function buildPriceAnomalyItem(
 ): PriceAnomalyRecord {
     return {
         PK: `HOUSEHOLD#${householdId}`,
-        SK: `ANOMALY#${detectedAt}#${payload.ticker}`,
+        SK: `ANOMALY#${detectedAt}#${payload.ticker}#${randomUUID()}`,
         type: "PRICE_ANOMALY",
         ticker: payload.ticker,
         assetId: payload.assetId,
@@ -27,8 +28,9 @@ export function buildPriceAnomalyItem(
 }
 
 /**
- * Writes a price-anomaly record to DynamoDB. Best-effort — caller catches
- * failures and treats logging as non-critical.
+ * Writes a price-anomaly record to DynamoDB. Rejects (throws on await) if
+ * the DDB Put fails — callers MUST wrap with `.catch()` to honor the
+ * best-effort logging contract (logging is instrumentation, not critical path).
  */
 export async function insertPriceAnomalyLog(
     householdId: string,
