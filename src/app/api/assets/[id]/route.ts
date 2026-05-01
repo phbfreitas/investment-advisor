@@ -151,6 +151,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             expectedAnnualDividends: data.expectedAnnualDividends !== undefined ? parseFloat(data.expectedAnnualDividends) : existingAsset.expectedAnnualDividends,
 
             userOverrides: data.userOverrides !== undefined ? data.userOverrides : existingAsset.userOverrides,
+            marketComputedAt: data.marketComputedAt !== undefined ? data.marketComputedAt : existingAsset.marketComputedAt,
             updatedAt: new Date().toISOString(),
         };
 

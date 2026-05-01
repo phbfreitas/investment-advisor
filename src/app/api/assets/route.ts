@@ -83,6 +83,9 @@ export async function POST(request: Request) {
             volatility: parseFloat(data.volatility) || 0,
             expectedAnnualDividends: parseFloat(data.expectedAnnualDividends) || (parseFloat(data.quantity) || 0) * (parseFloat(data.liveTickerPrice) || 0) * (parseFloat(data.yield) || 0),
 
+            userOverrides: data.userOverrides && typeof data.userOverrides === "object" ? data.userOverrides : undefined,
+            marketComputedAt: typeof data.marketComputedAt === "string" || data.marketComputedAt === null ? data.marketComputedAt : undefined,
+
             updatedAt: new Date().toISOString(),
         };
 
