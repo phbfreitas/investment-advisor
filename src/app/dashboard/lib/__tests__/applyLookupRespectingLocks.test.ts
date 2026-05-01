@@ -1,4 +1,5 @@
 import { applyLookupRespectingLocks, type LookupData } from "../applyLookupRespectingLocks";
+import type { Asset } from "@/types";
 
 describe("applyLookupRespectingLocks", () => {
     it("applies all lookup classification fields when nothing is locked", () => {
@@ -115,4 +116,64 @@ describe("applyLookupRespectingLocks", () => {
         expect(next.riskFlag).toBe("Medium");
         expect(next.liveTickerPrice).toBe(100);
     });
+});
+
+describe("applyLookupRespectingLocks — marketComputedAt", () => {
+  it("forwards data.marketComputedAt when market is unlocked", async () => {
+    const prev: Partial<Asset> = {
+      market: "Not Found",
+      marketComputedAt: undefined,
+      userOverrides: {},
+    };
+    const result = applyLookupRespectingLocks(prev, {
+      market: "USA",
+      marketComputedAt: "2026-04-30T12:00:00Z",
+    });
+
+    expect(result.market).toBe("USA");
+    expect(result.marketComputedAt).toBe("2026-04-30T12:00:00Z");
+  });
+
+  it("preserves prev.marketComputedAt when market is locked", async () => {
+    const prev: Partial<Asset> = {
+      market: "Canada",
+      marketComputedAt: null,  // manual-set sentinel
+      userOverrides: { market: true },
+    };
+    const result = applyLookupRespectingLocks(prev, {
+      market: "USA",
+      marketComputedAt: "2026-04-30T12:00:00Z",
+    });
+
+    expect(result.market).toBe("Canada");
+    expect(result.marketComputedAt).toBeNull();
+  });
+
+  it("when unlocked and lookup omits marketComputedAt, falls back to prev", async () => {
+    const prev: Partial<Asset> = {
+      market: "USA",
+      marketComputedAt: "2026-01-01T00:00:00Z",
+      userOverrides: {},
+    };
+    const result = applyLookupRespectingLocks(prev, {
+      market: "USA",
+      // marketComputedAt omitted from lookup response
+    });
+
+    expect(result.marketComputedAt).toBe("2026-01-01T00:00:00Z");
+  });
+
+  it("when unlocked and lookup explicitly sends null, writes null", async () => {
+    const prev: Partial<Asset> = {
+      market: "USA",
+      marketComputedAt: "2026-01-01T00:00:00Z",
+      userOverrides: {},
+    };
+    const result = applyLookupRespectingLocks(prev, {
+      market: "USA",
+      marketComputedAt: null,
+    });
+
+    expect(result.marketComputedAt).toBeNull();
+  });
 });

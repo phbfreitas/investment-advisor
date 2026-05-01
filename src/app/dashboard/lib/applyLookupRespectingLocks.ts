@@ -29,6 +29,7 @@ export type LookupData = {
     externalRating?: string;
     beta?: number;
     riskFlag?: string;
+    marketComputedAt?: string | null;
 };
 
 /**
@@ -51,6 +52,13 @@ export function applyLookupRespectingLocks(
         managementStyle: isLocked("managementStyle") ? prev.managementStyle : (data.managementStyle || prev.managementStyle),
         currency: isLocked("currency") ? prev.currency : (data.currency || prev.currency),
         managementFee: isLocked("managementFee") ? prev.managementFee : (data.managementFee ?? prev.managementFee),
+
+        // 3C: marketComputedAt rides with the market field's lock. Locked → keep
+        // prev timestamp; unlocked → take whatever researchTicker returned (a
+        // fresh ISO timestamp on classification, or echoed-existing on cache hit).
+        marketComputedAt: isLocked("market")
+            ? (prev.marketComputedAt ?? null)
+            : (data.marketComputedAt !== undefined ? data.marketComputedAt : (prev.marketComputedAt ?? null)),
 
         // Live data — never locked. Lookup wins when it returns a value;
         // otherwise the previous edit-form value is preserved (so a
