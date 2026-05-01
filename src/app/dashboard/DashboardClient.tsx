@@ -312,6 +312,9 @@ function DashboardContent() {
       ...prev,
       [field]: value,
       userOverrides: { ...prev.userOverrides, [field]: true },
+      // 3C: manual edit of `market` clears the cache timestamp so the
+      // unlock flow self-heals — next refresh re-classifies.
+      ...(field === "market" ? { marketComputedAt: null } : {}),
     }));
   };
 
