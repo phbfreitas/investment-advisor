@@ -131,8 +131,8 @@ function DashboardContent() {
   const managementStyles = [...MGMT_STYLES];
   const risks = useMemo(() => Array.from(new Set(assets.map(a => a.risk).filter(Boolean))), [assets]);
 
-  const fetchMarketData = async (symbols: string[]) => {
-    const validSymbols = symbols.filter(Boolean);
+  const fetchMarketData = async (assetsToCheck: Asset[]) => {
+    const validSymbols = assetsToCheck.map(a => a.ticker).filter(Boolean);
     if (validSymbols.length === 0) return;
     setIsMarketLoading(true);
 
@@ -151,9 +151,12 @@ function DashboardContent() {
         if (data && data.ticker && !data.error) {
           newMarketData[data.ticker] = data as MarketData;
 
+          // IMPORTANT: detect against the explicitly-passed asset list, NOT the
+          // closed-over `assets` state (which lags by one fetch cycle on first
+          // load). See Codex adversarial review #2 finding 2.
           const detections = detectAnomaliesForTicker(
             { ticker: data.ticker, currentPrice: data.currentPrice ?? 0 },
-            assets,
+            assetsToCheck,
           );
 
           for (const detection of detections) {
@@ -202,8 +205,9 @@ function DashboardContent() {
       ]);
       const data = await res.json();
       if (data && data.assets) {
-        setAssets(data.assets as Asset[]);
-        fetchMarketData((data.assets as Asset[]).map(a => a.ticker));
+        const fresh = data.assets as Asset[];
+        setAssets(fresh);
+        fetchMarketData(fresh);
       }
     } catch (error) {
       console.error("Failed to load assets", error);
