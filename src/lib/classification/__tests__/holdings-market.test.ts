@@ -287,3 +287,58 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
     expect(await classifyMarketByHoldings("TESTPARENT.TO", 0)).toBe("Canada");
   });
 });
+
+describe("classifyMarketByHoldings — Codex round-3 #2: batch quote failure", () => {
+  beforeEach(() => {
+    mockQuoteSummary.mockReset();
+    mockQuote.mockReset();
+  });
+
+  it("returns Not Found when batch quote throws (preserves cache integrity)", async () => {
+    // Parent fund-of-funds whose top-10 are sub-ETFs. quoteSummary succeeds
+    // but the batch quote call throws — we cannot identify sub-ETFs, so
+    // recursion is impossible. Falling through to suffix would misclassify
+    // (all .TO-suffixed → Canada) and cache the wrong result for a year.
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [
+        { symbol: "VTI", holdingName: "VTI", holdingPercent: 0.45 },
+        { symbol: "VCN.TO", holdingName: "VCN", holdingPercent: 0.30 },
+        { symbol: "VIU.TO", holdingName: "VIU", holdingPercent: 0.20 },
+        { symbol: "VEE.TO", holdingName: "VEE", holdingPercent: 0.05 },
+      ]},
+      price: { shortName: "Vanguard All-Equity", longName: "Vanguard All-Equity ETF Portfolio" },
+      fundProfile: { categoryName: "Allocation--85% to 100% Equity" },
+    });
+
+    mockQuote.mockRejectedValueOnce(new Error("Yahoo batch endpoint unavailable"));
+
+    const result = await classifyMarketByHoldings("VEQT.TO", 0);
+
+    expect(result).toBe("Not Found");
+    // Verify quoteSummary was called for the parent (not just rejected outright)
+    expect(mockQuoteSummary).toHaveBeenCalledWith("VEQT.TO", expect.any(Object));
+  });
+
+  it("partial batch quote results still allow classification (only full-throw is degraded)", async () => {
+    // batch quote returns successfully with only some symbols. Missing
+    // entries default to "EQUITY" → suffix classification. This is the
+    // accepted trade-off — over-rejecting on every partial flake would
+    // make the classifier feel broken under normal Yahoo flakiness.
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [
+        { symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 },
+        { symbol: "MSFT", holdingName: "Microsoft", holdingPercent: 0.06 },
+      ]},
+      price: { shortName: "Mocked Fund", longName: "Mocked Fund Long" },
+      fundProfile: { categoryName: "Large Blend" },
+    });
+
+    // Only AAPL comes back; MSFT is silently dropped from the response.
+    mockQuote.mockResolvedValueOnce([{ symbol: "AAPL", quoteType: "EQUITY" }]);
+
+    const result = await classifyMarketByHoldings("VOO", 0);
+
+    // Both AAPL and MSFT have no suffix → both classify as USA → result = USA.
+    expect(result).toBe("USA");
+  });
+});

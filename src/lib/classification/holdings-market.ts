@@ -85,13 +85,24 @@ export async function classifyMarketByHoldings(
 
   const symbols: string[] = holdings.map((h: any) => String(h.symbol)).filter(Boolean);
 
+  // Codex round-3 #2: track whether the batch quote call threw entirely.
+  // If it did, we cannot safely identify sub-funds for recursion, and
+  // falling through to suffix-only classification can cache wrong results
+  // (e.g., a global all-in-one whose .TO sub-ETFs collapse to "Canada"
+  // when recursion is skipped). Return Not Found so the caller's stamp-
+  // on-success guard skips caching and the next refresh retries.
+  let batchQuoteFailed = false;
   let quoteTypeBySymbol = new Map<string, string>();
   try {
     const quotes = await yahooFinance.quote(symbols);
     const arr = Array.isArray(quotes) ? quotes : [quotes];
     quoteTypeBySymbol = new Map(arr.map((q: any) => [String(q.symbol), String(q.quoteType ?? "EQUITY")]));
   } catch {
-    // Fall back to treating everything as EQUITY.
+    batchQuoteFailed = true;
+  }
+
+  if (batchQuoteFailed) {
+    return "Not Found";
   }
 
   const countries: Country[] = [];
