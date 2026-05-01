@@ -20,13 +20,13 @@ type CurrencyConfig = {
 const CURRENCY_CONFIGS: CurrencyConfig[] = [
     {
         code: "CAD",
-        sectionRegex: /^Canadian\s*Dollar\s*(?:Holdings|Securities|Account)?(?:\s*\([^)]*\))?\s*$/i,
+        sectionRegex: /^Canadian(?:\s+Dollar)?\s+(?:Equities|Holdings|Securities|Account|Stocks|Investments)(?:\s+and\s+(?:Alternatives|Cash|Investments|Other|Bonds|Mutual\s+Funds))?(?:\s*\([^)]*\))?\s*$/i,
         inlineToken: /\bCAD\b/i,
         documentRegex: /CAD|Canadian/i,
     },
     {
         code: "USD",
-        sectionRegex: /^U\.?S\.?\s*Dollar\s*(?:Holdings|Securities|Account)?(?:\s*\([^)]*\))?\s*$/i,
+        sectionRegex: /^U\.?S\.?(?:\s+Dollar)?\s+(?:Equities|Holdings|Securities|Account|Stocks|Investments)(?:\s+and\s+(?:Alternatives|Cash|Investments|Other|Bonds|Mutual\s+Funds))?(?:\s*\([^)]*\))?\s*$/i,
         inlineToken: /\bUSD\b/i,
         documentRegex: /USD|U\.?S\.?\s*Dollar/i,
     },
