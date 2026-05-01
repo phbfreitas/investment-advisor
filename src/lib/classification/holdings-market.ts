@@ -40,10 +40,22 @@ function nameOrCategoryMatchesGuard(name: string, category: string): boolean {
 
 async function resolveHoldingCountry(
   symbol: string,
-  _quoteType: string,
-  _parentDepth: number,
+  quoteType: string,
+  parentDepth: number,
 ): Promise<Country> {
-  // Recursion is added in Task 4. For now, every holding resolves by suffix.
+  const isFund = quoteType === "ETF" || quoteType === "MUTUALFUND";
+
+  // Recursion FIRST for sub-funds — their suffix tells where they're
+  // listed, not what they hold.
+  if (isFund && parentDepth < 1) {
+    const sub = await classifyMarketByHoldings(symbol, parentDepth + 1);
+    if (sub === "USA") return "USA";
+    if (sub === "Canada") return "Canada";
+    if (sub === "North America") return "Both";
+    if (sub === "Global") return "Other";
+    // sub === "Not Found" → fall through to suffix.
+  }
+
   return resolveByExchangeSuffix(symbol);
 }
 
@@ -65,7 +77,6 @@ export async function classifyMarketByHoldings(
   const holdings = summary?.topHoldings?.holdings ?? [];
   if (!Array.isArray(holdings) || holdings.length === 0) return "Not Found";
 
-  // Name/category guard fires only at the parent fund (depth=0).
   if (depth === 0) {
     const fundName = String(summary?.price?.shortName ?? "") + " " + String(summary?.price?.longName ?? "");
     const fundCategory = String(summary?.fundProfile?.categoryName ?? "");
