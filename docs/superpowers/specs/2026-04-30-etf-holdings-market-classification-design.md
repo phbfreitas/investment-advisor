@@ -308,6 +308,35 @@ Yahoo is mocked; existing asset is passed in as a fixture.
 - Set Market manually to "Canada", refresh — value sticks, lock icon visible (3A behavior intact).
 - Tap the lock icon in display mode, then tap refresh — new classifier value writes; old timestamp replaced.
 
+## Known Limitations
+
+### ADRs and dotless foreign symbols (Codex round-2 finding #3)
+
+`resolveByExchangeSuffix` defaults every symbol without a `.`-suffix to "USA". This is correct for the common case — Yahoo returns major US-exchange tickers (AAPL, MSFT, NVDA, GOOGL, etc.) without suffixes — but it breaks for **ADRs of foreign companies** that trade unsuffixed on NYSE/NASDAQ. Examples:
+
+- `TSM` → Taiwan Semiconductor, ADR on NYSE, but underlying is Taiwanese.
+- `BABA` → Alibaba, ADR on NYSE, underlying is Chinese.
+- `BIDU`, `JD`, `NIO` → Chinese companies, US-listed ADRs.
+- `RIO`, `BHP` → Australian/British miners, US-listed ADRs.
+
+When such ADRs appear in an ETF's top-10 holdings, this classifier counts them as USA exposure. A fund with significant ADR exposure (e.g., a "US Total Stock Market" ETF that includes BABA, or an emerging-markets fund whose top-10 are all ADRs) may classify as USA when the underlying companies are largely foreign.
+
+**Why we accept this limitation for now:**
+
+- Fixing properly requires per-holding `quoteSummary({modules: ['assetProfile']})` lookups to read the company's country of incorporation. That's ~10 extra Yahoo round-trips per parent classification (a 5x cost increase on an already rate-limited API).
+- The simpler workaround (a hard-coded ADR allowlist) is brittle and ages poorly as new ADRs list.
+- The case is uncommon for the PO's actual portfolio: she primarily holds broad-market US/Canadian ETFs and Canadian-listed funds. Funds with heavy foreign-ADR top-10 (emerging market ETFs especially) typically already trip the name guard ("Emerging Markets", "International", etc.).
+- The 3A lock is the user-side escape hatch: when this surfaces in QA, the PO sets Market manually once and the classifier never runs again on that asset.
+
+**When to revisit:**
+
+- If the PO reports a real-world misclassification on a fund she holds.
+- If the user base ever expands beyond Simone (other users may have ADR-heavy portfolios).
+
+**Mitigation if revisited:**
+
+The cleanest fix is per-holding `assetProfile.country` lookups, batched alongside the existing `quote()` batch in `classifyMarketByHoldings`. Cost is acceptable on the 1-year TTL cadence (lookup happens once per asset per year). Implementation is straightforward but out of scope for the 3C sprint.
+
 ## Acceptance
 
 - A re-import of a brokerage PDF containing ETFs produces classified Market values where Yahoo's holdings data permits it (typical US/Canadian ETFs).
