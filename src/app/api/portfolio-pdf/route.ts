@@ -164,12 +164,20 @@ export async function POST(request: Request) {
             let enrichedData = null;
             
             if (needsMetadata) {
-                if (tickerCache.has(h.ticker)) {
+                // 3C cache scoping: only the new-ticker case (existing == null) is
+                // safe to cache, because researchTicker's result depends on the
+                // existing asset's lock state, marketComputedAt, and market. For
+                // multi-account households holding the same ticker with divergent
+                // states, sharing the cache would poison sibling holdings.
+                // (Codex adversarial review finding #2.)
+                if (existing == null && tickerCache.has(h.ticker)) {
                     enrichedData = tickerCache.get(h.ticker);
                 } else {
                     try {
                         enrichedData = await researchTicker(h.ticker, existing);
-                        tickerCache.set(h.ticker, enrichedData);
+                        if (existing == null) {
+                            tickerCache.set(h.ticker, enrichedData);
+                        }
                     } catch (e) {
                         console.warn(`[portfolio-pdf] AI Enrichment failed for ${h.ticker}:`, e);
                     }
