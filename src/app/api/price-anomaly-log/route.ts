@@ -45,7 +45,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true, sk });
     } catch (error) {
         console.error("[price-anomaly] write failed:", error);
-        // Best-effort: return 200 with ok:false so the client doesn't surface an error.
-        return NextResponse.json({ ok: false, error: "internal" }, { status: 200 });
+        // Honest 5xx so CloudWatch / monitoring can alert on real storage failures.
+        // The client's .catch(() => {}) on the fetch call swallows this for users —
+        // best-effort means non-blocking for the UI, NOT lying to operators.
+        return NextResponse.json({ ok: false, error: "internal" }, { status: 500 });
     }
 }

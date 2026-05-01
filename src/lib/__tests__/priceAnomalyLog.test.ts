@@ -12,12 +12,12 @@ describe("buildPriceAnomalyItem", () => {
         rawYahooQuote: { regularMarketPrice: 116.40, currency: "USD", symbol: "JEPQ" },
     };
 
-    it("constructs a PK keyed to the household and a deterministic-fingerprint SK", () => {
+    it("constructs PK keyed to household and SK with daily bucket + fingerprint", () => {
         const item = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T12:00:00.000Z");
         expect(item.PK).toBe("HOUSEHOLD#hh-123");
-        // SK fingerprint: assetId + priorPrice + newPrice + source, prices to 4 decimals.
-        // Timestamp is NOT in the SK (it lives in detectedAt as a non-key field).
-        expect(item.SK).toBe("ANOMALY#asset-uuid-1#58.1200#116.4000#refresh");
+        // SK fingerprint: assetId + YYYY-MM-DD + priorPrice + newPrice + source.
+        // Same-day recurrences dedupe; different-day recurrences each log fresh.
+        expect(item.SK).toBe("ANOMALY#asset-uuid-1#2026-04-29#58.1200#116.4000#refresh");
         expect(item.type).toBe("PRICE_ANOMALY");
     });
 
@@ -38,14 +38,25 @@ describe("buildPriceAnomalyItem", () => {
         });
     });
 
-    it("produces the SAME SK for the same payload regardless of detectedAt", () => {
-        // This is the dedupe contract: subsequent identical anomalies hit the same SK,
-        // so DDB ConditionExpression(attribute_not_exists) silently skips them.
-        const itemA = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T12:00:00.000Z");
-        const itemB = buildPriceAnomalyItem("hh-123", samplePayload, "2026-05-15T03:21:45.000Z");
+    it("produces the SAME SK for two detections on the same day at different times", () => {
+        // Same-day dedupe: morning and evening detections of the same anomaly
+        // collapse to one record via DDB's attribute_not_exists condition.
+        const itemA = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T08:00:00.000Z");
+        const itemB = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T20:30:00.000Z");
         expect(itemA.SK).toBe(itemB.SK);
-        // detectedAt itself differs because it's a non-key field.
+        // detectedAt itself differs because it's a non-key field (records FIRST seen).
         expect(itemA.detectedAt).not.toBe(itemB.detectedAt);
+    });
+
+    it("produces DIFFERENT SKs for the same anomaly detected on different DAYS (recurrence signal)", () => {
+        // This is the value of the daily-bucket key: a recurring bad quote logs
+        // once per day so operators see "this anomaly came back."
+        const itemA = buildPriceAnomalyItem("hh-123", samplePayload, "2026-04-29T12:00:00.000Z");
+        const itemB = buildPriceAnomalyItem("hh-123", samplePayload, "2026-05-15T12:00:00.000Z");
+        expect(itemA.SK).not.toBe(itemB.SK);
+        // Confirm date buckets are what changed.
+        expect(itemA.SK).toContain("#2026-04-29#");
+        expect(itemB.SK).toContain("#2026-05-15#");
     });
 
     it("produces DIFFERENT SKs when the new price changes (a different anomaly)", () => {
@@ -69,7 +80,6 @@ describe("buildPriceAnomalyItem", () => {
     });
 
     it("normalizes prices to 4 decimals so float-format jitter doesn't generate distinct SKs", () => {
-        // 58.12 and 58.1200 are the same number; their SK component must be identical.
         const itemA = buildPriceAnomalyItem("hh-123", { ...samplePayload, priorPrice: 58.12 }, "2026-04-29T12:00:00.000Z");
         const itemB = buildPriceAnomalyItem("hh-123", { ...samplePayload, priorPrice: 58.1200 }, "2026-04-29T12:00:00.000Z");
         expect(itemA.SK).toBe(itemB.SK);
