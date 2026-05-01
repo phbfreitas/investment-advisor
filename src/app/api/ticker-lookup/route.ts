@@ -9,6 +9,7 @@ import type { Asset } from '@/types';
 export async function findExistingAssetById(
   householdId: string,
   assetId: string,
+  symbol: string,
 ): Promise<Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null> {
   try {
     const { Item } = await db.send(
@@ -21,6 +22,19 @@ export async function findExistingAssetById(
       })
     );
     if (!Item) return null;
+
+    // Codex round-3 #1: if the user changed the ticker on this asset, the
+    // stored cache/lock state was for the OLD ticker and does not apply
+    // to the new symbol being looked up. Return null so researchTicker
+    // runs as a fresh classification — otherwise we'd carry over the
+    // prior market/timestamp/lock and silently corrupt the new ticker's
+    // classification (e.g., switching VOO to VT would freeze VT as USA).
+    const storedTicker = String(Item.ticker ?? "").toUpperCase();
+    const requestedTicker = symbol.toUpperCase();
+    if (storedTicker && storedTicker !== requestedTicker) {
+      return null;
+    }
+
     return {
       userOverrides: Item.userOverrides as Asset["userOverrides"],
       marketComputedAt: typeof Item.marketComputedAt === "string" || Item.marketComputedAt === null
@@ -51,7 +65,7 @@ export async function GET(request: NextRequest) {
     // Asset-specific lookup (Codex adversarial review #1, round 2): never
     // borrow lock/cache state from a sibling holding by ticker alone.
     const existing = assetId
-      ? await findExistingAssetById(session.user.householdId, assetId)
+      ? await findExistingAssetById(session.user.householdId, assetId, symbol)
       : null;
     const data = await researchTicker(symbol, existing);
     if (!data) {
