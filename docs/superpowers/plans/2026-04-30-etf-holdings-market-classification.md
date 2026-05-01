@@ -213,36 +213,23 @@ This task lays down the module skeleton with the simplest classifier behavior: s
 
 - [ ] **Step 1: Write the failing test for stocks-only happy paths**
 
-Create `src/lib/classification/__tests__/holdings-market.test.ts`:
+Create `src/lib/classification/__tests__/holdings-market.test.ts`. The test file uses module-level mock fns shared with the `jest.mock` factory — variables prefixed with `mock` are jest's documented escape hatch from the hoisting that would otherwise make them undefined at factory invocation time.
 
 ```typescript
+const mockQuoteSummary = jest.fn();
+const mockQuote = jest.fn();
+
+jest.mock("yahoo-finance2", () => ({
+  __esModule: true,
+  default: class {
+    quoteSummary = mockQuoteSummary;
+    quote = mockQuote;
+  },
+}));
+
 import { classifyMarketByHoldings } from "../holdings-market";
 
-jest.mock("yahoo-finance2", () => {
-  return {
-    __esModule: true,
-    default: class {
-      quoteSummary = jest.fn();
-      quote = jest.fn();
-    },
-  };
-});
-
-import YahooFinance from "yahoo-finance2";
-
-type MockedYahoo = {
-  quoteSummary: jest.Mock;
-  quote: jest.Mock;
-};
-
-function getYahooMock(): MockedYahoo {
-  // The classifier instantiates yahoo-finance2 internally; we read the
-  // singleton from the module's instance map after the first import.
-  const instance = (YahooFinance as unknown as new () => MockedYahoo).prototype;
-  return instance as unknown as MockedYahoo;
-}
-
-// Helper: build a mock holdings response.
+// Helper: build a mock quoteSummary response.
 function holdingsFor(symbols: string[], category = "Large Blend") {
   return {
     topHoldings: { holdings: symbols.map(s => ({ symbol: s, holdingName: s, holdingPercent: 0.05 })) },
@@ -257,42 +244,41 @@ function stocksFor(symbols: string[]) {
 }
 
 describe("classifyMarketByHoldings — stocks-only happy paths", () => {
-  let mock: MockedYahoo;
   beforeEach(() => {
-    jest.resetAllMocks();
-    mock = getYahooMock();
+    mockQuoteSummary.mockReset();
+    mockQuote.mockReset();
   });
 
   it("returns USA when all top-10 holdings have no suffix or .US", async () => {
-    mock.quoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "NVDA", "AMZN"]));
-    mock.quote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "NVDA", "AMZN"]));
+    mockQuoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "NVDA", "AMZN"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "NVDA", "AMZN"]));
 
     expect(await classifyMarketByHoldings("VOO", 0)).toBe("USA");
   });
 
   it("returns Canada when all top-10 are .TO/.V/.NE/.CN", async () => {
-    mock.quoteSummary.mockResolvedValue(holdingsFor(["RY.TO", "TD.TO", "ENB.TO", "BNS.TO"]));
-    mock.quote.mockResolvedValue(stocksFor(["RY.TO", "TD.TO", "ENB.TO", "BNS.TO"]));
+    mockQuoteSummary.mockResolvedValue(holdingsFor(["RY.TO", "TD.TO", "ENB.TO", "BNS.TO"]));
+    mockQuote.mockResolvedValue(stocksFor(["RY.TO", "TD.TO", "ENB.TO", "BNS.TO"]));
 
     expect(await classifyMarketByHoldings("XIU.TO", 0)).toBe("Canada");
   });
 
   it("returns North America when top-10 mixes US and Canadian holdings", async () => {
-    mock.quoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "RY.TO", "TD.TO"]));
-    mock.quote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "RY.TO", "TD.TO"]));
+    mockQuoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "RY.TO", "TD.TO"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "RY.TO", "TD.TO"]));
 
     expect(await classifyMarketByHoldings("ZNA.TO", 0)).toBe("North America");
   });
 
   it("returns Global when any top-10 holding is on a non-NA exchange (.L)", async () => {
-    mock.quoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "BARC.L", "HSBA.L"]));
-    mock.quote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "BARC.L", "HSBA.L"]));
+    mockQuoteSummary.mockResolvedValue(holdingsFor(["AAPL", "MSFT", "BARC.L", "HSBA.L"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL", "MSFT", "BARC.L", "HSBA.L"]));
 
     expect(await classifyMarketByHoldings("VT", 0)).toBe("Global");
   });
 
   it("returns Not Found when topHoldings is empty", async () => {
-    mock.quoteSummary.mockResolvedValue({
+    mockQuoteSummary.mockResolvedValue({
       topHoldings: { holdings: [] },
       price: { shortName: "X", longName: "X" },
       fundProfile: { categoryName: "Large Blend" },
@@ -432,41 +418,40 @@ Append to `src/lib/classification/__tests__/holdings-market.test.ts`:
 
 ```typescript
 describe("classifyMarketByHoldings — name/category guard", () => {
-  let mock: MockedYahoo;
   beforeEach(() => {
-    jest.resetAllMocks();
-    mock = getYahooMock();
+    mockQuoteSummary.mockReset();
+    mockQuote.mockReset();
   });
 
   it("returns Not Found when fund name contains 'World' even if top-10 is all-US", async () => {
-    mock.quoteSummary.mockResolvedValue({
+    mockQuoteSummary.mockResolvedValue({
       topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
       price: { shortName: "Vanguard Total World", longName: "Vanguard Total World ETF" },
       fundProfile: { categoryName: "Large Blend" },
     });
-    mock.quote.mockResolvedValue(stocksFor(["AAPL"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
 
     expect(await classifyMarketByHoldings("VT", 0)).toBe("Not Found");
   });
 
   it("returns Not Found when category contains 'Foreign Large Blend'", async () => {
-    mock.quoteSummary.mockResolvedValue({
+    mockQuoteSummary.mockResolvedValue({
       topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
       price: { shortName: "Mocked", longName: "Mocked Fund" },
       fundProfile: { categoryName: "Foreign Large Blend" },
     });
-    mock.quote.mockResolvedValue(stocksFor(["AAPL"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
 
     expect(await classifyMarketByHoldings("VEA", 0)).toBe("Not Found");
   });
 
   it("returns Not Found when name contains 'Emerging Markets'", async () => {
-    mock.quoteSummary.mockResolvedValue({
+    mockQuoteSummary.mockResolvedValue({
       topHoldings: { holdings: [{ symbol: "TSM", holdingName: "TSMC", holdingPercent: 0.06 }] },
       price: { shortName: "Vanguard Emerging Markets", longName: "Vanguard FTSE Emerging Markets ETF" },
       fundProfile: { categoryName: "Diversified Emerging Markets" },
     });
-    mock.quote.mockResolvedValue(stocksFor(["TSM"]));
+    mockQuote.mockResolvedValue(stocksFor(["TSM"]));
 
     expect(await classifyMarketByHoldings("VWO", 0)).toBe("Not Found");
   });
@@ -475,12 +460,12 @@ describe("classifyMarketByHoldings — name/category guard", () => {
     // A 'World'-named sub-fund encountered during recursion should classify by
     // its top-10 holdings, not be killed by the guard. Verified once recursion
     // is wired in Task 4 — for now we just confirm the guard checks depth.
-    mock.quoteSummary.mockResolvedValue({
+    mockQuoteSummary.mockResolvedValue({
       topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
       price: { shortName: "Sub World Fund", longName: "Sub World Fund" },
       fundProfile: { categoryName: "Large Blend" },
     });
-    mock.quote.mockResolvedValue(stocksFor(["AAPL"]));
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
 
     expect(await classifyMarketByHoldings("SUBW", 1)).toBe("USA");
   });
@@ -635,15 +620,14 @@ Append to `src/lib/classification/__tests__/holdings-market.test.ts`:
 
 ```typescript
 describe("classifyMarketByHoldings — sub-fund recursion", () => {
-  let mock: MockedYahoo;
   beforeEach(() => {
-    jest.resetAllMocks();
-    mock = getYahooMock();
+    mockQuoteSummary.mockReset();
+    mockQuote.mockReset();
   });
 
   it("recurses one level when top-10 contains ETFs", async () => {
     // VBAL.TO holds VTI (US-stock ETF) and VAB.TO (CA-bond ETF).
-    mock.quoteSummary
+    mockQuoteSummary
       // First call: VBAL.TO fetched at depth=0
       .mockResolvedValueOnce({
         topHoldings: { holdings: [
@@ -672,7 +656,7 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
         fundProfile: { categoryName: "Canadian Fixed Income" },
       });
 
-    mock.quote
+    mockQuote
       // batch quote for VBAL.TO's top-10
       .mockResolvedValueOnce([
         { symbol: "VTI", quoteType: "ETF" },
@@ -698,7 +682,7 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
     // returned "North America" because all sub-ETFs are .TO-suffixed.
     // The fix recurses INTO each sub-ETF and discovers VIU.TO holds
     // international stocks (.L, .DE) → contributes "Other" → parent = Global.
-    mock.quoteSummary
+    mockQuoteSummary
       // VEQT.TO at depth=0
       .mockResolvedValueOnce({
         topHoldings: { holdings: [
@@ -738,7 +722,7 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
         fundProfile: { categoryName: "Emerging" },
       });
 
-    mock.quote
+    mockQuote
       // VEQT batch
       .mockResolvedValueOnce([
         { symbol: "VTI", quoteType: "ETF" },
@@ -771,13 +755,13 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
   it("does not recurse beyond depth=1", async () => {
     // Depth=2 returns Not Found immediately.
     expect(await classifyMarketByHoldings("ANY", 2)).toBe("Not Found");
-    expect(mock.quoteSummary).not.toHaveBeenCalled();
+    expect(mockQuoteSummary).not.toHaveBeenCalled();
   });
 
   it("falls back to suffix when sub-fund classification returns Not Found", async () => {
     // Parent's top-10 = one ETF whose own classification returns Not Found
     // (because of guard). Should fall through to suffix → "Canada" (.TO).
-    mock.quoteSummary
+    mockQuoteSummary
       .mockResolvedValueOnce({
         topHoldings: { holdings: [{ symbol: "VEE.TO", holdingName: "Emerging", holdingPercent: 1.0 }]},
         price: { shortName: "Test Parent", longName: "Test Parent ETF" },
@@ -790,7 +774,7 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
         fundProfile: { categoryName: "Emerging Markets" },
       });
 
-    mock.quote
+    mockQuote
       .mockResolvedValueOnce([{ symbol: "VEE.TO", quoteType: "ETF" }])
       .mockResolvedValueOnce([{ symbol: "TSM", quoteType: "EQUITY" }]);
 
@@ -956,49 +940,40 @@ Add the classifier orchestration around the existing `researchTicker` body. The 
 
 - [ ] **Step 1: Write the failing orchestration tests**
 
-Create `src/lib/__tests__/ticker-research.test.ts`:
+Create `src/lib/__tests__/ticker-research.test.ts`. The Yahoo mock uses module-level shared `mock`-prefixed fns (the same pattern as Task 2's holdings-market test). The classifier helper (`./classification/holdings-market`) is also mocked so we can spy on `classifyMarketByHoldings` calls without going through Yahoo a second time.
 
 ```typescript
-import { researchTicker } from "../ticker-research";
+const mockYahooQuote = jest.fn();
+const mockYahooQuoteSummary = jest.fn();
+const mockClassifyMarketByHoldings = jest.fn();
 
-jest.mock("yahoo-finance2", () => {
-  return {
-    __esModule: true,
-    default: class {
-      quote = jest.fn();
-      quoteSummary = jest.fn();
-    },
-  };
-});
+jest.mock("yahoo-finance2", () => ({
+  __esModule: true,
+  default: class {
+    quote = mockYahooQuote;
+    quoteSummary = mockYahooQuoteSummary;
+  },
+}));
 
 jest.mock("../classification/holdings-market", () => ({
   __esModule: true,
-  classifyMarketByHoldings: jest.fn(),
+  classifyMarketByHoldings: mockClassifyMarketByHoldings,
   isClassificationExpired: jest.requireActual("../classification/holdings-market").isClassificationExpired,
 }));
 
-import YahooFinance from "yahoo-finance2";
-import { classifyMarketByHoldings } from "../classification/holdings-market";
-
-type MockedYahoo = { quote: jest.Mock; quoteSummary: jest.Mock };
-
-function getYahooMock(): MockedYahoo {
-  return (YahooFinance as unknown as new () => MockedYahoo).prototype as unknown as MockedYahoo;
-}
-
-const classifyMock = classifyMarketByHoldings as unknown as jest.Mock;
+import { researchTicker } from "../ticker-research";
 
 // Build a baseline Yahoo response that resolves an ETF on a US exchange with
 // market = "Not Found" (the trigger for the new classifier path).
-function mockEtfResponses(yahoo: MockedYahoo) {
-  yahoo.quote.mockResolvedValue({
+function mockEtfResponses() {
+  mockYahooQuote.mockResolvedValue({
     quoteType: "ETF",
     exchange: "PCX",  // not in US_EXCHANGES set in normalizeMarket → returns Not Found for ETFs
     regularMarketPrice: 100,
     currency: "USD",
     shortName: "Test ETF",
   });
-  yahoo.quoteSummary.mockImplementation(async (_sym: string, opts: any) => {
+  mockYahooQuoteSummary.mockImplementation(async (_sym: string, opts: any) => {
     // researchTicker calls quoteSummary first with the full module list.
     if (opts?.modules?.includes("summaryDetail")) {
       return {
@@ -1014,52 +989,52 @@ function mockEtfResponses(yahoo: MockedYahoo) {
 }
 
 describe("researchTicker orchestration — 3C classifier integration", () => {
-  let yahoo: MockedYahoo;
   beforeEach(() => {
-    jest.clearAllMocks();
-    yahoo = getYahooMock();
+    mockYahooQuote.mockReset();
+    mockYahooQuoteSummary.mockReset();
+    mockClassifyMarketByHoldings.mockReset();
   });
 
   it("ETF with no existingAsset → calls classifier; returns fresh marketComputedAt", async () => {
-    mockEtfResponses(yahoo);
-    classifyMock.mockResolvedValue("USA");
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
 
     const result = await researchTicker("VOO");
 
-    expect(classifyMock).toHaveBeenCalledWith("VOO", 0);
+    expect(mockClassifyMarketByHoldings).toHaveBeenCalledWith("VOO", 0);
     expect(result?.market).toBe("USA");
     expect(typeof result?.marketComputedAt).toBe("string");
     expect(Date.parse(result!.marketComputedAt as string)).toBeGreaterThan(Date.now() - 5000);
   });
 
   it("ETF with fresh marketComputedAt (< 365 days) → classifier skipped", async () => {
-    mockEtfResponses(yahoo);
-    classifyMock.mockResolvedValue("USA");
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const fresh = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString();  // 60 days old
 
     const result = await researchTicker("VOO", { userOverrides: undefined, marketComputedAt: fresh });
 
-    expect(classifyMock).not.toHaveBeenCalled();
+    expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
     // market falls back to normalizeMarket result (Not Found for ETFs on PCX); marketComputedAt echoes back.
     expect(result?.market).toBe("Not Found");
     expect(result?.marketComputedAt).toBe(fresh);
   });
 
   it("ETF with expired marketComputedAt (> 365 days) → classifier runs", async () => {
-    mockEtfResponses(yahoo);
-    classifyMock.mockResolvedValue("USA");
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const stale = new Date(Date.now() - 400 * 24 * 3600 * 1000).toISOString();
 
     const result = await researchTicker("VOO", { userOverrides: undefined, marketComputedAt: stale });
 
-    expect(classifyMock).toHaveBeenCalledWith("VOO", 0);
+    expect(mockClassifyMarketByHoldings).toHaveBeenCalledWith("VOO", 0);
     expect(result?.market).toBe("USA");
     expect(result?.marketComputedAt).not.toBe(stale);
   });
 
   it("ETF with userOverrides.market === true → classifier skipped", async () => {
-    mockEtfResponses(yahoo);
-    classifyMock.mockResolvedValue("USA");
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const stale = new Date(Date.now() - 400 * 24 * 3600 * 1000).toISOString();
 
     const result = await researchTicker("VOO", {
@@ -1067,30 +1042,30 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
       marketComputedAt: stale,
     });
 
-    expect(classifyMock).not.toHaveBeenCalled();
+    expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
     expect(result?.marketComputedAt).toBe(stale);
   });
 
   it("Company (non-ETF/Fund) → classifier never runs", async () => {
-    yahoo.quote.mockResolvedValue({
+    mockYahooQuote.mockResolvedValue({
       quoteType: "EQUITY",
       exchange: "NYQ",
       regularMarketPrice: 150,
       currency: "USD",
       shortName: "Apple",
     });
-    yahoo.quoteSummary.mockResolvedValue({
+    mockYahooQuoteSummary.mockResolvedValue({
       summaryDetail: { dividendYield: 0.005 },
       assetProfile: { longBusinessSummary: "Apple makes phones." },
       fundProfile: {},
       defaultKeyStatistics: { beta: 1.2 },
       recommendationTrend: { trend: [{ recommendationMean: "Buy" }] },
     });
-    classifyMock.mockResolvedValue("USA");
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
 
     const result = await researchTicker("AAPL");
 
-    expect(classifyMock).not.toHaveBeenCalled();
+    expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
     expect(result?.market).toBe("USA");  // exchange-suffix path for Companies
   });
 });
