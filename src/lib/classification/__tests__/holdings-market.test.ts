@@ -69,3 +69,57 @@ describe("classifyMarketByHoldings — stocks-only happy paths", () => {
     expect(await classifyMarketByHoldings("XYZ", 0)).toBe("Not Found");
   });
 });
+
+describe("classifyMarketByHoldings — name/category guard", () => {
+  beforeEach(() => {
+    mockQuoteSummary.mockReset();
+    mockQuote.mockReset();
+  });
+
+  it("returns Not Found when fund name contains 'World' even if top-10 is all-US", async () => {
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
+      price: { shortName: "Vanguard Total World", longName: "Vanguard Total World ETF" },
+      fundProfile: { categoryName: "Large Blend" },
+    });
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
+
+    expect(await classifyMarketByHoldings("VT", 0)).toBe("Not Found");
+  });
+
+  it("returns Not Found when category contains 'Foreign Large Blend'", async () => {
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
+      price: { shortName: "Mocked", longName: "Mocked Fund" },
+      fundProfile: { categoryName: "Foreign Large Blend" },
+    });
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
+
+    expect(await classifyMarketByHoldings("VEA", 0)).toBe("Not Found");
+  });
+
+  it("returns Not Found when name contains 'Emerging Markets'", async () => {
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [{ symbol: "TSM", holdingName: "TSMC", holdingPercent: 0.06 }] },
+      price: { shortName: "Vanguard Emerging Markets", longName: "Vanguard FTSE Emerging Markets ETF" },
+      fundProfile: { categoryName: "Diversified Emerging Markets" },
+    });
+    mockQuote.mockResolvedValue(stocksFor(["TSM"]));
+
+    expect(await classifyMarketByHoldings("VWO", 0)).toBe("Not Found");
+  });
+
+  it("guard does NOT fire at depth > 0 (sub-fund classified by its own holdings)", async () => {
+    // A 'World'-named sub-fund encountered during recursion should classify by
+    // its top-10 holdings, not be killed by the guard. Verified once recursion
+    // is wired in Task 4 — for now we just confirm the guard checks depth.
+    mockQuoteSummary.mockResolvedValue({
+      topHoldings: { holdings: [{ symbol: "AAPL", holdingName: "Apple", holdingPercent: 0.07 }] },
+      price: { shortName: "Sub World Fund", longName: "Sub World Fund" },
+      fundProfile: { categoryName: "Large Blend" },
+    });
+    mockQuote.mockResolvedValue(stocksFor(["AAPL"]));
+
+    expect(await classifyMarketByHoldings("SUBW", 1)).toBe("USA");
+  });
+});
