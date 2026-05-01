@@ -9,7 +9,7 @@ import type { Asset } from '@/types';
 async function findExistingAssetByTicker(
   householdId: string,
   ticker: string,
-): Promise<Pick<Asset, "userOverrides" | "marketComputedAt"> | null> {
+): Promise<Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null> {
   try {
     const { Items } = await db.send(
       new QueryCommand({
@@ -29,6 +29,7 @@ async function findExistingAssetByTicker(
       marketComputedAt: typeof match.marketComputedAt === "string" || match.marketComputedAt === null
         ? (match.marketComputedAt as string | null)
         : undefined,
+      market: typeof match.market === "string" ? match.market : "",
     };
   } catch (e) {
     console.warn(`[ticker-lookup] Failed to load existing asset for ${ticker}:`, e);

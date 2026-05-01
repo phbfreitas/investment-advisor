@@ -76,15 +76,19 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
     expect(Date.parse(result!.marketComputedAt as string)).toBeGreaterThan(Date.now() - 5000);
   });
 
-  it("ETF with fresh marketComputedAt (< 365 days) → classifier skipped", async () => {
+  it("ETF with fresh marketComputedAt (< 365 days) → classifier skipped, prior market preserved", async () => {
     mockEtfResponses();
     mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const fresh = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString();
 
-    const result = await researchTicker("VOO", { userOverrides: undefined, marketComputedAt: fresh });
+    const result = await researchTicker("VOO", {
+      userOverrides: undefined,
+      marketComputedAt: fresh,
+      market: "USA",  // previously classified
+    });
 
     expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
-    expect(result?.market).toBe("Not Found");
+    expect(result?.market).toBe("USA");           // preserved, NOT downgraded to Not Found
     expect(result?.marketComputedAt).toBe(fresh);
   });
 
@@ -93,14 +97,18 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
     mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const stale = new Date(Date.now() - 400 * 24 * 3600 * 1000).toISOString();
 
-    const result = await researchTicker("VOO", { userOverrides: undefined, marketComputedAt: stale });
+    const result = await researchTicker("VOO", {
+      userOverrides: undefined,
+      marketComputedAt: stale,
+      market: "USA",
+    });
 
     expect(mockClassifyMarketByHoldings).toHaveBeenCalledWith("VOO", 0);
     expect(result?.market).toBe("USA");
     expect(result?.marketComputedAt).not.toBe(stale);
   });
 
-  it("ETF with userOverrides.market === true → classifier skipped", async () => {
+  it("ETF with userOverrides.market === true → classifier skipped, manual market preserved", async () => {
     mockEtfResponses();
     mockClassifyMarketByHoldings.mockResolvedValue("USA");
     const stale = new Date(Date.now() - 400 * 24 * 3600 * 1000).toISOString();
@@ -108,10 +116,33 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
     const result = await researchTicker("VOO", {
       userOverrides: { market: true },
       marketComputedAt: stale,
+      market: "Canada",  // user manually set to Canada
     });
 
     expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
+    expect(result?.market).toBe("Canada");        // manual value preserved
     expect(result?.marketComputedAt).toBe(stale);
+  });
+
+  it("Codex adversarial review #1 — ETF with no prior classified market still returns Not Found on fresh cache hit", async () => {
+    // The preservation guard requires a non-Not-Found prior market. If the
+    // asset was somehow saved with a fresh marketComputedAt but market="Not Found"
+    // (e.g., classifier returned Not Found legitimately, like a Total World fund),
+    // the fresh cache should still suppress reclassification but the result should
+    // remain "Not Found" — there's no real prior value to preserve.
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
+    const fresh = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString();
+
+    const result = await researchTicker("VT", {
+      userOverrides: undefined,
+      marketComputedAt: fresh,
+      market: "Not Found",  // legitimately unclassified before
+    });
+
+    expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
+    expect(result?.market).toBe("Not Found");
+    expect(result?.marketComputedAt).toBe(fresh);
   });
 
   it("Company (non-ETF/Fund) → classifier never runs", async () => {

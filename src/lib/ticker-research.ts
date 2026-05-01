@@ -114,7 +114,7 @@ export function inferSector(description: string = '', currentSector: string = ''
 
 export async function researchTicker(
   symbol: string,
-  existingAsset?: Pick<Asset, "userOverrides" | "marketComputedAt"> | null,
+  existingAsset?: Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null,
 ): Promise<Partial<TickerMetadata> | null> {
   let ticker = symbol.toUpperCase();
   try {
@@ -174,14 +174,26 @@ export async function researchTicker(
     // 3C: holdings-based classification for ETFs/Funds when not locked + cache expired.
     const marketLocked = existingAsset?.userOverrides?.market === true;
     const cacheExpired = isClassificationExpired(existingAsset?.marketComputedAt);
+    const isEtfOrFund = securityType === "ETF" || securityType === "Fund";
     if (
       market === "Not Found" &&
-      (securityType === "ETF" || securityType === "Fund") &&
+      isEtfOrFund &&
       !marketLocked &&
       cacheExpired
     ) {
       market = await classifyMarketByHoldings(ticker, 0);
       marketComputedAt = new Date().toISOString();
+    } else if (
+      market === "Not Found" &&
+      isEtfOrFund &&
+      existingAsset?.market &&
+      existingAsset.market !== "Not Found"
+    ) {
+      // Classifier skipped (locked OR fresh cache) but the existing asset
+      // already has a real classified market value. Preserve it — otherwise
+      // we'd silently downgrade USA/Canada/etc. back to "Not Found" on every
+      // ordinary ticker lookup. (Codex adversarial review finding #1.)
+      market = existingAsset.market as typeof market;
     }
 
     const result = {
