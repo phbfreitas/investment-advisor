@@ -1001,7 +1001,19 @@ function DashboardContent() {
                           {/* 8. Sector */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
                           {/* 9. Market */}
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td
+                            className="px-3 py-3 text-neutral-700 dark:text-neutral-300"
+                            title={
+                              !isEditing &&
+                              asset.market === "Not Found" &&
+                              (asset.securityType === "ETF" || asset.securityType === "Fund") &&
+                              asset.marketComputedAt
+                                ? "Couldn't determine from top holdings. Set manually if needed."
+                                : undefined
+                            }
+                          >
+                            {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                          </td>
                           {/* 10. Currency */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
                           {/* 11. Mgt Style — N/A if missing */}
