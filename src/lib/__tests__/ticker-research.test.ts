@@ -167,4 +167,31 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
     expect(mockClassifyMarketByHoldings).not.toHaveBeenCalled();
     expect(result?.market).toBe("USA");
   });
+
+  it("Codex round-2 #2 — classifier returning Not Found does NOT stamp marketComputedAt", async () => {
+    // Transient Yahoo failure: classifier returns "Not Found". The cache
+    // timestamp must NOT be refreshed, so the next refresh retries.
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("Not Found");
+
+    const result = await researchTicker("VOO");
+
+    expect(mockClassifyMarketByHoldings).toHaveBeenCalledWith("VOO", 0);
+    expect(result?.market).toBe("Not Found");
+    // marketComputedAt should be null (no existingAsset to echo from), NOT a fresh ISO timestamp.
+    expect(result?.marketComputedAt).toBeNull();
+  });
+
+  it("Codex round-2 #2 — successful classification still stamps marketComputedAt", async () => {
+    // Sanity check: when the classifier returns a real bucket, the
+    // timestamp DOES update (existing behavior, not regressed by Fix #2).
+    mockEtfResponses();
+    mockClassifyMarketByHoldings.mockResolvedValue("USA");
+
+    const result = await researchTicker("VOO");
+
+    expect(result?.market).toBe("USA");
+    expect(typeof result?.marketComputedAt).toBe("string");
+    expect(Date.parse(result!.marketComputedAt as string)).toBeGreaterThan(Date.now() - 5000);
+  });
 });

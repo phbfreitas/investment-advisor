@@ -181,8 +181,17 @@ export async function researchTicker(
       !marketLocked &&
       cacheExpired
     ) {
-      market = await classifyMarketByHoldings(ticker, 0);
-      marketComputedAt = new Date().toISOString();
+      const classified = await classifyMarketByHoldings(ticker, 0);
+      market = classified;
+      // Codex round-2 #2: only stamp the cache timestamp on a confirmed
+      // classification. A "Not Found" result may be transient (Yahoo error,
+      // holdings empty) and a fresh stamp would freeze the asset in "Not
+      // Found" for up to a year. The 3A lock is the user-side mitigation
+      // for legitimate Not Found cases (Total World funds, etc.) — set
+      // Market manually once → lock fires → classifier never re-runs.
+      if (classified !== "Not Found") {
+        marketComputedAt = new Date().toISOString();
+      }
     } else if (
       market === "Not Found" &&
       isEtfOrFund &&
