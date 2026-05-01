@@ -3,36 +3,33 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { researchTicker } from '@/lib/ticker-research';
 import { db, TABLE_NAME } from '@/lib/db';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import type { Asset } from '@/types';
 
-async function findExistingAssetByTicker(
+export async function findExistingAssetById(
   householdId: string,
-  ticker: string,
+  assetId: string,
 ): Promise<Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null> {
   try {
-    const { Items } = await db.send(
-      new QueryCommand({
+    const { Item } = await db.send(
+      new GetCommand({
         TableName: TABLE_NAME,
-        KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
-        ExpressionAttributeValues: {
-          ":pk": `HOUSEHOLD#${householdId}`,
-          ":prefix": "ASSET#",
+        Key: {
+          PK: `HOUSEHOLD#${householdId}`,
+          SK: `ASSET#${assetId}`,
         },
       })
     );
-    const upper = ticker.toUpperCase();
-    const match = (Items ?? []).find((a: any) => String(a.ticker ?? "").toUpperCase() === upper);
-    if (!match) return null;
+    if (!Item) return null;
     return {
-      userOverrides: match.userOverrides as Asset["userOverrides"],
-      marketComputedAt: typeof match.marketComputedAt === "string" || match.marketComputedAt === null
-        ? (match.marketComputedAt as string | null)
+      userOverrides: Item.userOverrides as Asset["userOverrides"],
+      marketComputedAt: typeof Item.marketComputedAt === "string" || Item.marketComputedAt === null
+        ? (Item.marketComputedAt as string | null)
         : undefined,
-      market: typeof match.market === "string" ? match.market : "",
+      market: typeof Item.market === "string" ? Item.market : "",
     };
   } catch (e) {
-    console.warn(`[ticker-lookup] Failed to load existing asset for ${ticker}:`, e);
+    console.warn(`[ticker-lookup] Failed to load asset ${assetId}:`, e);
     return null;
   }
 }
@@ -48,8 +45,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing symbol parameter' }, { status: 400 });
   }
 
+  const assetId = request.nextUrl.searchParams.get('assetId');
+
   try {
-    const existing = await findExistingAssetByTicker(session.user.householdId, symbol);
+    // Asset-specific lookup (Codex adversarial review #1, round 2): never
+    // borrow lock/cache state from a sibling holding by ticker alone.
+    const existing = assetId
+      ? await findExistingAssetById(session.user.householdId, assetId)
+      : null;
     const data = await researchTicker(symbol, existing);
     if (!data) {
       return NextResponse.json({ error: `Could not find ticker: ${symbol}` }, { status: 404 });

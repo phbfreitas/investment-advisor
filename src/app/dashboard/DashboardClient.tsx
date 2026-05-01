@@ -492,7 +492,11 @@ function DashboardContent() {
   const handleTickerLookup = async (symbol: string) => {
     if (!symbol.trim()) return;
     try {
-      const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}`);
+      // Pass the current asset id so /api/ticker-lookup loads exactly that
+      // asset's lock/cache state, not whichever sibling holding happens to
+      // share the ticker. (Codex adversarial review #1, round 2.)
+      const assetIdParam = editingId && editingId !== "NEW" ? `&assetId=${encodeURIComponent(editingId)}` : "";
+      const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}${assetIdParam}`);
       if (res.ok) {
         const data = await res.json();
         const qty = editForm.quantity || 0;
