@@ -25,3 +25,47 @@ export function detectAnomaly(
         deltaPct,
     };
 }
+
+export interface AssetForAnomalyCheck {
+    id: string;
+    ticker: string;
+    liveTickerPrice: number;
+}
+
+export interface AnomalyDetection {
+    assetId: string;
+    ticker: string;
+    prior: number;
+    next: number;
+    deltaPct: number;
+}
+
+/**
+ * For a given Yahoo quote, return one anomaly detection per asset that
+ * crosses the threshold. Multiple assets with the same ticker are evaluated
+ * INDEPENDENTLY against their own stored liveTickerPrice. Empty array when
+ * no asset is anomalous.
+ */
+export function detectAnomaliesForTicker(
+    quote: { ticker: string; currentPrice: number },
+    assets: AssetForAnomalyCheck[],
+    threshold = 0.1
+): AnomalyDetection[] {
+    const matching = assets.filter(a => a.ticker === quote.ticker);
+    const detections: AnomalyDetection[] = [];
+    for (const asset of matching) {
+        const prior = asset.liveTickerPrice;
+        const next = quote.currentPrice;
+        const result = detectAnomaly(prior, next, threshold);
+        if (result.isAnomaly) {
+            detections.push({
+                assetId: asset.id,
+                ticker: asset.ticker,
+                prior,
+                next,
+                deltaPct: result.deltaPct,
+            });
+        }
+    }
+    return detections;
+}

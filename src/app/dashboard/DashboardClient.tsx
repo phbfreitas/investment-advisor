@@ -20,7 +20,7 @@ import { HoldingsTab } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
-import { detectAnomaly } from "./lib/priceAnomaly";
+import { detectAnomaly, detectAnomaliesForTicker } from "./lib/priceAnomaly";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
@@ -77,6 +77,8 @@ function DashboardContent() {
   // Market data is now optional/helper since the table uses DB values, but we still fetch it for live updates
   const [marketData, setMarketData] = useState<Record<string, MarketData>>({});
   const [isMarketLoading, setIsMarketLoading] = useState(false);
+  // Keyed by asset.id (NOT ticker) so multi-account holdings of the same ticker
+  // flag independently. See Codex adversarial review finding 1 (5G).
   const [anomalies, setAnomalies] = useState<Record<string, { prior: number; next: number; deltaPct: number }>>({});
 
   // Editing state
@@ -149,25 +151,28 @@ function DashboardContent() {
         if (data && data.ticker && !data.error) {
           newMarketData[data.ticker] = data as MarketData;
 
-          const asset = assets.find(a => a.ticker === data.ticker);
-          const prior = asset?.liveTickerPrice ?? 0;
-          const next = data.currentPrice ?? 0;
-          const { isAnomaly, deltaPct } = detectAnomaly(prior, next);
+          const detections = detectAnomaliesForTicker(
+            { ticker: data.ticker, currentPrice: data.currentPrice ?? 0 },
+            assets,
+          );
 
-          if (isAnomaly && asset) {
-            newAnomalies[data.ticker] = { prior, next, deltaPct };
-            // Fire-and-forget — logging is best-effort instrumentation.
+          for (const detection of detections) {
+            newAnomalies[detection.assetId] = {
+              prior: detection.prior,
+              next: detection.next,
+              deltaPct: detection.deltaPct,
+            };
             try {
               fetch("/api/price-anomaly-log", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  ticker: data.ticker,
-                  assetId: asset.id,
-                  priorPrice: prior,
-                  newPrice: next,
-                  deltaPct,
-                  deltaAbs: next - prior,
+                  ticker: detection.ticker,
+                  assetId: detection.assetId,
+                  priorPrice: detection.prior,
+                  newPrice: detection.next,
+                  deltaPct: detection.deltaPct,
+                  deltaAbs: detection.next - detection.prior,
                   source: "refresh",
                   rawYahooQuote: data,
                 }),
@@ -1031,7 +1036,7 @@ function DashboardContent() {
                                 const formatted = isNaN(numPrice)
                                   ? "N/A"
                                   : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                                const anomaly = anomalies[asset.ticker];
+                                const anomaly = anomalies[asset.id];
                                 return (
                                   <span className="inline-flex items-center gap-1">
                                     <span>{formatted}</span>
@@ -1040,7 +1045,7 @@ function DashboardContent() {
                                         title={`Changed from $${anomaly.prior.toFixed(2)} (${anomaly.deltaPct >= 0 ? "+" : ""}${anomaly.deltaPct.toFixed(1)}%)`}
                                         aria-label={`Price changed by ${anomaly.deltaPct.toFixed(1)} percent`}
                                         className="text-neutral-400 dark:text-neutral-500 text-xs cursor-help select-none px-1"
-                                        data-testid={`price-anomaly-flag-${asset.ticker}`}
+                                        data-testid={`price-anomaly-flag-${asset.id}`}
                                       >
                                         ?
                                       </span>
