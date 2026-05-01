@@ -14,6 +14,8 @@ import {
   type ManagementStyle,
   type CallValue,
 } from "./classification/allowlists";
+import { classifyMarketByHoldings, isClassificationExpired } from "./classification/holdings-market";
+import type { Asset } from "@/types";
 
 const yahooFinance = new YahooFinance();
 
@@ -44,6 +46,7 @@ export interface TickerMetadata {
   riskFlag: string;
   currency: string;
   currentPrice: number;
+  marketComputedAt: string | null;
 }
 
 export function classifyStrategyType(yieldDecimal: number, beta: number, description: string = '', securityType: string = '', name: string = ''): StrategyType {
@@ -109,7 +112,10 @@ export function inferSector(description: string = '', currentSector: string = ''
   return "Not Found";
 }
 
-export async function researchTicker(symbol: string): Promise<Partial<TickerMetadata> | null> {
+export async function researchTicker(
+  symbol: string,
+  existingAsset?: Pick<Asset, "userOverrides" | "marketComputedAt"> | null,
+): Promise<Partial<TickerMetadata> | null> {
   let ticker = symbol.toUpperCase();
   try {
     let quote;
@@ -162,6 +168,22 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
       ? "Not Found"
       : classifyStrategyType(dividendYield ?? 0, beta, description, securityType, name);
 
+    let market = normalizeMarket(quote.exchange, securityType);
+    let marketComputedAt: string | null = existingAsset?.marketComputedAt ?? null;
+
+    // 3C: holdings-based classification for ETFs/Funds when not locked + cache expired.
+    const marketLocked = existingAsset?.userOverrides?.market === true;
+    const cacheExpired = isClassificationExpired(existingAsset?.marketComputedAt);
+    if (
+      market === "Not Found" &&
+      (securityType === "ETF" || securityType === "Fund") &&
+      !marketLocked &&
+      cacheExpired
+    ) {
+      market = await classifyMarketByHoldings(ticker, 0);
+      marketComputedAt = new Date().toISOString();
+    }
+
     const result = {
       name,
       symbol: ticker,
@@ -171,7 +193,8 @@ export async function researchTicker(symbol: string): Promise<Partial<TickerMeta
       strategyType,
       call: ((securityType === "Fund" || securityType === "ETF") && (isCallInName || isCallInDesc)) ? "Yes" as const : "No" as const,
       sector: inferSector(description, assetProfile?.sector),
-      market: normalizeMarket(quote.exchange, securityType),
+      market,
+      marketComputedAt,
       managementStyle: normalizeManagementStyle(
         (assetProfile?.longBusinessSummary || "").toLowerCase().includes("index") ? "Passive" : "Active"
       ),
