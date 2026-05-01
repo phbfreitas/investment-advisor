@@ -21,6 +21,7 @@ import {
 import type { AuditMutation } from "@/types/audit";
 import type { LockableField } from "@/types";
 import { parseHoldings, extractAccountNumber } from "./parseHoldings";
+import { isClassificationExpired } from '@/lib/classification/holdings-market';
 
 function pickWithLock<T>(
     existing: { userOverrides?: Partial<Record<LockableField, boolean>> } | null | undefined,
@@ -30,6 +31,47 @@ function pickWithLock<T>(
 ): T | undefined {
     if (existing?.userOverrides?.[field] === true) return existingValue;
     return fallback;
+}
+
+type ExistingForGate = {
+    securityType?: string | null;
+    strategyType?: string | null;
+    sector?: string | null;
+    market?: string | null;
+    marketComputedAt?: string | null;
+    userOverrides?: { market?: boolean } & Record<string, unknown>;
+} | null | undefined;
+
+/**
+ * Returns true when this holding should call researchTicker for enrichment.
+ *
+ * Originally (pre-3C) this gate only fired when classification fields like
+ * strategyType / sector / securityType were missing. Codex round-4 finding
+ * #1 caught a gap: a legacy ETF with those fields populated but with
+ * market="Not Found" or expired marketComputedAt would never call
+ * researchTicker on PDF re-import — meaning the new 3C classifier path
+ * was unreachable for the installed base of pre-3C assets.
+ *
+ * Added the marketStale clause so the gate also fires when an ETF/Fund
+ * has classification-eligible market state (not locked, not yet
+ * classified or expired). Lock check via userOverrides.market avoids
+ * re-firing the classifier on a manually-set value.
+ */
+export function shouldEnrichHolding(existing: ExistingForGate): boolean {
+    if (!existing) return true;
+    if (!existing.strategyType || existing.strategyType === "Not Found") return true;
+    if (!existing.sector || existing.sector === "Not Found") return true;
+    if (!existing.securityType || existing.securityType === "Not Found") return true;
+
+    // Round-4 #1: market staleness on ETFs/Funds also triggers re-enrichment.
+    const isEtfOrFund = existing.securityType === "ETF" || existing.securityType === "Fund";
+    const marketLocked = existing.userOverrides?.market === true;
+    if (isEtfOrFund && !marketLocked) {
+        if (!existing.market || existing.market === "Not Found") return true;
+        if (isClassificationExpired(existing.marketComputedAt)) return true;
+    }
+
+    return false;
 }
 
 export const dynamic = "force-dynamic";
@@ -156,11 +198,7 @@ export async function POST(request: Request) {
 
             // --- AI ENRICHMENT (New Logic) ---
             // If asset is new OR has missing metadata, attempt enrichment
-            const needsMetadata =
-                !existing ||
-                !existing.strategyType || existing.strategyType === "Not Found" ||
-                !existing.sector || existing.sector === "Not Found" ||
-                !existing.securityType || existing.securityType === "Not Found";
+            const needsMetadata = shouldEnrichHolding(existing);
             let enrichedData = null;
             
             if (needsMetadata) {
