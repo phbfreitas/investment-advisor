@@ -168,7 +168,7 @@ export async function POST(request: Request) {
                     enrichedData = tickerCache.get(h.ticker);
                 } else {
                     try {
-                        enrichedData = await researchTicker(h.ticker);
+                        enrichedData = await researchTicker(h.ticker, existing);
                         tickerCache.set(h.ticker, enrichedData);
                     } catch (e) {
                         console.warn(`[portfolio-pdf] AI Enrichment failed for ${h.ticker}:`, e);
@@ -250,6 +250,9 @@ export async function POST(request: Request) {
                     ),
                     securityType,
                 ),
+                marketComputedAt: existing?.userOverrides?.market === true
+                    ? (existing?.marketComputedAt ?? null)
+                    : (enrichedData?.marketComputedAt ?? existing?.marketComputedAt ?? null),
                 managementStyle: normalizeManagementStyle(
                     pickWithLock(
                         existing,
