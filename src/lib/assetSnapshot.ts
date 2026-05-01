@@ -43,5 +43,11 @@ export function toSnapshot(asset: Record<string, unknown>): AssetSnapshot {
     userOverrides: (asset.userOverrides && typeof asset.userOverrides === "object")
         ? (asset.userOverrides as unknown) as AssetSnapshot["userOverrides"]
         : undefined,
+    marketComputedAt:
+      typeof asset.marketComputedAt === "string"
+        ? asset.marketComputedAt
+        : asset.marketComputedAt === null
+          ? null
+          : undefined,
   };
 }

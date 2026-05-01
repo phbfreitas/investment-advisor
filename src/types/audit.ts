@@ -31,6 +31,7 @@ export interface AssetSnapshot {
   createdAt: string;
   updatedAt: string;
   userOverrides?: Partial<Record<"sector" | "market" | "securityType" | "strategyType" | "call" | "managementStyle" | "currency" | "managementFee", boolean>>;
+  marketComputedAt?: string | null;
 }
 
 export interface AuditMutation {

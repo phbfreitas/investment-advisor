@@ -45,6 +45,7 @@ export interface Asset {
     expectedAnnualDividends: number;
     updatedAt: string;
     userOverrides?: Partial<Record<LockableField, boolean>>;
+    marketComputedAt?: string | null;
 }
 
 export interface MarketData {
