@@ -16,6 +16,42 @@ import {
   applyCompanyAutoDefaults,
 } from "@/lib/classification/allowlists";
 
+/**
+ * Codex round-4 #3: validate client-supplied marketComputedAt.
+ *
+ * The server should be the authority on freshness metadata. Without
+ * validation, a client could send a future timestamp to freeze the
+ * asset's classification cache for decades, or a stale timestamp from
+ * years ago to suppress re-classification.
+ *
+ * Accepts:
+ *   - null: the manual-set sentinel (user manually edited Market via 3A
+ *     setFieldWithLock; researchTicker treats this as expired).
+ *   - ISO 8601 string within (now - 2 × TTL, now + 60 seconds): legitimate
+ *     server-computed timestamp round-tripped through the client. The 2×
+ *     TTL window allows slight clock drift on long-cached values; the
+ *     60-second future-skew tolerance handles client/server clock skew.
+ *
+ * Rejects (returns undefined → caller falls back to existingAsset.marketComputedAt):
+ *   - Future timestamps beyond 60-second skew tolerance.
+ *   - Timestamps older than 2 × TTL (730 days).
+ *   - Non-string, non-null values.
+ *   - Unparseable strings.
+ */
+const TTL_MS = 365 * 86_400_000;
+const FUTURE_SKEW_MS = 60_000;
+
+export function validateMarketComputedAt(value: unknown): string | null | undefined {
+    if (value === null) return null;
+    if (typeof value !== "string") return undefined;
+    const t = Date.parse(value);
+    if (Number.isNaN(t)) return undefined;
+    const now = Date.now();
+    if (t > now + FUTURE_SKEW_MS) return undefined;
+    if (now - t > 2 * TTL_MS) return undefined;
+    return value;
+}
+
 export const dynamic = "force-dynamic";
 
 // DELETE /api/assets/[id] - Deletes an asset
@@ -151,7 +187,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             expectedAnnualDividends: data.expectedAnnualDividends !== undefined ? parseFloat(data.expectedAnnualDividends) : existingAsset.expectedAnnualDividends,
 
             userOverrides: data.userOverrides !== undefined ? data.userOverrides : existingAsset.userOverrides,
-            marketComputedAt: data.marketComputedAt !== undefined ? data.marketComputedAt : existingAsset.marketComputedAt,
+            marketComputedAt: data.marketComputedAt !== undefined
+                ? (validateMarketComputedAt(data.marketComputedAt) ?? existingAsset.marketComputedAt)
+                : existingAsset.marketComputedAt,
             updatedAt: new Date().toISOString(),
         };
 
