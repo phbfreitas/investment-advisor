@@ -760,23 +760,24 @@ describe("classifyMarketByHoldings — sub-fund recursion", () => {
 
   it("falls back to suffix when sub-fund classification returns Not Found", async () => {
     // Parent's top-10 = one ETF whose own classification returns Not Found
-    // (because of guard). Should fall through to suffix → "Canada" (.TO).
+    // (empty top-10 at depth=1). Should fall through to suffix → "Canada" (.TO).
     mockQuoteSummary
       .mockResolvedValueOnce({
         topHoldings: { holdings: [{ symbol: "VEE.TO", holdingName: "Emerging", holdingPercent: 1.0 }]},
         price: { shortName: "Test Parent", longName: "Test Parent ETF" },
         fundProfile: { categoryName: "Allocation" },
       })
-      // VEE.TO recursion: name guard fires → Not Found
+      // VEE.TO recursion at depth=1: empty holdings → Not Found.
+      // (The name/category guard from Task 3 only fires at depth=0, so we
+      // use empty topHoldings — not name-guard tokens — to force Not Found
+      // from the recursive call.)
       .mockResolvedValueOnce({
-        topHoldings: { holdings: [{ symbol: "TSM", holdingName: "TSMC", holdingPercent: 0.06 }] },
+        topHoldings: { holdings: [] },
         price: { shortName: "Vanguard Emerging", longName: "Vanguard FTSE Emerging Markets" },
         fundProfile: { categoryName: "Emerging Markets" },
       });
 
-    mockQuote
-      .mockResolvedValueOnce([{ symbol: "VEE.TO", quoteType: "ETF" }])
-      .mockResolvedValueOnce([{ symbol: "TSM", quoteType: "EQUITY" }]);
+    mockQuote.mockResolvedValueOnce([{ symbol: "VEE.TO", quoteType: "ETF" }]);
 
     // After recursion fallback: VEE.TO suffix → Canada → parent = Canada
     expect(await classifyMarketByHoldings("TESTPARENT.TO", 0)).toBe("Canada");
