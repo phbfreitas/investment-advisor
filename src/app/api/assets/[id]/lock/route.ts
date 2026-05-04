@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, TABLE_NAME } from "@/lib/db";
+import { db, rawDb_unclassifiedOnly, TABLE_NAME } from "@/lib/db";
 import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -99,8 +99,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             expressionAttributeValues[":expectedUpdatedAt"] = expectedUpdatedAt;
         }
 
+        // userOverrides is NOT in FIELD_CLASSIFICATIONS, so bypassing the
+        // encrypted client is safe here. UpdateCommand against the encrypted
+        // client throws by design (5A Item 2). When the partial-update
+        // pattern needs classified fields, the route must Get → modify →
+        // PutCommand instead, which round-trips through encryption.
         try {
-            await db.send(
+            await rawDb_unclassifiedOnly.send(
                 new UpdateCommand({
                     TableName: TABLE_NAME,
                     Key: { PK: PROFILE_KEY, SK: assetSK },

@@ -42,4 +42,15 @@ export const db = process.env.KMS_KEY_ID
     )
     : rawDb;
 
+// Exported for callers that intentionally bypass classification:
+//  - UpdateCommand on unclassified fields (e.g., userOverrides). The
+//    EncryptedDocumentClient throws on UpdateCommand by design (see 5A
+//    Item 2 — partial updates can't safely encrypt expression values).
+//  - Internal infra writes (e.g., audit log) that don't store classified
+//    fields and don't need round-trip decryption.
+//
+// Use sparingly. If your data path involves any field listed in
+// FIELD_CLASSIFICATIONS, use `db` (the encrypted wrapper) instead.
+export const rawDb_unclassifiedOnly = rawDb;
+
 if (process.env.NODE_ENV !== "production") globalForDynamo.dynamoClient = dynamoClient;
