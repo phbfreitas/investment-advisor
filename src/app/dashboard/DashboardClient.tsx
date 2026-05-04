@@ -20,7 +20,7 @@ import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY, ColumnManagerPopo
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
-import { detectAnomaly, detectAnomaliesForTicker } from "./lib/priceAnomaly";
+import { detectAnomaly } from "./lib/priceAnomaly";
 import type { PortfolioTotals } from "@/lib/portfolio-analytics";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
@@ -150,6 +150,23 @@ function DashboardContent() {
         }),
       });
       if (!res.ok) throw new Error("Failed to save exchange");
+
+      // Immediately re-fetch the price using the new exchange suffix so the
+      // stored liveTickerPrice reflects the correct listing (e.g., HYLD.TO, not HYLD).
+      const lookupRes = await fetch(
+        `/api/ticker-lookup?symbol=${encodeURIComponent(asset.ticker)}&assetId=${encodeURIComponent(assetId)}`
+      );
+      if (lookupRes.ok) {
+        const lookupData = await lookupRes.json();
+        if (!lookupData.currencyMismatch && lookupData.currentPrice) {
+          await fetch(`/api/assets/${assetId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ liveTickerPrice: lookupData.currentPrice }),
+          });
+        }
+      }
+
       fetchAssets();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save exchange";
@@ -184,50 +201,60 @@ function DashboardContent() {
   const risks = useMemo(() => Array.from(new Set(assets.map(a => a.risk).filter(Boolean))), [assets]);
 
   const fetchMarketData = async (assetsToCheck: Asset[]) => {
-    const validSymbols = assetsToCheck.map(a => a.ticker).filter(Boolean);
-    if (validSymbols.length === 0) return;
+    const validAssets = assetsToCheck.filter(a => Boolean(a.ticker));
+    if (validAssets.length === 0) return;
     setIsMarketLoading(true);
 
-    const uniqueTickers = Array.from(new Set(validSymbols));
+    // Build effective ticker per asset (append suffix when exchange is user-locked),
+    // then deduplicate so we don't fire duplicate API calls for the same listing.
+    const effectiveTickerMap = new Map<string, Asset[]>();
+    for (const asset of validAssets) {
+      const effectiveTicker =
+        asset.userOverrides?.exchange && asset.exchangeSuffix
+          ? asset.ticker + asset.exchangeSuffix
+          : asset.ticker;
+      if (!effectiveTickerMap.has(effectiveTicker)) {
+        effectiveTickerMap.set(effectiveTicker, []);
+      }
+      effectiveTickerMap.get(effectiveTicker)!.push(asset);
+    }
 
     try {
-      const promises = uniqueTickers.map(ticker =>
-        fetch(`/api/market-data?ticker=${ticker}`).then(res => res.json().catch(() => null)) as Promise<MarketData | null>
+      const promises = Array.from(effectiveTickerMap.entries()).map(
+        ([effectiveTicker, assetGroup]) =>
+          fetch(`/api/market-data?ticker=${encodeURIComponent(effectiveTicker)}`)
+            .then(res => res.json().catch(() => null))
+            .then(data => ({ data, assetGroup }))
       );
 
       const results = await Promise.all(promises);
       const newMarketData: Record<string, MarketData> = {};
       const newAnomalies: Record<string, { prior: number; next: number; deltaPct: number }> = {};
 
-      results.forEach(data => {
-        if (data && data.ticker && !data.error) {
-          newMarketData[data.ticker] = data as MarketData;
+      results.forEach(({ data, assetGroup }) => {
+        if (!data || data.error) return;
+        for (const asset of assetGroup) {
+          // Key by asset.id so same ticker on different exchanges stays separate.
+          newMarketData[asset.id] = data as MarketData;
 
-          // IMPORTANT: detect against the explicitly-passed asset list, NOT the
-          // closed-over `assets` state (which lags by one fetch cycle on first
-          // load). See Codex adversarial review #2 finding 2.
-          const detections = detectAnomaliesForTicker(
-            { ticker: data.ticker, currentPrice: data.currentPrice ?? 0 },
-            assetsToCheck,
-          );
-
-          for (const detection of detections) {
-            newAnomalies[detection.assetId] = {
-              prior: detection.prior,
-              next: detection.next,
-              deltaPct: detection.deltaPct,
+          const { isAnomaly, deltaPct } = detectAnomaly(asset.liveTickerPrice, data.currentPrice ?? 0);
+          if (isAnomaly) {
+            newAnomalies[asset.id] = {
+              prior: asset.liveTickerPrice,
+              next: data.currentPrice,
+              deltaPct,
             };
             try {
               fetch("/api/price-anomaly-log", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  ticker: detection.ticker,
-                  assetId: detection.assetId,
-                  priorPrice: detection.prior,
-                  newPrice: detection.next,
-                  deltaPct: detection.deltaPct,
-                  deltaAbs: detection.next - detection.prior,
+                  ticker: asset.ticker,
+                  assetId: asset.id,
+                  priorPrice: asset.liveTickerPrice,
+                  newPrice: data.currentPrice,
+                  deltaPct,
+                  deltaAbs: data.currentPrice - asset.liveTickerPrice,
                   source: "refresh",
                   rawYahooQuote: data,
                 }),
@@ -507,7 +534,7 @@ function DashboardContent() {
 
         let assetValue: string | number | undefined =
           key === 'liveTickerPrice'
-            ? (marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice)
+            ? (marketData[asset.id]?.currentPrice ?? asset.liveTickerPrice)
             : asset[key as keyof Asset] as string | number | undefined;
 
         if (assetValue == null) return false;
@@ -524,8 +551,8 @@ function DashboardContent() {
 
         // Ensure live ticker price uses the actively fetched market data when sorting
         if (sortConfig.key === 'liveTickerPrice') {
-          aValue = marketData[a.ticker]?.currentPrice ?? a.liveTickerPrice;
-          bValue = marketData[b.ticker]?.currentPrice ?? b.liveTickerPrice;
+          aValue = marketData[a.id]?.currentPrice ?? a.liveTickerPrice;
+          bValue = marketData[b.id]?.currentPrice ?? b.liveTickerPrice;
         }
 
         if (aValue == null) aValue = '';
@@ -1227,7 +1254,7 @@ function DashboardContent() {
                               <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={editForm.liveTickerPrice ?? 0} onChange={e => handleEditChange('liveTickerPrice', parseFloat(e.target.value) || 0)} />
                             ) : (
                               (() => {
-                                const price = marketData[asset.ticker]?.currentPrice ?? asset.liveTickerPrice;
+                                const price = marketData[asset.id]?.currentPrice ?? asset.liveTickerPrice;
                                 const numPrice = Number(price);
                                 const formatted = isNaN(numPrice)
                                   ? "N/A"
