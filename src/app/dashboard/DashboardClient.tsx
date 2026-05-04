@@ -106,13 +106,29 @@ function DashboardContent() {
   const [detectedAccounts, setDetectedAccounts] = useState<string[]>([]);
   const [accountNameMappings, setAccountNameMappings] = useState<Record<string, string>>({});
 
-  // Column visibility (controlled; Task 14 will wire up the toggle UI)
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(DEFAULT_COLUMN_VISIBILITY);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [showColumnManager, setShowColumnManager] = useState(false);
+  const [portfolioTotals, setPortfolioTotals] = useState<{
+    cadTotal: number; usdTotal: number; grandTotalCad: number;
+    usdToCadRate: number | null; fxUnavailable: boolean;
+  } | null>(null);
+  const [mismatchState, setMismatchState] = useState<{
+    symbol: string; detectedCurrency: string; storedCurrency: string;
+  } | null>(null);
 
-  const handleColumnVisibilityChange = useCallback((key: string, visible: boolean) => {
-    setColumnVisibility(prev => ({ ...prev, [key]: visible }));
-  }, []);
+  const handleColumnVisibilityChange = async (key: string, visible: boolean) => {
+    const patch = { [key]: visible };
+    setColumnVisibility(prev => ({ ...prev, ...patch }));
+    try {
+      await fetch("/api/preferences/columns", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ columnVisibility: patch }),
+      });
+    } catch {
+      setColumnVisibility(prev => ({ ...prev, [key]: !visible }));
+    }
+  };
 
   const isVisible = (key: string): boolean =>
     columnVisibility[key] !== undefined
@@ -237,6 +253,8 @@ function DashboardContent() {
         const fresh = data.assets as Asset[];
         setAssets(fresh);
         fetchMarketData(fresh);
+        if (data.portfolioTotals) setPortfolioTotals(data.portfolioTotals);
+        if (data.columnVisibility) setColumnVisibility(data.columnVisibility);
       }
     } catch (error) {
       console.error("Failed to load assets", error);
@@ -455,7 +473,9 @@ function DashboardContent() {
       accountNumber: "",
       accountType: "",
       risk: "",
-      expectedAnnualDividends: 0
+      expectedAnnualDividends: 0,
+      exchangeSuffix: "",
+      exchangeName: "",
     });
   };
 
@@ -517,34 +537,43 @@ function DashboardContent() {
     return sortableItems;
   }, [assets, sortConfig, filters, marketData]);
 
-  // Ticker lookup — auto-populate fields when ticker is entered/changed
-  const handleTickerLookup = async (symbol: string) => {
+  // Ticker lookup — auto-populate fields when ticker is entered/changed.
+  // Pass exchangeSuffixOverride to retry with a specific exchange suffix when a
+  // currency mismatch is detected (user selects the correct listing).
+  const handleTickerLookup = async (symbol: string, exchangeSuffixOverride?: string) => {
     if (!symbol.trim()) return;
     try {
-      // Pass the current asset id so /api/ticker-lookup loads exactly that
-      // asset's lock/cache state, not whichever sibling holding happens to
-      // share the ticker. (Codex adversarial review #1, round 2.)
       const assetIdParam = editingId && editingId !== "NEW" ? `&assetId=${encodeURIComponent(editingId)}` : "";
-      const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}${assetIdParam}`);
-      if (res.ok) {
-        const data = await res.json();
-        const qty = editForm.quantity || 0;
-        const price = data.currentPrice || 0;
-        const yieldForCalc = data.dividendYield ?? 0;
-        const bookCostNum = editForm.bookCost || 0;
+      const suffixParam = exchangeSuffixOverride != null ? `&exchangeSuffix=${encodeURIComponent(exchangeSuffixOverride)}` : "";
+      const res = await fetch(`/api/ticker-lookup?symbol=${encodeURIComponent(symbol)}${assetIdParam}${suffixParam}`);
+      if (!res.ok) return;
+      const data = await res.json();
 
-        setEditForm(prev => {
-          const lookupPatch = applyLookupRespectingLocks(prev, data);
-          return {
-            ...prev,
-            ...lookupPatch,
-            // Computed fields derived from quantity * price * yield — always recomputed.
-            marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
-            profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
-            expectedAnnualDividends: qty > 0 && price > 0 && yieldForCalc > 0 ? qty * price * yieldForCalc : 0,
-          };
+      if (data.currencyMismatch) {
+        setMismatchState({
+          symbol,
+          detectedCurrency: data.detectedCurrency ?? "Unknown",
+          storedCurrency: editForm.currency ?? "Unknown",
         });
+        return;
       }
+
+      setMismatchState(null);
+      const qty = editForm.quantity || 0;
+      const price = data.currentPrice || 0;
+      const yieldForCalc = data.dividendYield ?? 0;
+      const bookCostNum = editForm.bookCost || 0;
+
+      setEditForm(prev => {
+        const lookupPatch = applyLookupRespectingLocks(prev, data);
+        return {
+          ...prev,
+          ...lookupPatch,
+          marketValue: qty > 0 && price > 0 ? qty * price : prev.marketValue,
+          profitLoss: qty > 0 && price > 0 ? (qty * price) - bookCostNum : prev.profitLoss,
+          expectedAnnualDividends: qty > 0 && price > 0 && yieldForCalc > 0 ? qty * price * yieldForCalc : 0,
+        };
+      });
     } catch (err) {
       console.error('Ticker lookup failed:', err);
     }
@@ -777,8 +806,40 @@ function DashboardContent() {
             </div>
           </div>
 
+          {/* FX Portfolio Totals */}
+          {portfolioTotals && (
+            <div className="glass-panel p-6">
+              <div className="flex flex-col gap-1 text-sm">
+                <div className="flex justify-between gap-8">
+                  <span className="text-neutral-500 dark:text-neutral-400">CAD Portfolio</span>
+                  <span className="font-medium">${portfolioTotals.cadTotal.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD</span>
+                </div>
+                <div className="flex justify-between gap-8">
+                  <span className="text-neutral-500 dark:text-neutral-400">USD Portfolio</span>
+                  <span className="font-medium">${portfolioTotals.usdTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })} USD</span>
+                </div>
+                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-1 flex justify-between gap-8">
+                  <span className="text-neutral-700 dark:text-neutral-300 font-medium">Grand Total</span>
+                  <span className="font-semibold">
+                    {portfolioTotals.fxUnavailable
+                      ? "FX rate unavailable"
+                      : `$${portfolioTotals.grandTotalCad.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD`}
+                  </span>
+                </div>
+                {!portfolioTotals.fxUnavailable && portfolioTotals.usdToCadRate && (
+                  <p className="text-xs text-neutral-400">
+                    at 1 USD = {portfolioTotals.usdToCadRate.toFixed(4)} CAD · as of today
+                  </p>
+                )}
+                {portfolioTotals.fxUnavailable && (
+                  <p className="text-xs text-neutral-400">Showing per-currency subtotals only</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Investment Table */}
-          <div className="glass-panel overflow-hidden">
+          <div className="glass-panel">
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between transition-colors duration-300">
               <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 flex items-center">
                 <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-500 mr-2" />
@@ -799,9 +860,7 @@ function DashboardContent() {
                   {showColumnManager && (
                     <ColumnManagerPopover
                       columnVisibility={columnVisibility}
-                      onToggle={(key, visible) => {
-                        handleColumnVisibilityChange(key, visible);
-                      }}
+                      onToggle={handleColumnVisibilityChange}
                       onClose={() => setShowColumnManager(false)}
                     />
                   )}
@@ -893,7 +952,7 @@ function DashboardContent() {
                 <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 transition-colors duration-300">
                   {[...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].length === 0 && !isLoading ? (
                     <tr>
-                      <td colSpan={29} className="px-6 py-8 text-center text-neutral-500">
+                      <td colSpan={isVisible("exchange") ? 30 : 29} className="px-6 py-8 text-center text-neutral-500">
                         No assets found. Click Add Row below.
                       </td>
                     </tr>
@@ -1029,6 +1088,7 @@ function DashboardContent() {
                       };
 
                       return (
+                        <>
                         <tr key={asset.id} className={`hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors ${getRowHighlightClass(asset.SK)}`}>
                           {/* 1. Account */}
                           <td className={`px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200 ${stickyBodyCol1} min-w-[120px]`}>
@@ -1201,6 +1261,40 @@ function DashboardContent() {
                             </div>
                           </td>
                         </tr>
+                        {isEditing && mismatchState && (
+                          <tr key={`${asset.id}-mismatch`}>
+                            <td colSpan={isVisible("exchange") ? 30 : 29} className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20">
+                              <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
+                                  Yahoo returned <strong>{mismatchState.detectedCurrency}</strong> for this ticker, but this asset is{" "}
+                                  <strong>{mismatchState.storedCurrency}</strong>. Select the correct exchange to continue.
+                                </p>
+                                <div className="flex gap-2 flex-wrap">
+                                  {[
+                                    { label: "TSX (.TO)", suffix: ".TO" },
+                                    { label: "Cboe Canada (.NE)", suffix: ".NE" },
+                                    { label: "TSX Venture (.V)", suffix: ".V" },
+                                  ].map(opt => (
+                                    <button
+                                      key={opt.suffix}
+                                      onClick={() => handleTickerLookup(mismatchState.symbol, opt.suffix)}
+                                      className="text-xs px-2 py-1 rounded bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 hover:border-teal-500 transition-colors"
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                  <button
+                                    onClick={() => setMismatchState(null)}
+                                    className="text-xs px-2 py-1 text-neutral-500 hover:text-neutral-700"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </>
                       );
                     })
                   )}
@@ -1224,7 +1318,7 @@ function DashboardContent() {
                       <td className={`${stickyTotalsCol2}`}></td>
                       <td></td>
                       <td></td>
-                      <td colSpan={11} className="px-3 py-4 text-right">TOTAL:</td>
+                      <td colSpan={isVisible("exchange") ? 12 : 11} className="px-3 py-4 text-right">TOTAL:</td>
                       <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
                       <td colSpan={5}></td>
                       <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
