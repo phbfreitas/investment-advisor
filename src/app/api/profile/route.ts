@@ -4,6 +4,9 @@ import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { RISK_TOLERANCE_MIGRATION } from "@/types";
+import { fetchFxRate } from "@/lib/fxRate";
+import { computePortfolioTotals } from "@/lib/portfolio-analytics";
+import type { Asset } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -27,19 +30,30 @@ export async function GET() {
             })
         );
 
-        // Fetch associated assets
-        const { Items: assets } = await db.send(
-            new QueryCommand({
+        // Fetch assets and FX rate in parallel
+        const [assetsResult, fxRate] = await Promise.all([
+            db.send(new QueryCommand({
                 TableName: TABLE_NAME,
                 KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
                 ExpressionAttributeValues: {
                     ":pk": PROFILE_KEY,
                     ":skPrefix": "ASSET#",
                 },
-            })
-        );
+            })),
+            fetchFxRate("USD", "CAD").catch(() => null),   // null = FX unavailable
+        ]);
 
-        const responseData = profile ? { ...profile, assets: assets || [] } : {};
+        const assets = (assetsResult.Items || []) as Asset[];
+        const portfolioTotals = computePortfolioTotals(assets, fxRate);
+
+        const responseData = profile
+            ? {
+                ...profile,
+                assets,
+                portfolioTotals,
+                columnVisibility: profile.columnVisibility ?? {},
+            }
+            : {};
         return NextResponse.json(responseData);
     } catch (error) {
         console.error("Failed to fetch profile:", error);
