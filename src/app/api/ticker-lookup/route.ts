@@ -10,7 +10,7 @@ export async function findExistingAssetById(
   householdId: string,
   assetId: string,
   symbol: string,
-): Promise<Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null> {
+): Promise<Pick<Asset, "userOverrides" | "marketComputedAt" | "market" | "exchangeSuffix" | "currency"> | null> {
   try {
     const { Item } = await db.send(
       new GetCommand({
@@ -41,6 +41,8 @@ export async function findExistingAssetById(
         ? (Item.marketComputedAt as string | null)
         : undefined,
       market: typeof Item.market === "string" ? Item.market : "",
+      exchangeSuffix: typeof Item.exchangeSuffix === "string" ? Item.exchangeSuffix : "",
+      currency: typeof Item.currency === "string" ? Item.currency : "",
     };
   } catch (e) {
     console.warn(`[ticker-lookup] Failed to load asset ${assetId}:`, e);
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
   }
 
   const assetId = request.nextUrl.searchParams.get('assetId');
+  const exchangeSuffixParam = request.nextUrl.searchParams.get('exchangeSuffix');
 
   try {
     // Asset-specific lookup (Codex adversarial review #1, round 2): never
@@ -67,7 +70,16 @@ export async function GET(request: NextRequest) {
     const existing = assetId
       ? await findExistingAssetById(session.user.householdId, assetId, symbol)
       : null;
-    const data = await researchTicker(symbol, existing);
+
+    const assetForLookup = exchangeSuffixParam !== null
+      ? {
+          ...existing,
+          exchangeSuffix: exchangeSuffixParam,
+          userOverrides: { ...(existing?.userOverrides ?? {}), exchange: true as const },
+        }
+      : existing;
+
+    const data = await researchTicker(symbol, assetForLookup);
     if (!data) {
       return NextResponse.json({ error: `Could not find ticker: ${symbol}` }, { status: 404 });
     }

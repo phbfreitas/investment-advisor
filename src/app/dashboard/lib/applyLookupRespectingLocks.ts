@@ -9,6 +9,7 @@ const LOCKABLE_FIELDS: readonly LockableField[] = [
     "managementStyle",
     "currency",
     "managementFee",
+    "exchange",
 ] as const;
 
 export type LookupData = {

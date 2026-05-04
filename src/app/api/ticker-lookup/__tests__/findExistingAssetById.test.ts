@@ -33,6 +33,8 @@ describe("findExistingAssetById", () => {
       userOverrides: { market: true },
       marketComputedAt: "2026-04-01T00:00:00Z",
       market: "Canada",
+      exchangeSuffix: "",
+      currency: "",
     });
   });
 
@@ -92,6 +94,26 @@ describe("findExistingAssetById", () => {
       userOverrides: undefined,
       marketComputedAt: "2026-04-01T00:00:00Z",
       market: "Canada",
+      exchangeSuffix: "",
+      currency: "",
     });
+  });
+
+  it("returns exchangeSuffix and currency from stored asset", async () => {
+    // Mock the DynamoDB GetCommand to return an item with exchangeSuffix
+    mockSend.mockResolvedValueOnce({
+      Item: {
+        ticker: "JEPQ",
+        market: "Canada",
+        exchangeSuffix: ".NE",
+        currency: "CAD",
+        marketComputedAt: null,
+        userOverrides: { exchange: true },
+      },
+    });
+
+    const result = await findExistingAssetById("household1", "asset1", "JEPQ");
+    expect(result?.exchangeSuffix).toBe(".NE");
+    expect(result?.currency).toBe("CAD");
   });
 });

@@ -18,6 +18,7 @@ const LOCKABLE_FIELDS: ReadonlyArray<LockableField> = [
     "managementStyle",
     "currency",
     "managementFee",
+    "exchange",
 ];
 
 function isLockableField(value: unknown): value is LockableField {
