@@ -129,8 +129,8 @@ export async function researchTicker(
 
   try {
     let quote;
-    if (exchangeLocked && storedSuffix !== undefined) {
-      // Use stored suffix — skip auto-detection entirely
+    if (exchangeLocked) {
+      // storedSuffix may be "" for US tickers (no suffix); that's valid — bare symbol is correct
       ticker = `${symbol.toUpperCase()}${storedSuffix}`;
       quote = await yahooFinance.quote(ticker);
     } else {
@@ -233,13 +233,17 @@ export async function researchTicker(
     const exchangeName = resolved.exchangeName;
     const exchangeSuffix = exchangeLocked ? storedSuffix : resolved.exchangeSuffix;
 
-    // Mismatch detection: only when exchange is not locked
+    // Mismatch detection: only when exchange is not locked.
+    // Normalise both sides to avoid false positives from case differences
+    // (e.g. stored "cad" vs Yahoo "CAD" are the same currency).
     const storedCurrency = existingAsset?.currency;
+    const storedCurrencyNorm = normalizeCurrency(storedCurrency ?? "");
+    const quoteCurrencyNorm = normalizeCurrency(quote.currency ?? "");
     const currencyMismatch =
       !exchangeLocked &&
-      storedCurrency != null &&
-      storedCurrency !== "Not Found" &&
-      (quote.currency ?? "") !== storedCurrency;
+      storedCurrencyNorm !== "" &&
+      storedCurrencyNorm !== "Not Found" &&
+      quoteCurrencyNorm !== storedCurrencyNorm;
 
     const result = {
       name,
@@ -265,7 +269,7 @@ export async function researchTicker(
       currency: normalizeCurrency(quote.currency || "USD"),
       exchangeSuffix,
       exchangeName,
-      ...(currencyMismatch ? { currencyMismatch: true as const, detectedCurrency: quote.currency ?? "" } : {}),
+      ...(currencyMismatch ? { currencyMismatch: true as const, detectedCurrency: quoteCurrencyNorm } : {}),
     };
 
     return applyCompanyAutoDefaults(result);

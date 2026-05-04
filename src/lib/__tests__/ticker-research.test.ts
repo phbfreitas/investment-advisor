@@ -280,4 +280,28 @@ describe("exchange routing", () => {
 
     expect(result?.currencyMismatch).toBeUndefined();
   });
+
+  it("does not set currencyMismatch due to case differences in stored currency", async () => {
+    // Simulate stored currency being lowercase "usd" (not normalised at write time)
+    // Yahoo returns "USD" — these should be treated as matching
+    mockYahooQuote.mockResolvedValueOnce({
+      regularMarketPrice: 55.52,
+      currency: "USD",
+      exchange: "NMS",
+      fullExchangeName: "Nasdaq",
+      quoteType: "ETF",
+      shortName: "Test ETF",
+      summaryDetail: {},
+    });
+
+    const result = await researchTicker("TEST", {
+      userOverrides: {},
+      exchangeSuffix: "",
+      currency: "usd",  // lowercase — not normalised
+      market: "USA",
+      marketComputedAt: null,
+    });
+
+    expect(result?.currencyMismatch).toBeUndefined();
+  });
 });
