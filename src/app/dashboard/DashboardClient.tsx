@@ -604,7 +604,7 @@ function DashboardContent() {
       const bookCostNum = editForm.bookCost || 0;
 
       setEditForm(prev => {
-        const lookupPatch = applyLookupRespectingLocks(prev, data);
+        const lookupPatch = applyLookupRespectingLocks(prev, { ...data, symbol });
         return {
           ...prev,
           ...lookupPatch,

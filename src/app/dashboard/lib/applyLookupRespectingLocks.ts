@@ -13,6 +13,7 @@ const LOCKABLE_FIELDS: readonly LockableField[] = [
 ] as const;
 
 export type LookupData = {
+    symbol?: string;       // NEW: ticker the lookup was performed for, used to detect symbol changes
     sector?: string;
     market?: string;
     securityType?: string;
@@ -38,6 +39,12 @@ export type LookupData = {
 /**
  * Returns the patch to apply to editForm in response to a ticker lookup,
  * skipping any field that the user has explicitly locked.
+ *
+ * 5A Item 3: when the user changed the ticker before the lookup ran
+ * (data.symbol !== prev.ticker), lookup-derived fields take the new
+ * lookup's value verbatim — including null. Without this, AAPL's
+ * 1yr-return would survive a switch to SHOP because SHOP's lookup
+ * returns null and the old ?? prev.field fallback carried it forward.
  */
 export function applyLookupRespectingLocks(
     prev: Partial<Asset>,
@@ -45,6 +52,41 @@ export function applyLookupRespectingLocks(
 ): Partial<Asset> {
     const overrides = prev.userOverrides ?? {};
     const isLocked = (field: LockableField) => overrides[field] === true;
+
+    const tickerChanged = typeof data.symbol === "string"
+        && typeof prev.ticker === "string"
+        && data.symbol.toUpperCase() !== prev.ticker.toUpperCase();
+
+    // For lookup-derived fields (non-lockable): when the ticker changed, take the
+    // new lookup's value verbatim (including null). When unchanged, preserve prev
+    // for silent refreshes.
+    const liveTickerPrice = tickerChanged
+        ? (data.currentPrice ?? 0)
+        : (data.currentPrice ?? prev.liveTickerPrice ?? 0);
+    const yieldVal = tickerChanged
+        ? (data.dividendYield ?? null)
+        : (data.dividendYield ?? prev.yield ?? null);
+    const oneYearReturn = tickerChanged
+        ? (data.oneYearReturn ?? null)
+        : (data.oneYearReturn ?? prev.oneYearReturn ?? null);
+    const threeYearReturn = tickerChanged
+        ? (data.threeYearReturn ?? null)
+        : (data.threeYearReturn ?? prev.threeYearReturn ?? null);
+    const exDividendDate = tickerChanged
+        ? (data.exDividendDate ?? "")
+        : (data.exDividendDate ?? prev.exDividendDate ?? "");
+    const analystConsensus = tickerChanged
+        ? (data.analystConsensus ?? "")
+        : (data.analystConsensus ?? prev.analystConsensus ?? "");
+    const externalRating = tickerChanged
+        ? (data.externalRating ?? "")
+        : (data.externalRating ?? prev.externalRating ?? "");
+    const beta = tickerChanged
+        ? (data.beta ?? 0)
+        : (data.beta ?? prev.beta ?? 0);
+    const riskFlag = tickerChanged
+        ? (data.riskFlag ?? "")
+        : (data.riskFlag ?? prev.riskFlag ?? "");
 
     return {
         sector: isLocked("sector") ? prev.sector : (data.sector || prev.sector),
@@ -59,27 +101,19 @@ export function applyLookupRespectingLocks(
         exchangeSuffix: isLocked("exchange") ? prev.exchangeSuffix : (data.exchangeSuffix ?? prev.exchangeSuffix ?? ""),
         exchangeName:   isLocked("exchange") ? prev.exchangeName   : (data.exchangeName   ?? prev.exchangeName   ?? ""),
 
-        // 3C: marketComputedAt rides with the market field's lock. Locked → keep
-        // prev timestamp; unlocked → take whatever researchTicker returned (a
-        // fresh ISO timestamp on classification, or echoed-existing on cache hit).
         marketComputedAt: isLocked("market")
             ? (prev.marketComputedAt ?? null)
             : (data.marketComputedAt !== undefined ? data.marketComputedAt : (prev.marketComputedAt ?? null)),
 
-        // Live data — never locked. Lookup wins when it returns a value;
-        // otherwise the previous edit-form value is preserved (so a
-        // partial lookup doesn't wipe manually-entered values).
-        liveTickerPrice: data.currentPrice ?? prev.liveTickerPrice ?? 0,
-        yield: data.dividendYield ?? prev.yield ?? null,
-        oneYearReturn: data.oneYearReturn ?? prev.oneYearReturn ?? null,
-        threeYearReturn: data.threeYearReturn ?? prev.threeYearReturn ?? null,
-        exDividendDate: data.exDividendDate ?? prev.exDividendDate ?? "",
-        analystConsensus: data.analystConsensus ?? prev.analystConsensus ?? "",
-        externalRating: data.externalRating ?? prev.externalRating ?? "",
-        beta: data.beta ?? prev.beta ?? 0,
-        riskFlag: data.riskFlag ?? prev.riskFlag ?? "",
-
-        // userOverrides itself is never written by the lookup.
+        liveTickerPrice,
+        yield: yieldVal,
+        oneYearReturn,
+        threeYearReturn,
+        exDividendDate,
+        analystConsensus,
+        externalRating,
+        beta,
+        riskFlag,
     };
 }
 
