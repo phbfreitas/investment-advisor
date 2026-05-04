@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
 
     const assetForLookup = exchangeSuffixParam !== null
       ? {
-          ...existing,
+          market: existing?.market ?? "",
+          currency: existing?.currency ?? "",
+          marketComputedAt: existing?.marketComputedAt,
           exchangeSuffix: exchangeSuffixParam,
           userOverrides: { ...(existing?.userOverrides ?? {}), exchange: true as const },
         }
