@@ -603,8 +603,22 @@ function DashboardContent() {
       const yieldForCalc = data.dividendYield ?? 0;
       const bookCostNum = editForm.bookCost || 0;
 
+      // Capture the persisted ticker from the assets array (server-fetched,
+      // immutable mid-edit). At this point editForm.ticker has already been
+      // updated to the new symbol via onChange, so prev.ticker would equal
+      // data.symbol and the tickerChanged branch in applyLookupRespectingLocks
+      // would never fire. We override prev.ticker with the persisted ticker so
+      // the comparison is against the asset's pre-edit state.
+      // For NEW assets there's no persisted state — fall through to prev.
+      const persistedTicker = editingId && editingId !== "NEW"
+        ? assets.find(a => a.id === editingId)?.ticker
+        : undefined;
+
       setEditForm(prev => {
-        const lookupPatch = applyLookupRespectingLocks(prev, { ...data, symbol });
+        const lookupPatch = applyLookupRespectingLocks(
+          persistedTicker !== undefined ? { ...prev, ticker: persistedTicker } : prev,
+          { ...data, symbol },
+        );
         return {
           ...prev,
           ...lookupPatch,

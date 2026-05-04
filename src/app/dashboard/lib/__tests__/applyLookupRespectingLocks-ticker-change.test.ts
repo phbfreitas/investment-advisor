@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { applyLookupRespectingLocks, LookupData } from "../applyLookupRespectingLocks";
 import type { Asset } from "@/types";
 
@@ -79,5 +81,25 @@ describe("applyLookupRespectingLocks — ticker change", () => {
     expect(next.market).toBe("US");
     // lookup-derived still cleared (data.oneYearReturn is undefined → null)
     expect(next.oneYearReturn).toBeNull();
+  });
+});
+
+describe("applyLookupRespectingLocks — call-site wiring at handleTickerLookup", () => {
+  it("passes the persisted-ticker override (not editForm.ticker) so tickerChanged actually fires", () => {
+    const dashboardClientPath = path.resolve(__dirname, "../../DashboardClient.tsx");
+    const source = fs.readFileSync(dashboardClientPath, "utf-8");
+
+    // Must capture the persisted ticker from the assets array.
+    expect(source).toMatch(/persistedTicker\s*=/);
+    expect(source).toMatch(/assets\.find\([^)]*\)\?\.ticker/);
+
+    // Must override prev.ticker with persistedTicker before calling applyLookupRespectingLocks.
+    // The whole-file regex is permissive about whitespace/newlines (multiline pattern).
+    expect(source).toMatch(/applyLookupRespectingLocks\(/);
+    // The call site must reference persistedTicker in the same expression chain
+    // (catches both `{ ...prev, ticker: persistedTicker }` and `persistedTicker !== undefined ? ... : prev`).
+    const callSiteMatch = source.match(/applyLookupRespectingLocks\(([\s\S]{0,400})\)/);
+    expect(callSiteMatch).toBeTruthy();
+    expect(callSiteMatch![1]).toMatch(/persistedTicker/);
   });
 });
