@@ -20,7 +20,7 @@ export async function fetchFxRate(from: string, to: string): Promise<number> {
   const symbol = `${from}${to}=X`;
   const quote = await yahooFinance.quote(symbol);
   const rate = (quote as any).regularMarketPrice;
-  if (!rate || typeof rate !== "number") {
+  if (typeof rate !== "number") {
     throw new Error(`Failed to get FX rate for ${symbol}: no price returned`);
   }
 
