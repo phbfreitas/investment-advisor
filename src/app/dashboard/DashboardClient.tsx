@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense, Fragment, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
 import type { Asset, LockableField, MarketData } from "@/types";
@@ -21,6 +21,7 @@ import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
 import { detectAnomaly, detectAnomaliesForTicker } from "./lib/priceAnomaly";
+import type { PortfolioTotals } from "@/lib/portfolio-analytics";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
@@ -108,10 +109,7 @@ function DashboardContent() {
 
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [showColumnManager, setShowColumnManager] = useState(false);
-  const [portfolioTotals, setPortfolioTotals] = useState<{
-    cadTotal: number; usdTotal: number; grandTotalCad: number;
-    usdToCadRate: number | null; fxUnavailable: boolean;
-  } | null>(null);
+  const [portfolioTotals, setPortfolioTotals] = useState<PortfolioTotals | null>(null);
   const [mismatchState, setMismatchState] = useState<{
     symbol: string; detectedCurrency: string; storedCurrency: string;
   } | null>(null);
@@ -262,7 +260,11 @@ function DashboardContent() {
         setAssets(fresh);
         fetchMarketData(fresh);
         if (data.portfolioTotals) setPortfolioTotals(data.portfolioTotals);
-        if (data.columnVisibility) setColumnVisibility(data.columnVisibility);
+        // Only hydrate column visibility on initial load (when state is still {}).
+        // Subsequent fetchAssets calls must not overwrite optimistic PATCH updates.
+        if (data.columnVisibility && Object.keys(columnVisibility).length === 0) {
+          setColumnVisibility(data.columnVisibility);
+        }
       }
     } catch (error) {
       console.error("Failed to load assets", error);
@@ -424,6 +426,7 @@ function DashboardContent() {
 
       setEditingId(null);
       setEditForm({});
+      setMismatchState(null);
       fetchAssets();
 
       // Audit feedback
@@ -778,7 +781,6 @@ function DashboardContent() {
         marketData={marketData}
         isMarketLoading={isMarketLoading}
         columnVisibility={columnVisibility}
-        onColumnVisibilityChange={handleColumnVisibilityChange}
         onExchangeSave={handleExchangeSave}
       >
       <div className="w-full p-4 md:p-8">
@@ -1096,8 +1098,8 @@ function DashboardContent() {
                       };
 
                       return (
-                        <>
-                        <tr key={asset.id} className={`hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors ${getRowHighlightClass(asset.SK)}`}>
+                        <Fragment key={asset.id}>
+                        <tr className={`hover:bg-neutral-50 dark:hover:bg-neutral-900/30 transition-colors ${getRowHighlightClass(asset.SK)}`}>
                           {/* 1. Account */}
                           <td className={`px-3 py-3 font-medium text-neutral-900 dark:text-neutral-200 ${stickyBodyCol1} min-w-[120px]`}>
                             {isEditing ? (
@@ -1270,7 +1272,7 @@ function DashboardContent() {
                           </td>
                         </tr>
                         {isEditing && mismatchState && (
-                          <tr key={`${asset.id}-mismatch`}>
+                          <tr>
                             <td colSpan={isVisible("exchange") ? 30 : 29} className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20">
                               <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-700">
                                 <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
@@ -1302,7 +1304,7 @@ function DashboardContent() {
                             </td>
                           </tr>
                         )}
-                        </>
+                        </Fragment>
                       );
                     })
                   )}
