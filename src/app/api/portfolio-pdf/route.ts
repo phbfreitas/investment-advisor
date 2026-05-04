@@ -313,14 +313,12 @@ export async function POST(request: Request) {
                 marketComputedAt: existing?.userOverrides?.market === true
                     ? (existing?.marketComputedAt ?? null)
                     : (enrichedData?.marketComputedAt ?? existing?.marketComputedAt ?? null),
-                exchangeSuffix: (() => {
-                    const locked = existing?.userOverrides?.exchange === true;
-                    return locked ? (existing?.exchangeSuffix ?? "") : (enrichedData?.exchangeSuffix ?? existing?.exchangeSuffix ?? "");
-                })(),
-                exchangeName: (() => {
-                    const locked = existing?.userOverrides?.exchange === true;
-                    return locked ? (existing?.exchangeName ?? "") : (enrichedData?.exchangeName ?? existing?.exchangeName ?? "");
-                })(),
+                exchangeSuffix: (existing?.userOverrides?.exchange === true)
+                    ? (existing?.exchangeSuffix ?? "")
+                    : (enrichedData?.exchangeSuffix ?? existing?.exchangeSuffix ?? ""),
+                exchangeName: (existing?.userOverrides?.exchange === true)
+                    ? (existing?.exchangeName ?? "")
+                    : (enrichedData?.exchangeName ?? existing?.exchangeName ?? ""),
                 needsExchangeReview: enrichedData?.currencyMismatch === true
                     ? true
                     : (existing?.needsExchangeReview ?? undefined),
