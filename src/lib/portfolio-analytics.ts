@@ -236,6 +236,44 @@ export function formatStrategyContext(profile: Partial<StrategyConfig>): string 
     return lines.length > 0 ? lines.join("\n") : "";
 }
 
+// --- Portfolio Currency Totals ---
+
+export interface PortfolioTotals {
+  cadTotal: number;
+  usdTotal: number;
+  grandTotalCad: number;
+  usdToCadRate: number | null;
+  fxUnavailable: boolean;
+}
+
+export function computePortfolioTotals(
+  assets: Asset[],
+  usdToCadRate: number | null,
+): PortfolioTotals {
+  let cadTotal = 0;
+  let usdTotal = 0;
+
+  for (const asset of assets) {
+    const mv = asset.marketValue || 0;
+    if (asset.currency === "CAD") {
+      cadTotal += mv;
+    } else if (asset.currency === "USD") {
+      usdTotal += mv;
+    } else {
+      // Unknown currency: bucket into CAD at 1:1
+      console.warn(`[portfolio-totals] Unknown currency "${asset.currency}" for asset ${asset.id} — bucketing as CAD`);
+      cadTotal += mv;
+    }
+  }
+
+  const fxUnavailable = usdToCadRate === null;
+  const grandTotalCad = fxUnavailable
+    ? cadTotal
+    : cadTotal + usdTotal * usdToCadRate!;
+
+  return { cadTotal, usdTotal, grandTotalCad, usdToCadRate, fxUnavailable };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 /**
  * Format a nullable decimal-stored ratio (e.g., 0.05 = 5%) as a percentage

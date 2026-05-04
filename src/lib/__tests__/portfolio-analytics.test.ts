@@ -1,4 +1,53 @@
-import { buildFullUserContext } from "../portfolio-analytics";
+import { buildFullUserContext, computePortfolioTotals } from "../portfolio-analytics";
+import type { Asset } from "@/types";
+
+function makeAsset(overrides: Partial<Asset>): Asset {
+  return {
+    PK: "HOUSEHOLD#h1", SK: "ASSET#a1", id: "a1", profileId: "HOUSEHOLD#h1",
+    type: "ASSET", account: "", ticker: "X", securityType: "ETF",
+    strategyType: "Growth", call: "No", sector: "IT", market: "USA",
+    currency: "USD", managementStyle: "Passive", externalRating: "",
+    managementFee: null, quantity: 1, liveTickerPrice: 100,
+    bookCost: 90, marketValue: 100, profitLoss: 10, yield: null,
+    oneYearReturn: null, fiveYearReturn: null, threeYearReturn: null,
+    exDividendDate: "", analystConsensus: "", beta: 1, riskFlag: "Normal",
+    accountNumber: "", accountType: "", risk: "", volatility: 0,
+    expectedAnnualDividends: 0, updatedAt: "",
+    ...overrides,
+  };
+}
+
+describe("computePortfolioTotals", () => {
+  it("splits assets by currency and converts USD to CAD for grand total", () => {
+    const assets = [
+      makeAsset({ id: "a1", currency: "CAD", marketValue: 100_000 }),
+      makeAsset({ id: "a2", currency: "USD", marketValue: 10_000 }),
+    ];
+    const result = computePortfolioTotals(assets, 1.36);
+    expect(result.cadTotal).toBe(100_000);
+    expect(result.usdTotal).toBe(10_000);
+    expect(result.grandTotalCad).toBeCloseTo(113_600);
+    expect(result.fxUnavailable).toBe(false);
+  });
+
+  it("sets fxUnavailable and grandTotalCad equals cadTotal when rate is null", () => {
+    const assets = [
+      makeAsset({ id: "a1", currency: "CAD", marketValue: 50_000 }),
+      makeAsset({ id: "a2", currency: "USD", marketValue: 5_000 }),
+    ];
+    const result = computePortfolioTotals(assets, null);
+    expect(result.fxUnavailable).toBe(true);
+    expect(result.grandTotalCad).toBe(50_000);
+  });
+
+  it("handles all-CAD portfolio", () => {
+    const assets = [makeAsset({ id: "a1", currency: "CAD", marketValue: 75_000 })];
+    const result = computePortfolioTotals(assets, 1.36);
+    expect(result.cadTotal).toBe(75_000);
+    expect(result.usdTotal).toBe(0);
+    expect(result.grandTotalCad).toBe(75_000);
+  });
+});
 
 const baseAsset = {
   PK: "p#1", SK: "a#1", id: "a1", profileId: "p1", type: "ASSET",
