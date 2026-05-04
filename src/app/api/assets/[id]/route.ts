@@ -190,6 +190,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             marketComputedAt: data.marketComputedAt !== undefined
                 ? (validateMarketComputedAt(data.marketComputedAt) ?? existingAsset.marketComputedAt)
                 : existingAsset.marketComputedAt,
+            exchangeSuffix: data.exchangeSuffix !== undefined ? String(data.exchangeSuffix) : (existingAsset.exchangeSuffix ?? ""),
+            exchangeName:   data.exchangeName   !== undefined ? String(data.exchangeName)   : (existingAsset.exchangeName   ?? ""),
+            // Auto-clear needsExchangeReview when the exchange field is being locked
+            needsExchangeReview: (data.userOverrides?.exchange === true)
+                ? false
+                : (data.needsExchangeReview !== undefined ? data.needsExchangeReview : existingAsset.needsExchangeReview),
             updatedAt: new Date().toISOString(),
         };
 
