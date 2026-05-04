@@ -259,3 +259,41 @@ QQQ 10 350.00 3700.00
         expect(byTicker["QQQ"]?.currency).toBe("USD");
     });
 });
+
+describe("collision ticker handling", () => {
+    it("keeps both JEPQ rows when one is CAD and one is USD", () => {
+        // Real Wealthsimple format: holding line has 4 qty columns, then dollar amounts
+        // appear on the same line and/or subsequent lines (parser collects until next ticker).
+        // Three dollar amounts are required by the parser (marketValue=amounts[1], bookCost=amounts[2]).
+        const text = `
+Canadian Equities and Alternatives
+JEPQ 6205.6905 6205.6905 0.0000 $26.56 $164823.13 $168562.69
+CAD
+
+US Equities and Alternatives
+JEPQ 92.7690 7.7690 85.0000 $55.52 $5150.53 $5309.07
+USD
+`.trim();
+
+        const holdings = parseHoldings(text);
+        const cadJepq = holdings.find(h => h.ticker === "JEPQ" && h.currency === "CAD");
+        const usdJepq = holdings.find(h => h.ticker === "JEPQ" && h.currency === "USD");
+
+        expect(cadJepq).toBeDefined();
+        expect(usdJepq).toBeDefined();
+        expect(holdings.filter(h => h.ticker === "JEPQ")).toHaveLength(2);
+    });
+
+    it("still deduplicates same ticker with same currency appearing twice", () => {
+        const text = `
+Canadian Equities and Alternatives
+JEPQ 6205.6905 6205.6905 0.0000 $26.56 $164823.13 $168562.69
+CAD
+JEPQ 100.0000 100.0000 0.0000 $26.56 $2656.00 $2700.00
+CAD
+`.trim();
+
+        const holdings = parseHoldings(text);
+        expect(holdings.filter(h => h.ticker === "JEPQ")).toHaveLength(1);
+    });
+});

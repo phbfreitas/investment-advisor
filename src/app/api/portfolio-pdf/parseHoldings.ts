@@ -134,8 +134,9 @@ export function parseHoldings(text: string): ParsedHolding[] {
             const marketValue = parseFloat(match[4].replace(/,/g, ''));
 
             if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
-                if (!holdings.some(h => h.ticker === ticker)) {
-                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault });
+                const currency = detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault;
+                if (!holdings.some(h => h.ticker === ticker && h.currency === currency)) {
+                    holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency });
                 }
             }
             continue;
@@ -169,8 +170,9 @@ export function parseHoldings(text: string): ParsedHolding[] {
                 const bookCost = dollarAmounts[2];
 
                 if (quantity > 0 && !isNaN(bookCost) && !isNaN(marketValue)) {
-                    if (!holdings.some(h => h.ticker === ticker)) {
-                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault });
+                    const rowCurrency = detectInlineCurrency(line) ?? sectionCurrency ?? documentDefault;
+                    if (!holdings.some(h => h.ticker === ticker && h.currency === rowCurrency)) {
+                        holdings.push({ ticker, quantity, bookCost, marketValue, accountNumber, accountType, currency: rowCurrency });
                     }
                 }
             }
