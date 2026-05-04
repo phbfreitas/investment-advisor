@@ -99,10 +99,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             expressionAttributeValues[":expectedUpdatedAt"] = expectedUpdatedAt;
         }
 
-        // userOverrides is NOT in FIELD_CLASSIFICATIONS, so bypassing the
-        // encrypted client is safe here. UpdateCommand against the encrypted
-        // client throws by design (5A Item 2). When the partial-update
-        // pattern needs classified fields, the route must Get → modify →
+        // SAFETY INVARIANT: this route only writes to userOverrides (and updatedAt). If
+        // either field is ever added to FIELD_CLASSIFICATIONS in
+        // src/lib/encryption/field-classification.ts, this raw-client bypass MUST be
+        // replaced with a Get → modify → PutCommand round-trip (which routes through
+        // the encrypted wrapper).
+        // UpdateCommand against the encrypted client throws by design. When the
+        // partial-update pattern needs classified fields, the route must Get → modify →
         // PutCommand instead, which round-trips through encryption.
         try {
             await rawDb_unclassifiedOnly.send(

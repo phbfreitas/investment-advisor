@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { UpdateCommand, GetCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { EncryptedDocumentClient } from "../encrypted-client";
 import type { KeyProvider } from "../types";
@@ -41,14 +43,21 @@ describe("EncryptedDocumentClient — UpdateCommand guard", () => {
 
 describe("EncryptedDocumentClient — lock PATCH route stays raw-client", () => {
   it("source-of-routing audit: only lock PATCH route uses UpdateCommand and it imports rawDb_unclassifiedOnly", () => {
-    // Static assertion via require — the lock route module must reference rawDb_unclassifiedOnly.
-    const fs = require("fs");
-    const path = require("path");
-    const lockRouteSource = fs.readFileSync(
-      path.join(process.cwd(), "src/app/api/assets/[id]/lock/route.ts"),
-      "utf-8"
-    );
+    // Static assertion: the lock route module must reference rawDb_unclassifiedOnly.
+    const lockRoutePath = path.resolve(__dirname, "../../../app/api/assets/[id]/lock/route.ts");
+    const lockRouteSource = fs.readFileSync(lockRoutePath, "utf-8");
     expect(lockRouteSource).toMatch(/rawDb_unclassifiedOnly/);
-    expect(lockRouteSource).not.toMatch(/\bdb\.send\(\s*new UpdateCommand/);
+    // Hard-fail if the route ever reverts to using the encrypted `db` for an UpdateCommand,
+    // regardless of whether it's called inline (`db.send(new UpdateCommand(...))`),
+    // via a captured variable (`const cmd = new UpdateCommand(...); db.send(cmd);`),
+    // or through bracket access (`db['send'](...)`).
+    expect(lockRouteSource).not.toMatch(/\bdb\s*\.\s*send\s*\(\s*new\s+UpdateCommand/);
+    expect(lockRouteSource).not.toMatch(/\bdb\s*\[\s*['"]send['"]\s*\]\s*\(/);
+    // Variable-indirection check: any `new UpdateCommand` expression in this file should
+    // be sent via rawDb_unclassifiedOnly, never via `db`.
+    const hasUpdateCmd = /\bnew\s+UpdateCommand\b/.test(lockRouteSource);
+    if (hasUpdateCmd) {
+      expect(lockRouteSource).toMatch(/rawDb_unclassifiedOnly\s*\.\s*send/);
+    }
   });
 });

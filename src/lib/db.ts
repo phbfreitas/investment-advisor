@@ -44,8 +44,9 @@ export const db = process.env.KMS_KEY_ID
 
 // Exported for callers that intentionally bypass classification:
 //  - UpdateCommand on unclassified fields (e.g., userOverrides). The
-//    EncryptedDocumentClient throws on UpdateCommand by design (see 5A
-//    Item 2 — partial updates can't safely encrypt expression values).
+//    EncryptedDocumentClient throws on UpdateCommand by design (see
+//    docs/superpowers/triage/2026-04-30-3A-deferred-followups.md Item 2
+//    — partial updates can't safely encrypt expression values).
 //  - Internal infra writes (e.g., audit log) that don't store classified
 //    fields and don't need round-trip decryption.
 //
