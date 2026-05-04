@@ -7,6 +7,7 @@ import {
   normalizeManagementStyle,
   normalizeCall,
   applyCompanyAutoDefaults,
+  resolveExchange,
   type StrategyType,
   type SecurityType,
   type Sector,
@@ -45,6 +46,10 @@ export interface TickerMetadata {
   volatility: number;
   riskFlag: string;
   currency: string;
+  exchangeSuffix: string;
+  exchangeName: string;
+  currencyMismatch?: boolean;
+  detectedCurrency?: string;
   currentPrice: number;
   marketComputedAt: string | null;
 }
@@ -114,19 +119,31 @@ export function inferSector(description: string = '', currentSector: string = ''
 
 export async function researchTicker(
   symbol: string,
-  existingAsset?: Pick<Asset, "userOverrides" | "marketComputedAt" | "market"> | null,
+  existingAsset?: Pick<Asset,
+    "userOverrides" | "marketComputedAt" | "market" | "exchangeSuffix" | "currency"
+  > | null,
 ): Promise<Partial<TickerMetadata> | null> {
   let ticker = symbol.toUpperCase();
+  const exchangeLocked = existingAsset?.userOverrides?.exchange === true;
+  const storedSuffix = existingAsset?.exchangeSuffix ?? "";
+
   try {
     let quote;
-    try {
+    if (exchangeLocked && storedSuffix !== undefined) {
+      // Use stored suffix — skip auto-detection entirely
+      ticker = `${symbol.toUpperCase()}${storedSuffix}`;
       quote = await yahooFinance.quote(ticker);
-    } catch (e) {
-      if (!ticker.includes('.') && (ticker.length === 3 || ticker.length === 4)) {
-        ticker = `${ticker}.TO`;
+    } else {
+      // Default path: bare query with .TO fallback on exception
+      try {
         quote = await yahooFinance.quote(ticker);
-      } else {
-        throw e;
+      } catch (e) {
+        if (!ticker.includes('.') && (ticker.length === 3 || ticker.length === 4)) {
+          ticker = `${ticker}.TO`;
+          quote = await yahooFinance.quote(ticker);
+        } else {
+          throw e;
+        }
       }
     }
 
@@ -205,6 +222,25 @@ export async function researchTicker(
       market = existingAsset.market as typeof market;
     }
 
+    // Resolve exchange fields.
+    // The name always comes from the quote (the quote was fetched with the
+    // correct suffix, so its exchange name is authoritative even when locked).
+    // The suffix is pinned to the stored value when locked; otherwise derived.
+    const resolved = resolveExchange(
+      (quote as any).exchange ?? "",
+      (quote as any).fullExchangeName ?? "",
+    );
+    const exchangeName = resolved.exchangeName;
+    const exchangeSuffix = exchangeLocked ? storedSuffix : resolved.exchangeSuffix;
+
+    // Mismatch detection: only when exchange is not locked
+    const storedCurrency = existingAsset?.currency;
+    const currencyMismatch =
+      !exchangeLocked &&
+      storedCurrency != null &&
+      storedCurrency !== "Not Found" &&
+      (quote.currency ?? "") !== storedCurrency;
+
     const result = {
       name,
       symbol: ticker,
@@ -227,6 +263,9 @@ export async function researchTicker(
       volatility: 0,
       riskFlag: "Normal",
       currency: normalizeCurrency(quote.currency || "USD"),
+      exchangeSuffix,
+      exchangeName,
+      ...(currencyMismatch ? { currencyMismatch: true as const, detectedCurrency: quote.currency ?? "" } : {}),
     };
 
     return applyCompanyAutoDefaults(result);

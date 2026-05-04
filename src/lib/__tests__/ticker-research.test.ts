@@ -195,3 +195,89 @@ describe("researchTicker orchestration — 3C classifier integration", () => {
     expect(Date.parse(result!.marketComputedAt as string)).toBeGreaterThan(Date.now() - 5000);
   });
 });
+
+describe("exchange routing", () => {
+  beforeEach(() => {
+    mockYahooQuote.mockReset();
+    mockYahooQuoteSummary.mockReset();
+    mockClassifyMarketByHoldings.mockReset();
+    // Default quoteSummary stub — avoids TypeError inside researchTicker
+    mockYahooQuoteSummary.mockResolvedValue({
+      summaryDetail: { dividendYield: 0.02, managementFee: null },
+      assetProfile: { longBusinessSummary: "" },
+      fundProfile: {},
+      defaultKeyStatistics: { beta: 1.0 },
+      recommendationTrend: { trend: [{ recommendationMean: "Buy" }] },
+    });
+  });
+
+  it("uses stored exchangeSuffix when exchange is locked", async () => {
+    mockYahooQuote.mockResolvedValue({
+      regularMarketPrice: 26.56,
+      currency: "CAD",
+      exchange: "NEO",
+      fullExchangeName: "Cboe Canada",
+      quoteType: "ETF",
+      shortName: "JPMorgan NASDAQ Active ETF",
+    });
+
+    const result = await researchTicker("JEPQ", {
+      userOverrides: { exchange: true },
+      exchangeSuffix: ".NE",
+      currency: "CAD",
+      market: "Canada",
+      marketComputedAt: null,
+    });
+
+    // Should have called Yahoo with JEPQ.NE
+    expect(mockYahooQuote).toHaveBeenCalledWith("JEPQ.NE");
+    expect(result?.exchangeSuffix).toBe(".NE");
+    expect(result?.exchangeName).toBe("Cboe Canada");
+    expect(result?.currencyMismatch).toBeUndefined();
+  });
+
+  it("sets currencyMismatch when Yahoo returns different currency than stored", async () => {
+    mockYahooQuote.mockResolvedValue({
+      regularMarketPrice: 55.52,
+      currency: "USD",
+      exchange: "NMS",
+      fullExchangeName: "Nasdaq",
+      quoteType: "ETF",
+      shortName: "JPMorgan NASDAQ ETF",
+    });
+
+    const result = await researchTicker("JEPQ", {
+      userOverrides: {},
+      exchangeSuffix: "",
+      currency: "CAD",
+      market: "Not Found",
+      marketComputedAt: null,
+    });
+
+    expect(result?.currencyMismatch).toBe(true);
+    expect(result?.detectedCurrency).toBe("USD");
+    expect(result?.exchangeSuffix).toBe("");
+    expect(result?.exchangeName).toBe("Nasdaq");
+  });
+
+  it("does not set currencyMismatch when currencies match", async () => {
+    mockYahooQuote.mockResolvedValue({
+      regularMarketPrice: 55.52,
+      currency: "USD",
+      exchange: "NMS",
+      fullExchangeName: "Nasdaq",
+      quoteType: "ETF",
+      shortName: "JPMorgan NASDAQ ETF",
+    });
+
+    const result = await researchTicker("JEPQ", {
+      userOverrides: {},
+      exchangeSuffix: "",
+      currency: "USD",
+      market: "USA",
+      marketComputedAt: null,
+    });
+
+    expect(result?.currencyMismatch).toBeUndefined();
+  });
+});
