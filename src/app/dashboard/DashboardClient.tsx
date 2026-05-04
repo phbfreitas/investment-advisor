@@ -454,7 +454,7 @@ function DashboardContent() {
       });
 
       if (res.status === 409) {
-        alert("This asset was changed in another tab/device since you opened the editor. Click OK to refresh.");
+        setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
         await fetchAssets();
         setEditingId(null);
         setEditForm({});

@@ -17,15 +17,24 @@ describe("DashboardClient — PUT 409 handling (5A Task 4 audit)", () => {
     "utf-8"
   );
 
-  it("includes expectedUpdatedAt in the PUT body of saveEdit", () => {
+  it("wires saveEdit's PUT path to optimistic-concurrency + in-app 409 banner", () => {
+    // 1. PUT body still carries the optimistic-concurrency token.
     expect(source).toMatch(/expectedUpdatedAt:\s*editForm\.updatedAt/);
-  });
 
-  it("checks for status === 409 to detect stale-edit conflict", () => {
-    expect(source).toMatch(/res\.status\s*===\s*409/);
-  });
+    // 2. Proximity assertion: the 409 branch must close the editor (or
+    // refresh state) within ~400 chars of the status check. A future
+    // refactor that deletes the 409 branch entirely would fail this test,
+    // even though the file would still contain `setEditingId(null)`
+    // elsewhere (success path, cancel handler).
+    expect(source).toMatch(
+      /res\.status\s*===\s*409[\s\S]{0,400}setEditingId\(null\)/
+    );
 
-  it("closes the editor on 409 (setEditingId(null))", () => {
-    expect(source).toMatch(/setEditingId\(null\)/);
+    // 3. Proximity assertion: the 409 branch must surface a user-visible
+    // banner via setMessage (mirrors handleUnlockField's pattern), not a
+    // blocking native alert(). Mobile-first per Simone's PO usage.
+    expect(source).toMatch(
+      /res\.status\s*===\s*409[\s\S]{0,400}setMessage\(/
+    );
   });
 });
