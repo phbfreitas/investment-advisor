@@ -122,7 +122,10 @@ export function parseHoldings(text: string): ParsedHolding[] {
     let sectionCurrency: CurrencyCode | null = null;
 
     // Split into lines for row-by-row parsing
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = text
+        .split('\n')
+        .map(l => l.replace(/^[\s﻿​ ]+/, '').trim())
+        .filter(Boolean);
 
     // Standard Pattern: TICKER.TO or TICKER followed by numbers (qty, cost, value)
     // Safe generic holding pattern (Ticker Qty Price Value)

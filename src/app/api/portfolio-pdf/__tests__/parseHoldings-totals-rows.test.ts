@@ -44,7 +44,8 @@ TOTAL FOR ACCOUNT 50 29000 29000
 EOD 2026 50 580
         `.trim();
         const holdings = parseHoldings(text);
-        // EOD is uppercase + 3 letters; without context it would have matched. Reject.
+        // EOD is in NON_TICKER_LEAD_TOKENS — without the reject list, the wsQtyPattern
+        // would parse this as ticker=EOD, qty=2026 (a year, nonsensical as a quantity).
         expect(holdings).toHaveLength(0);
     });
 
