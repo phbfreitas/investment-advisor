@@ -156,6 +156,7 @@ export async function POST(request: Request) {
             targetAnnualReturn: data.targetAnnualReturn !== undefined ? data.targetAnnualReturn : existingProfile?.targetAnnualReturn,
             targetMonthlyDividend: data.targetMonthlyDividend !== undefined ? data.targetMonthlyDividend : existingProfile?.targetMonthlyDividend,
 
+            columnVisibility: existingProfile?.columnVisibility,
             updatedAt: new Date().toISOString(),
         };
 
