@@ -177,3 +177,37 @@ describe("applyLookupRespectingLocks — marketComputedAt", () => {
     expect(result.marketComputedAt).toBeNull();
   });
 });
+
+describe("exchange field locking", () => {
+  it("preserves exchangeSuffix and exchangeName when exchange is locked", () => {
+    const prev: Partial<Asset> = {
+      exchangeSuffix: ".NE",
+      exchangeName: "Cboe Canada",
+      userOverrides: { exchange: true },
+    };
+    const data = { exchangeSuffix: ".TO", exchangeName: "TSX" };
+    const result = applyLookupRespectingLocks(prev, data);
+    expect(result.exchangeSuffix).toBe(".NE");
+    expect(result.exchangeName).toBe("Cboe Canada");
+  });
+
+  it("overwrites exchangeSuffix and exchangeName when exchange is not locked", () => {
+    const prev: Partial<Asset> = {
+      exchangeSuffix: "",
+      exchangeName: "Nasdaq",
+      userOverrides: {},
+    };
+    const data = { exchangeSuffix: ".NE", exchangeName: "Cboe Canada" };
+    const result = applyLookupRespectingLocks(prev, data);
+    expect(result.exchangeSuffix).toBe(".NE");
+    expect(result.exchangeName).toBe("Cboe Canada");
+  });
+
+  it("falls back to prev values when data fields are absent", () => {
+    const prev: Partial<Asset> = { exchangeSuffix: ".TO", exchangeName: "TSX", userOverrides: {} };
+    const data = {};
+    const result = applyLookupRespectingLocks(prev, data);
+    expect(result.exchangeSuffix).toBe(".TO");
+    expect(result.exchangeName).toBe("TSX");
+  });
+});

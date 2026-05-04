@@ -30,6 +30,8 @@ export type LookupData = {
     beta?: number;
     riskFlag?: string;
     marketComputedAt?: string | null;
+    exchangeSuffix?: string;
+    exchangeName?: string;
 };
 
 /**
@@ -52,6 +54,9 @@ export function applyLookupRespectingLocks(
         managementStyle: isLocked("managementStyle") ? prev.managementStyle : (data.managementStyle || prev.managementStyle),
         currency: isLocked("currency") ? prev.currency : (data.currency || prev.currency),
         managementFee: isLocked("managementFee") ? prev.managementFee : (data.managementFee ?? prev.managementFee),
+
+        exchangeSuffix: isLocked("exchange") ? prev.exchangeSuffix : (data.exchangeSuffix ?? prev.exchangeSuffix ?? ""),
+        exchangeName:   isLocked("exchange") ? prev.exchangeName   : (data.exchangeName   ?? prev.exchangeName   ?? ""),
 
         // 3C: marketComputedAt rides with the market field's lock. Locked → keep
         // prev timestamp; unlocked → take whatever researchTicker returned (a
