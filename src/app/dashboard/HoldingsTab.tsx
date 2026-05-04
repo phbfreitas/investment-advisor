@@ -140,6 +140,57 @@ function ExchangeCell({
   );
 }
 
+const COLUMN_LABELS: Record<string, string> = {
+  account: "Account", ticker: "Ticker", securityType: "Type",
+  strategyType: "Strategy", call: "Call", sector: "Sector",
+  market: "Market", currency: "Currency", exchange: "Exchange",
+  managementStyle: "Mgmt Style", managementFee: "Mgmt Fee",
+  quantity: "Qty", liveTickerPrice: "Live Price", bookCost: "Book Cost",
+  marketValue: "Market Value", weightPct: "Weight %", profitLoss: "P/L",
+  yield: "Yield %", oneYearReturn: "1YR Return", threeYearReturn: "3YR Return",
+  exDividendDate: "Ex-Div Date", analystConsensus: "Analyst",
+  externalRating: "Ext. Rating", beta: "Beta", riskFlag: "Risk Flag",
+  volatility: "Volatility", expectedAnnualDividends: "Exp. Dividends",
+  accountNumber: "Acct #", accountType: "Acct Type",
+};
+
+export function ColumnManagerPopover({
+  columnVisibility,
+  onToggle,
+  onClose,
+}: {
+  columnVisibility: Record<string, boolean>;
+  onToggle: (key: string, visible: boolean) => void;
+  onClose: () => void;
+}) {
+  const isVisible = (key: string) =>
+    columnVisibility[key] !== undefined
+      ? columnVisibility[key]
+      : (DEFAULT_COLUMN_VISIBILITY[key] ?? true);
+
+  return (
+    <div className="absolute right-0 top-8 z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl p-4 w-64 max-h-96 overflow-y-auto">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Manage Columns</span>
+        <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">✕</button>
+      </div>
+      <div className="space-y-2">
+        {Object.keys(COLUMN_LABELS).map(key => (
+          <label key={key} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isVisible(key)}
+              onChange={e => onToggle(key, e.target.checked)}
+              className="rounded border-neutral-300 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">{COLUMN_LABELS[key]}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function HoldingsTab({ children }: HoldingsTabProps) {
   return <>{children}</>;
 }

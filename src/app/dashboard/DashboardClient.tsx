@@ -16,7 +16,7 @@ import {
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { NotFoundCell } from "@/components/NotFoundCell";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
-import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY } from "./HoldingsTab";
+import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY, ColumnManagerPopover } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
@@ -108,6 +108,7 @@ function DashboardContent() {
 
   // Column visibility (controlled; Task 14 will wire up the toggle UI)
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(DEFAULT_COLUMN_VISIBILITY);
+  const [showColumnManager, setShowColumnManager] = useState(false);
 
   const handleColumnVisibilityChange = useCallback((key: string, visible: boolean) => {
     setColumnVisibility(prev => ({ ...prev, [key]: visible }));
@@ -783,13 +784,36 @@ function DashboardContent() {
                 <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-500 mr-2" />
                 Holdings Breakdown
               </h3>
-              <button
-                onClick={fetchAssets}
-                className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                title="Refresh"
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowColumnManager(v => !v)}
+                    className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 transition-colors"
+                    title="Show/hide columns"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Columns
+                  </button>
+                  {showColumnManager && (
+                    <ColumnManagerPopover
+                      columnVisibility={columnVisibility}
+                      onToggle={(key, visible) => {
+                        handleColumnVisibilityChange(key, visible);
+                      }}
+                      onClose={() => setShowColumnManager(false)}
+                    />
+                  )}
+                </div>
+                <button
+                  onClick={fetchAssets}
+                  className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                  title="Refresh"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto max-h-[75vh]">
