@@ -138,11 +138,12 @@ function DashboardContent() {
     try {
       const asset = assets.find(a => a.id === assetId);
       if (!asset) return;
+      // Send only the exchange fields — the server merges on top of its own DB copy,
+      // eliminating the stale-state overwrite risk that a full-document PUT carries.
       const res = await fetch(`/api/assets/${assetId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...asset,
           exchangeSuffix: suffix,
           exchangeName: name,
           userOverrides: { ...asset.userOverrides, exchange: true },
@@ -674,6 +675,18 @@ function DashboardContent() {
   const totalMarketValue = assets.reduce((acc, curr) => acc + (Number(curr.marketValue) || 0), 0);
   const totalExpectedDividends = assets.reduce((acc, curr) => acc + (Number(curr.expectedAnnualDividends) || 0), 0);
 
+  const visibleColCount = useMemo(() => {
+    const managed = [
+      "accountType", "accountNumber", "securityType", "strategyType", "call",
+      "sector", "market", "currency", "exchange", "managementStyle", "managementFee",
+      "quantity", "liveTickerPrice", "bookCost", "marketValue", "profitLoss",
+      "yield", "oneYearReturn", "threeYearReturn", "risk", "expectedAnnualDividends",
+      "externalRating", "exDividendDate", "analystConsensus", "beta",
+    ];
+    // 2 always-visible (account, ticker) + 1 always-visible (Actions) + managed
+    return 3 + managed.filter(k => isVisible(k)).length;
+  }, [columnVisibility]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keep legacy KPIs for top display mostly intact, adapting to new schema
   const totalCostBasis = assets.reduce((acc, curr) => acc + (Number(curr.bookCost) || 0), 0);
   const totalReturn = totalCostBasis > 0 ? ((totalMarketValue - totalCostBasis) / totalCostBasis) * 100 : 0;
@@ -891,65 +904,65 @@ function DashboardContent() {
                   <tr>
                     {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
                     {renderSortableHeader("Ticker", "ticker", `${stickyCol2} min-w-[90px]`)}
-                    {renderSortableHeader("Acct Type", "accountType", `min-w-[90px]`)}
-                    {renderSortableHeader("Acct #", "accountNumber", `min-w-[80px]`)}
-                    {renderSortableHeader("Security Type", "securityType")}
-                    {renderSortableHeader("Strategy Type", "strategyType")}
-                    {renderSortableHeader("Call", "call")}
-                    {renderSortableHeader("Sector", "sector")}
-                    {renderSortableHeader("Market", "market")}
-                    {renderSortableHeader("Currency", "currency")}
+                    {isVisible("accountType") && renderSortableHeader("Acct Type", "accountType", `min-w-[90px]`)}
+                    {isVisible("accountNumber") && renderSortableHeader("Acct #", "accountNumber", `min-w-[80px]`)}
+                    {isVisible("securityType") && renderSortableHeader("Security Type", "securityType")}
+                    {isVisible("strategyType") && renderSortableHeader("Strategy Type", "strategyType")}
+                    {isVisible("call") && renderSortableHeader("Call", "call")}
+                    {isVisible("sector") && renderSortableHeader("Sector", "sector")}
+                    {isVisible("market") && renderSortableHeader("Market", "market")}
+                    {isVisible("currency") && renderSortableHeader("Currency", "currency")}
                     {isVisible("exchange") && (
                       <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider whitespace-nowrap">
                         Exchange
                       </th>
                     )}
-                    {renderSortableHeader("Mgt Style", "managementStyle")}
-                    {renderSortableHeader("Mgt Fee %", "managementFee")}
-                    {renderSortableHeader("# Tickers", "quantity")}
-                    {renderSortableHeader("Live $", "liveTickerPrice")}
-                    {renderSortableHeader("Book Cost", "bookCost")}
-                    {renderSortableHeader("Market Value", "marketValue")}
-                    {renderSortableHeader("Profit/Loss", "profitLoss")}
-                    {renderSortableHeader("Yield %", "yield")}
-                    {renderSortableHeader("1YR Return %", "oneYearReturn")}
-                    {renderSortableHeader("3YR Return %", "threeYearReturn")}
-                    {renderSortableHeader("Risk", "risk")}
-                    {renderSortableHeader("Expected Div", "expectedAnnualDividends")}
-                    {renderSortableHeader("Ext. Rating", "externalRating")}
-                    {renderSortableHeader("Ex-Div Date", "exDividendDate")}
-                    {renderSortableHeader("Analyst", "analystConsensus")}
-                    {renderSortableHeader("Beta", "beta")}
+                    {isVisible("managementStyle") && renderSortableHeader("Mgt Style", "managementStyle")}
+                    {isVisible("managementFee") && renderSortableHeader("Mgt Fee %", "managementFee")}
+                    {isVisible("quantity") && renderSortableHeader("# Tickers", "quantity")}
+                    {isVisible("liveTickerPrice") && renderSortableHeader("Live $", "liveTickerPrice")}
+                    {isVisible("bookCost") && renderSortableHeader("Book Cost", "bookCost")}
+                    {isVisible("marketValue") && renderSortableHeader("Market Value", "marketValue")}
+                    {isVisible("profitLoss") && renderSortableHeader("Profit/Loss", "profitLoss")}
+                    {isVisible("yield") && renderSortableHeader("Yield %", "yield")}
+                    {isVisible("oneYearReturn") && renderSortableHeader("1YR Return %", "oneYearReturn")}
+                    {isVisible("threeYearReturn") && renderSortableHeader("3YR Return %", "threeYearReturn")}
+                    {isVisible("risk") && renderSortableHeader("Risk", "risk")}
+                    {isVisible("expectedAnnualDividends") && renderSortableHeader("Expected Div", "expectedAnnualDividends")}
+                    {isVisible("externalRating") && renderSortableHeader("Ext. Rating", "externalRating")}
+                    {isVisible("exDividendDate") && renderSortableHeader("Ex-Div Date", "exDividendDate")}
+                    {isVisible("analystConsensus") && renderSortableHeader("Analyst", "analystConsensus")}
+                    {isVisible("beta") && renderSortableHeader("Beta", "beta")}
                     <th className="px-3 py-3 text-right">Actions</th>
                   </tr>
                   <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
                     {renderFilterInput("account", "w-20", stickyCol1)}
                     {renderFilterInput("ticker", "w-20", stickyCol2)}
-                    {renderFilterInput("accountType", "w-20")}
-                    {renderFilterInput("accountNumber", "w-20")}
-                    {renderFilterInput("securityType", "w-24")}
-                    {renderFilterInput("strategyType", "w-28")}
-                    {renderFilterInput("call", "w-16")}
-                    {renderFilterInput("sector")}
-                    {renderFilterInput("market")}
-                    {renderFilterInput("currency", "w-16")}
+                    {isVisible("accountType") && renderFilterInput("accountType", "w-20")}
+                    {isVisible("accountNumber") && renderFilterInput("accountNumber", "w-20")}
+                    {isVisible("securityType") && renderFilterInput("securityType", "w-24")}
+                    {isVisible("strategyType") && renderFilterInput("strategyType", "w-28")}
+                    {isVisible("call") && renderFilterInput("call", "w-16")}
+                    {isVisible("sector") && renderFilterInput("sector")}
+                    {isVisible("market") && renderFilterInput("market")}
+                    {isVisible("currency") && renderFilterInput("currency", "w-16")}
                     {isVisible("exchange") && <td className="px-2 py-2" />}
-                    {renderFilterInput("managementStyle", "w-24")}
-                    {renderFilterInput("managementFee", "w-16")}
-                    {renderFilterInput("quantity", "w-20")}
-                    {renderFilterInput("liveTickerPrice", "w-24")}
-                    {renderFilterInput("bookCost")}
-                    {renderFilterInput("marketValue")}
-                    {renderFilterInput("profitLoss")}
-                    {renderFilterInput("yield", "w-16")}
-                    {renderFilterInput("oneYearReturn")}
-                    {renderFilterInput("threeYearReturn")}
-                    {renderFilterInput("risk", "w-16")}
-                    {renderFilterInput("expectedAnnualDividends")}
-                    {renderFilterInput("externalRating")}
-                    {renderFilterInput("exDividendDate", "w-24")}
-                    {renderFilterInput("analystConsensus", "w-20")}
-                    {renderFilterInput("beta", "w-16")}
+                    {isVisible("managementStyle") && renderFilterInput("managementStyle", "w-24")}
+                    {isVisible("managementFee") && renderFilterInput("managementFee", "w-16")}
+                    {isVisible("quantity") && renderFilterInput("quantity", "w-20")}
+                    {isVisible("liveTickerPrice") && renderFilterInput("liveTickerPrice", "w-24")}
+                    {isVisible("bookCost") && renderFilterInput("bookCost")}
+                    {isVisible("marketValue") && renderFilterInput("marketValue")}
+                    {isVisible("profitLoss") && renderFilterInput("profitLoss")}
+                    {isVisible("yield") && renderFilterInput("yield", "w-16")}
+                    {isVisible("oneYearReturn") && renderFilterInput("oneYearReturn")}
+                    {isVisible("threeYearReturn") && renderFilterInput("threeYearReturn")}
+                    {isVisible("risk") && renderFilterInput("risk", "w-16")}
+                    {isVisible("expectedAnnualDividends") && renderFilterInput("expectedAnnualDividends")}
+                    {isVisible("externalRating") && renderFilterInput("externalRating")}
+                    {isVisible("exDividendDate") && renderFilterInput("exDividendDate", "w-24")}
+                    {isVisible("analystConsensus") && renderFilterInput("analystConsensus", "w-20")}
+                    {isVisible("beta") && renderFilterInput("beta", "w-16")}
                     <td className="px-3 py-2 text-right">
                       {Object.keys(filters).length > 0 && (
                         <button onClick={clearFilters} className="text-neutral-400 hover:text-red-500 transition-colors" title="Clear Filters">
@@ -962,7 +975,7 @@ function DashboardContent() {
                 <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 transition-colors duration-300">
                   {[...sortedAssets, ...(editingId === "NEW" ? [editForm] : [])].length === 0 && !isLoading ? (
                     <tr>
-                      <td colSpan={isVisible("exchange") ? 30 : 29} className="px-6 py-8 text-center text-neutral-500">
+                      <td colSpan={visibleColCount} className="px-6 py-8 text-center text-neutral-500">
                         No assets found. Click Add Row below.
                       </td>
                     </tr>
@@ -1120,22 +1133,35 @@ function DashboardContent() {
                             )}
                           </td>
                           {/* 3. Acct Type */}
+                          {isVisible("accountType") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[90px]`}>
                             {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
                           </td>
+                          )}
                           {/* 4. Acct # */}
+                          {isVisible("accountNumber") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[80px]`}>
                             {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
                           </td>
+                          )}
                           {/* 5. Security Type */}
+                          {isVisible("securityType") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 6. Strategy Type */}
+                          {isVisible("strategyType") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 7. Call */}
+                          {isVisible("call") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 8. Sector */}
+                          {isVisible("sector") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 9. Market */}
+                          {isVisible("market") && (
                           <td
                             className="px-3 py-3 text-neutral-700 dark:text-neutral-300"
                             title={
@@ -1149,8 +1175,11 @@ function DashboardContent() {
                           >
                             {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
                           </td>
+                          )}
                           {/* 10. Currency */}
+                          {isVisible("currency") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 10b. Exchange */}
                           {isVisible("exchange") && (
                             <td className="px-3 py-2 whitespace-nowrap text-sm">
@@ -1158,6 +1187,7 @@ function DashboardContent() {
                             </td>
                           )}
                           {/* 11. Mgt Style — N/A if missing */}
+                          {isVisible("managementStyle") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
                               <span className="inline-flex items-center">
@@ -1170,7 +1200,9 @@ function DashboardContent() {
                               </span>
                             )}
                           </td>
+                          )}
                           {/* 12. Mgt Fee % — Companies are legitimately 0; otherwise NotFoundCell when null */}
+                          {isVisible("managementFee") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("managementFee", false, [], "number") : (
                               <span className="inline-flex items-center">
@@ -1183,9 +1215,13 @@ function DashboardContent() {
                               </span>
                             )}
                           </td>
+                          )}
                           {/* 13. Quantity */}
+                          {isVisible("quantity") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
+                          )}
                           {/* 14. Live $ — backslash fix */}
+                          {isVisible("liveTickerPrice") && (
                           <td className="px-3 py-3 text-emerald-600 dark:text-emerald-400 font-medium">
                             {isEditing ? (
                               <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={editForm.liveTickerPrice ?? 0} onChange={e => handleEditChange('liveTickerPrice', parseFloat(e.target.value) || 0)} />
@@ -1215,46 +1251,71 @@ function DashboardContent() {
                               })()
                             )}
                           </td>
+                          )}
                           {/* 15. Book Cost */}
+                          {isVisible("bookCost") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("bookCost", false, [], "number")}</td>
+                          )}
                           {/* 16. Market Value */}
+                          {isVisible("marketValue") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("marketValue", false, [], "number")}</td>
+                          )}
                           {/* 17. Profit/Loss */}
+                          {isVisible("profitLoss") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
+                          )}
                           {/* 18. Yield % */}
+                          {isVisible("yield") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("yield", false, [], "number") : renderPercent(asset.yield)}
                           </td>
+                          )}
                           {/* 19. 1YR Return % */}
+                          {isVisible("oneYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("oneYearReturn", false, [], "number") : renderPercent(asset.oneYearReturn)}
                           </td>
+                          )}
                           {/* 20. 3YR Return % */}
+                          {isVisible("threeYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : renderPercent(asset.threeYearReturn ?? asset.fiveYearReturn ?? null)}
                           </td>
+                          )}
                           {/* 21. Risk */}
+                          {isVisible("risk") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          )}
                           {/* 22. Expected Div */}
+                          {isVisible("expectedAnnualDividends") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
+                          )}
                           {/* 23. Ext. Rating */}
+                          {isVisible("externalRating") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("externalRating", false, [], "text") : naIndicator(asset.externalRating)}
                           </td>
+                          )}
                           {/* 24. Ex-Div Date */}
+                          {isVisible("exDividendDate") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : naIndicator(asset.exDividendDate)}
                           </td>
+                          )}
                           {/* 25. Analyst */}
+                          {isVisible("analystConsensus") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : naIndicator(asset.analystConsensus)}
                           </td>
+                          )}
                           {/* 26. Beta */}
+                          {isVisible("beta") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="number" className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.beta as number) ?? 0} onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)} /> : (
                               asset.beta ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(asset.beta).toLocaleString()}</span> : naIndicator(null)
                             )}
                           </td>
+                          )}
                           {/* Actions */}
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end space-x-2">
@@ -1273,7 +1334,7 @@ function DashboardContent() {
                         </tr>
                         {isEditing && mismatchState && (
                           <tr>
-                            <td colSpan={isVisible("exchange") ? 30 : 29} className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20">
+                            <td colSpan={visibleColCount} className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20">
                               <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-700">
                                 <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
                                   Yahoo returned <strong>{mismatchState.detectedCurrency}</strong> for this ticker, but this asset is{" "}
@@ -1326,13 +1387,32 @@ function DashboardContent() {
                     <tr className="bg-neutral-100 dark:bg-neutral-800/50 font-bold border-t-2 border-neutral-300 dark:border-neutral-700">
                       <td className={`px-3 py-4 ${stickyTotalsCol1}`}></td>
                       <td className={`${stickyTotalsCol2}`}></td>
-                      <td></td>
-                      <td></td>
-                      <td colSpan={isVisible("exchange") ? 12 : 11} className="px-3 py-4 text-right">TOTAL:</td>
-                      <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td colSpan={5}></td>
-                      <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                      <td colSpan={5}></td>
+                      {isVisible("accountType") && <td />}
+                      {isVisible("accountNumber") && <td />}
+                      {isVisible("securityType") && <td />}
+                      {isVisible("strategyType") && <td />}
+                      {isVisible("call") && <td />}
+                      {isVisible("sector") && <td />}
+                      {isVisible("market") && <td />}
+                      {isVisible("currency") && <td />}
+                      {isVisible("exchange") && <td />}
+                      {isVisible("managementStyle") && <td />}
+                      {isVisible("managementFee") && <td />}
+                      {isVisible("quantity") && <td />}
+                      {isVisible("liveTickerPrice") && <td className="px-3 py-4 text-right">TOTAL:</td>}
+                      {isVisible("bookCost") && <td />}
+                      {isVisible("marketValue") && <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("profitLoss") && <td />}
+                      {isVisible("yield") && <td />}
+                      {isVisible("oneYearReturn") && <td />}
+                      {isVisible("threeYearReturn") && <td />}
+                      {isVisible("risk") && <td />}
+                      {isVisible("expectedAnnualDividends") && <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("externalRating") && <td />}
+                      {isVisible("exDividendDate") && <td />}
+                      {isVisible("analystConsensus") && <td />}
+                      {isVisible("beta") && <td />}
+                      <td />
                     </tr>
                   )}
                 </tbody>
