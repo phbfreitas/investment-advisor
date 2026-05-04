@@ -175,10 +175,21 @@ export async function POST(request: Request) {
         // Cache for ticker research to avoid redundant API calls
         const tickerCache = new Map<string, any>();
 
+        // Detect tickers appearing more than once in parsed holdings (collision tickers).
+        // Cache is bypassed for these to prevent cross-currency contamination.
+        const tickerCount = new Map<string, number>();
+        holdings.forEach(h => tickerCount.set(h.ticker, (tickerCount.get(h.ticker) ?? 0) + 1));
+        const collisionTickers = new Set(
+            [...tickerCount.entries()].filter(([, c]) => c > 1).map(([t]) => t)
+        );
+
         for (const h of holdings) {
             const pricePerShare = h.quantity > 0 ? h.marketValue / h.quantity : 0;
             const mappedName = h.accountNumber ? accountMappings[h.accountNumber] : "";
-            const allMatches = existingAssets.filter((a: any) => a.ticker === h.ticker);
+            const allMatches = existingAssets.filter((a: any) =>
+                a.ticker === h.ticker &&
+                (a.currency === h.currency || !a.currency || a.currency === "Not Found")
+            );
             let existing: any;
 
             // --- REFINED MATCHING: Account-Bound Only ---
@@ -208,12 +219,15 @@ export async function POST(request: Request) {
                 // multi-account households holding the same ticker with divergent
                 // states, sharing the cache would poison sibling holdings.
                 // (Codex adversarial review finding #2.)
-                if (existing == null && tickerCache.has(h.ticker)) {
+                // Collision tickers (same ticker, multiple currencies) are also excluded
+                // from cache to prevent cross-currency contamination.
+                const canCache = existing == null && !collisionTickers.has(h.ticker);
+                if (canCache && tickerCache.has(h.ticker)) {
                     enrichedData = tickerCache.get(h.ticker);
                 } else {
                     try {
                         enrichedData = await researchTicker(h.ticker, existing);
-                        if (existing == null) {
+                        if (canCache) {
                             tickerCache.set(h.ticker, enrichedData);
                         }
                     } catch (e) {
@@ -299,6 +313,17 @@ export async function POST(request: Request) {
                 marketComputedAt: existing?.userOverrides?.market === true
                     ? (existing?.marketComputedAt ?? null)
                     : (enrichedData?.marketComputedAt ?? existing?.marketComputedAt ?? null),
+                exchangeSuffix: (() => {
+                    const locked = existing?.userOverrides?.exchange === true;
+                    return locked ? (existing?.exchangeSuffix ?? "") : (enrichedData?.exchangeSuffix ?? existing?.exchangeSuffix ?? "");
+                })(),
+                exchangeName: (() => {
+                    const locked = existing?.userOverrides?.exchange === true;
+                    return locked ? (existing?.exchangeName ?? "") : (enrichedData?.exchangeName ?? existing?.exchangeName ?? "");
+                })(),
+                needsExchangeReview: enrichedData?.currencyMismatch === true
+                    ? true
+                    : (existing?.needsExchangeReview ?? undefined),
                 managementStyle: normalizeManagementStyle(
                     pickWithLock(
                         existing,
@@ -400,7 +425,11 @@ export async function POST(request: Request) {
             );
             
             for (const asset of existingAssetsForAccount) {
-                const stillHoldsIt = holdings.some(h => h.ticker === asset.ticker);
+                const stillHoldsIt = holdings.some(h => {
+                    if (h.ticker !== asset.ticker) return false;
+                    if (!asset.currency || asset.currency === "Not Found") return true;
+                    return h.currency === asset.currency;
+                });
                 
                 // DEDUPLICATION FIX:
                 // Check if we already have a PutRequest for this asset SK (e.g. from the secondary pass)
