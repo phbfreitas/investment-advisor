@@ -135,31 +135,42 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             throw err;
         }
 
-        // Re-fetch the updated asset for the audit snapshot. (UpdateCommand's ReturnValues
-        // gave us ALL_NEW, but we don't use that here for simplicity — re-GET is cheap and
-        // routes the response through the EncryptedDocumentClient's decrypt path.)
-        const { Item: updatedAsset } = await db.send(
-            new GetCommand({
-                TableName: TABLE_NAME,
-                Key: { PK: PROFILE_KEY, SK: assetSK },
-            })
-        );
+        // Step 1 (UpdateCommand) committed successfully here.
+        // Steps 2 (refetch) and 3 (audit-log) are best-effort: failures must not
+        // surface as 500 to the user, since the lock state has already changed.
+        // Log them server-side for operator visibility.
+        let updatedAsset: Record<string, unknown> | undefined;
+        try {
+            const refetch = await db.send(
+                new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { PK: PROFILE_KEY, SK: assetSK },
+                })
+            );
+            updatedAsset = refetch.Item;
+        } catch (refetchErr) {
+            console.error("[lock-PATCH] post-commit refetch failed (lock state DID change):", refetchErr);
+        }
 
         if (updatedAsset) {
-            await insertAuditLog(
-                session.user.householdId,
-                "MANUAL_EDIT",
-                [
-                    {
-                        action: "UPDATE",
-                        ticker: String(updatedAsset.ticker || ""),
-                        assetSK,
-                        before: toSnapshot(existingAsset),
-                        after: toSnapshot(updatedAsset),
-                    },
-                ],
-                String(updatedAsset.ticker || "")
-            );
+            try {
+                await insertAuditLog(
+                    session.user.householdId,
+                    "MANUAL_EDIT",
+                    [
+                        {
+                            action: "UPDATE",
+                            ticker: String(updatedAsset.ticker || ""),
+                            assetSK,
+                            before: toSnapshot(existingAsset),
+                            after: toSnapshot(updatedAsset),
+                        },
+                    ],
+                    String(updatedAsset.ticker || "")
+                );
+            } catch (auditErr) {
+                console.error("[lock-PATCH] post-commit audit-log write failed (lock state DID change):", auditErr);
+            }
         }
 
         return NextResponse.json({ message: "Lock state updated", asset: updatedAsset });
