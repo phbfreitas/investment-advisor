@@ -13,7 +13,7 @@ const LOCKABLE_FIELDS: readonly LockableField[] = [
 ] as const;
 
 export type LookupData = {
-    symbol?: string;       // NEW: ticker the lookup was performed for, used to detect symbol changes
+    symbol?: string;       // 5A Item 3: ticker the lookup was performed for, used to detect symbol changes
     sector?: string;
     market?: string;
     securityType?: string;

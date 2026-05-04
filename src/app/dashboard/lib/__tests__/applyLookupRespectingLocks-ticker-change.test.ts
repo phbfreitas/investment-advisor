@@ -96,10 +96,13 @@ describe("applyLookupRespectingLocks — call-site wiring at handleTickerLookup"
     // Must override prev.ticker with persistedTicker before calling applyLookupRespectingLocks.
     // The whole-file regex is permissive about whitespace/newlines (multiline pattern).
     expect(source).toMatch(/applyLookupRespectingLocks\(/);
-    // The call site must reference persistedTicker in the same expression chain
-    // (catches both `{ ...prev, ticker: persistedTicker }` and `persistedTicker !== undefined ? ... : prev`).
-    const callSiteMatch = source.match(/applyLookupRespectingLocks\(([\s\S]{0,400})\)/);
-    expect(callSiteMatch).toBeTruthy();
-    expect(callSiteMatch![1]).toMatch(/persistedTicker/);
+    // Proximity assertion: inside the setEditForm callback, persistedTicker must
+    // appear within ~200 chars of the applyLookupRespectingLocks call. This
+    // is more resilient than scanning the call's parenthesized body (which
+    // breaks if the call grows past a fixed cap or contains nested parens from
+    // a helper extraction).
+    expect(source).toMatch(
+      /setEditForm\([\s\S]{0,800}applyLookupRespectingLocks\([\s\S]{0,200}persistedTicker/
+    );
   });
 });
