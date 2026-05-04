@@ -118,7 +118,7 @@ function DashboardContent() {
       ? columnVisibility[key]
       : (DEFAULT_COLUMN_VISIBILITY[key] ?? true);
 
-  const handleExchangeSave = useCallback(async (assetId: string, suffix: string, name: string) => {
+  const handleExchangeSave = async (assetId: string, suffix: string, name: string) => {
     try {
       const res = await fetch(`/api/assets/${assetId}`, {
         method: "PUT",
@@ -131,8 +131,7 @@ function DashboardContent() {
       const msg = err instanceof Error ? err.message : "Failed to save exchange";
       setMessage({ text: msg, type: "error" });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  };
 
   const dismissToast = useCallback((id: string) => {
     setAuditToasts(prev => prev.filter(t => t.id !== id));
