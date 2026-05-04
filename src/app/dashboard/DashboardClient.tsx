@@ -120,11 +120,12 @@ function DashboardContent() {
     const patch = { [key]: visible };
     setColumnVisibility(prev => ({ ...prev, ...patch }));
     try {
-      await fetch("/api/preferences/columns", {
+      const res = await fetch("/api/preferences/columns", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ columnVisibility: patch }),
       });
+      if (!res.ok) throw new Error("Failed to save column visibility");
     } catch {
       setColumnVisibility(prev => ({ ...prev, [key]: !visible }));
     }
@@ -137,10 +138,17 @@ function DashboardContent() {
 
   const handleExchangeSave = async (assetId: string, suffix: string, name: string) => {
     try {
+      const asset = assets.find(a => a.id === assetId);
+      if (!asset) return;
       const res = await fetch(`/api/assets/${assetId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exchangeSuffix: suffix, exchangeName: name, userOverrides: { exchange: true } }),
+        body: JSON.stringify({
+          ...asset,
+          exchangeSuffix: suffix,
+          exchangeName: name,
+          userOverrides: { ...asset.userOverrides, exchange: true },
+        }),
       });
       if (!res.ok) throw new Error("Failed to save exchange");
       fetchAssets();
