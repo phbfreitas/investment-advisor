@@ -440,11 +440,27 @@ function DashboardContent() {
       const method = editingId === "NEW" ? "POST" : "PUT";
       const url = editingId === "NEW" ? "/api/assets" : `/api/assets/${editingId}`;
 
+      // 5A: on edit-mode PUT, send expectedUpdatedAt so the server rejects
+      // concurrent overwrites (e.g., phone tab vs laptop tab). New rows skip
+      // this — POST has no prior version. See 3A deferred follow-ups Item 1.
+      const body = editingId === "NEW"
+        ? editForm
+        : { ...editForm, expectedUpdatedAt: editForm.updatedAt };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(body),
       });
+
+      if (res.status === 409) {
+        alert("This asset was changed in another tab/device since you opened the editor. Click OK to refresh.");
+        await fetchAssets();
+        setEditingId(null);
+        setEditForm({});
+        setMismatchState(null);
+        return;
+      }
 
       if (!res.ok) throw new Error("Failed to save asset");
 
