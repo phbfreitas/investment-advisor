@@ -35,6 +35,7 @@ const LOCKABLE_FIELD_LABELS: Record<LockableField, string> = {
   managementStyle: "Mgmt Style",
   currency: "Currency",
   managementFee: "Mgmt Fee",
+  exchange: "Exchange",
 };
 
 function LockedFieldIcon({

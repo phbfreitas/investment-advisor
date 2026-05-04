@@ -47,6 +47,7 @@ export interface Asset {
     updatedAt: string;
     userOverrides?: Partial<Record<LockableField, boolean>>;
     marketComputedAt?: string | null;
+    exchange?: string;
     exchangeSuffix?: string;
     exchangeName?: string;
     needsExchangeReview?: boolean;
