@@ -16,7 +16,7 @@ import {
 import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { NotFoundCell } from "@/components/NotFoundCell";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
-import { HoldingsTab } from "./HoldingsTab";
+import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY } from "./HoldingsTab";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
@@ -105,6 +105,34 @@ function DashboardContent() {
   const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
   const [detectedAccounts, setDetectedAccounts] = useState<string[]>([]);
   const [accountNameMappings, setAccountNameMappings] = useState<Record<string, string>>({});
+
+  // Column visibility (controlled; Task 14 will wire up the toggle UI)
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(DEFAULT_COLUMN_VISIBILITY);
+
+  const handleColumnVisibilityChange = useCallback((key: string, visible: boolean) => {
+    setColumnVisibility(prev => ({ ...prev, [key]: visible }));
+  }, []);
+
+  const isVisible = (key: string): boolean =>
+    columnVisibility[key] !== undefined
+      ? columnVisibility[key]
+      : (DEFAULT_COLUMN_VISIBILITY[key] ?? true);
+
+  const handleExchangeSave = useCallback(async (assetId: string, suffix: string, name: string) => {
+    try {
+      const res = await fetch(`/api/assets/${assetId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exchangeSuffix: suffix, exchangeName: name, userOverrides: { exchange: true } }),
+      });
+      if (!res.ok) throw new Error("Failed to save exchange");
+      fetchAssets();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to save exchange";
+      setMessage({ text: msg, type: "error" });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const dismissToast = useCallback((id: string) => {
     setAuditToasts(prev => prev.filter(t => t.id !== id));
@@ -712,6 +740,9 @@ function DashboardContent() {
         isLoading={isLoading}
         marketData={marketData}
         isMarketLoading={isMarketLoading}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={handleColumnVisibilityChange}
+        onExchangeSave={handleExchangeSave}
       >
       <div className="w-full p-4 md:p-8">
         <div className="mx-auto space-y-8">
@@ -776,6 +807,11 @@ function DashboardContent() {
                     {renderSortableHeader("Sector", "sector")}
                     {renderSortableHeader("Market", "market")}
                     {renderSortableHeader("Currency", "currency")}
+                    {isVisible("exchange") && (
+                      <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider whitespace-nowrap">
+                        Exchange
+                      </th>
+                    )}
                     {renderSortableHeader("Mgt Style", "managementStyle")}
                     {renderSortableHeader("Mgt Fee %", "managementFee")}
                     {renderSortableHeader("# Tickers", "quantity")}
@@ -805,6 +841,7 @@ function DashboardContent() {
                     {renderFilterInput("sector")}
                     {renderFilterInput("market")}
                     {renderFilterInput("currency", "w-16")}
+                    {isVisible("exchange") && <td className="px-2 py-2" />}
                     {renderFilterInput("managementStyle", "w-24")}
                     {renderFilterInput("managementFee", "w-16")}
                     {renderFilterInput("quantity", "w-20")}
@@ -1021,6 +1058,12 @@ function DashboardContent() {
                           </td>
                           {/* 10. Currency */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          {/* 10b. Exchange */}
+                          {isVisible("exchange") && (
+                            <td className="px-3 py-2 whitespace-nowrap text-sm">
+                              <ExchangeCell asset={asset} onSave={handleExchangeSave} />
+                            </td>
+                          )}
                           {/* 11. Mgt Style — N/A if missing */}
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
