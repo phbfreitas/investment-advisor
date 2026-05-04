@@ -15,6 +15,7 @@ import {
   normalizeMarket,
   normalizeCurrency,
   applyCompanyAutoDefaults,
+  resolveExchange,
 } from "../allowlists";
 
 describe("allowlists barrel", () => {
@@ -317,5 +318,32 @@ describe("applyCompanyAutoDefaults", () => {
     expect(result.ticker).toBe("AAPL");
     expect(result.sector).toBe("IT");
     expect(result.yield).toBe(0.005);
+  });
+});
+
+describe("resolveExchange", () => {
+  it("maps NYSE code to empty suffix and NYSE name", () => {
+    const result = resolveExchange("NYQ", "New York Stock Exchange");
+    expect(result).toEqual({ exchangeSuffix: "", exchangeName: "NYSE" });
+  });
+
+  it("maps TSX code to .TO suffix", () => {
+    const result = resolveExchange("TOR", "Toronto Stock Exchange");
+    expect(result).toEqual({ exchangeSuffix: ".TO", exchangeName: "TSX" });
+  });
+
+  it("maps NEO (Cboe Canada) code to .NE suffix", () => {
+    const result = resolveExchange("NEO", "Cboe Canada");
+    expect(result).toEqual({ exchangeSuffix: ".NE", exchangeName: "Cboe Canada" });
+  });
+
+  it("falls back to fallbackName and empty suffix for unknown code", () => {
+    const result = resolveExchange("XYZ", "Some Exchange");
+    expect(result).toEqual({ exchangeSuffix: "", exchangeName: "Some Exchange" });
+  });
+
+  it("is case-insensitive for exchange codes", () => {
+    const result = resolveExchange("tor", "Toronto");
+    expect(result).toEqual({ exchangeSuffix: ".TO", exchangeName: "TSX" });
   });
 });

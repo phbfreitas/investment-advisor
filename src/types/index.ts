@@ -6,7 +6,8 @@ export type LockableField =
     | "call"
     | "managementStyle"
     | "currency"
-    | "managementFee";
+    | "managementFee"
+    | "exchange";
 
 export interface Asset {
     PK: string;
@@ -46,6 +47,9 @@ export interface Asset {
     updatedAt: string;
     userOverrides?: Partial<Record<LockableField, boolean>>;
     marketComputedAt?: string | null;
+    exchangeSuffix?: string;
+    exchangeName?: string;
+    needsExchangeReview?: boolean;
 }
 
 export interface MarketData {

@@ -125,6 +125,29 @@ export function normalizeSector(raw: string | null | undefined): Sector {
 const US_EXCHANGES = new Set(["nyq", "nms", "ncm", "ngm", "ase", "pcx", "bats"]);
 const CA_EXCHANGES = new Set(["tor", "van", "cve", "neo"]);
 
+export const EXCHANGE_CODE_MAP: Record<string, { suffix: string; name: string }> = {
+  nms:  { suffix: "",    name: "Nasdaq" },
+  ngm:  { suffix: "",    name: "Nasdaq" },
+  ncm:  { suffix: "",    name: "Nasdaq" },
+  nyq:  { suffix: "",    name: "NYSE" },
+  ase:  { suffix: "",    name: "NYSE American" },
+  pcx:  { suffix: "",    name: "NYSE American" },
+  bats: { suffix: "",    name: "CBOE" },
+  tor:  { suffix: ".TO", name: "TSX" },
+  cve:  { suffix: ".V",  name: "TSX Venture" },
+  neo:  { suffix: ".NE", name: "Cboe Canada" },
+  van:  { suffix: ".V",  name: "Vancouver" },
+};
+
+export function resolveExchange(
+  code: string,
+  fallbackName: string,
+): { exchangeSuffix: string; exchangeName: string } {
+  const mapped = EXCHANGE_CODE_MAP[code.toLowerCase()];
+  if (mapped) return { exchangeSuffix: mapped.suffix, exchangeName: mapped.name };
+  return { exchangeSuffix: "", exchangeName: fallbackName || "Unknown" };
+}
+
 const MARKET_CANONICAL: Record<string, Market> = {
   "usa": "USA",
   "canada": "Canada",
