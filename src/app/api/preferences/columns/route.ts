@@ -14,8 +14,13 @@ export async function PATCH(request: Request) {
         }
 
         const PROFILE_KEY = `HOUSEHOLD#${session.user.householdId}`;
-        const body = await request.json();
-        const { columnVisibility } = body;
+        let body: unknown;
+        try {
+            body = await request.json();
+        } catch {
+            return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+        const { columnVisibility } = body as Record<string, unknown>;
 
         if (!columnVisibility || typeof columnVisibility !== "object" || Array.isArray(columnVisibility)) {
             return NextResponse.json({ error: "columnVisibility must be an object" }, { status: 400 });
