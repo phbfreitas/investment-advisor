@@ -968,9 +968,9 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="overflow-x-auto max-h-[75vh]">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-0 z-20">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-16 z-20">
                   <tr>
                     {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
                     {renderSortableHeader("Ticker", "ticker", `${stickyCol2} min-w-[90px]`)}
@@ -982,11 +982,7 @@ function DashboardContent() {
                     {isVisible("sector") && renderSortableHeader("Sector", "sector")}
                     {isVisible("market") && renderSortableHeader("Market", "market")}
                     {isVisible("currency") && renderSortableHeader("Currency", "currency")}
-                    {isVisible("exchange") && (
-                      <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider whitespace-nowrap">
-                        Exchange
-                      </th>
-                    )}
+                    {isVisible("exchange") && renderSortableHeader("Exchange", "exchangeName")}
                     {isVisible("managementStyle") && renderSortableHeader("Mgt Style", "managementStyle")}
                     {isVisible("managementFee") && renderSortableHeader("Mgt Fee %", "managementFee")}
                     {isVisible("quantity") && renderSortableHeader("# Tickers", "quantity")}
@@ -1016,7 +1012,7 @@ function DashboardContent() {
                     {isVisible("sector") && renderFilterInput("sector")}
                     {isVisible("market") && renderFilterInput("market")}
                     {isVisible("currency") && renderFilterInput("currency", "w-16")}
-                    {isVisible("exchange") && <td className="px-2 py-2" />}
+                    {isVisible("exchange") && renderFilterInput("exchangeName")}
                     {isVisible("managementStyle") && renderFilterInput("managementStyle", "w-24")}
                     {isVisible("managementFee") && renderFilterInput("managementFee", "w-16")}
                     {isVisible("quantity") && renderFilterInput("quantity", "w-20")}
