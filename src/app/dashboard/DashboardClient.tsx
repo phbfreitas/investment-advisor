@@ -29,6 +29,7 @@ import {
   formatTotal,
   formatRowPercent,
   formatTopPercent,
+  formatCurrencyAmount,
 } from "@/lib/decimalFormat";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
@@ -887,59 +888,48 @@ function DashboardContent() {
           )}
 
           {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-panel p-6 flex flex-col justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {/* Total Market Value — single badge, CAD-aggregating */}
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Market Value</span>
-              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
-                ${formatTotal(totalMarketValue)}
+              <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center break-words">
+                {portfolioTotals?.fxUnavailable
+                  ? <span className="text-base font-medium">FX rate unavailable</span>
+                  : <>${formatTotal(portfolioTotals?.grandTotalCad ?? totalMarketValue)}</>}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
+              {portfolioTotals && (
+                <div className="mt-3 flex flex-col gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="flex justify-between gap-4">
+                    <span>CAD subtotal</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">${formatTotal(portfolioTotals.cadTotal)} CAD</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>USD subtotal</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">US${formatTotal(portfolioTotals.usdTotal)}</span>
+                  </div>
+                  {!portfolioTotals.fxUnavailable && portfolioTotals.usdToCadRate && (
+                    <span className="text-neutral-400 dark:text-neutral-500">at 1 USD = {portfolioTotals.usdToCadRate.toFixed(4)} CAD · as of today</span>
+                  )}
+                  {portfolioTotals.fxUnavailable && (
+                    <span className="text-neutral-400 dark:text-neutral-500">Showing per-currency subtotals only</span>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="glass-panel p-6 flex flex-col justify-center">
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Return</span>
-              <h3 className={`text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+              <h3 className={`text-2xl md:text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
                 {formatTopPercent(totalReturn / 100)}
               </h3>
             </div>
-            <div className="glass-panel p-6 flex flex-col justify-center">
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Avg Dividend Yield</span>
-              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
                 {formatTopPercent(portfolioDividendYield, { withSign: false })}
               </h3>
             </div>
           </div>
-
-          {/* FX Portfolio Totals */}
-          {portfolioTotals && (
-            <div className="glass-panel p-6">
-              <div className="flex flex-col gap-1 text-sm">
-                <div className="flex justify-between gap-8">
-                  <span className="text-neutral-500 dark:text-neutral-400">CAD Portfolio</span>
-                  <span className="font-medium">${portfolioTotals.cadTotal.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-neutral-500 dark:text-neutral-400">USD Portfolio</span>
-                  <span className="font-medium">${portfolioTotals.usdTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })} USD</span>
-                </div>
-                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-1 flex justify-between gap-8">
-                  <span className="text-neutral-700 dark:text-neutral-300 font-medium">Grand Total</span>
-                  <span className="font-semibold">
-                    {portfolioTotals.fxUnavailable
-                      ? "FX rate unavailable"
-                      : `$${portfolioTotals.grandTotalCad.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD`}
-                  </span>
-                </div>
-                {!portfolioTotals.fxUnavailable && portfolioTotals.usdToCadRate && (
-                  <p className="text-xs text-neutral-400">
-                    at 1 USD = {portfolioTotals.usdToCadRate.toFixed(4)} CAD · as of today
-                  </p>
-                )}
-                {portfolioTotals.fxUnavailable && (
-                  <p className="text-xs text-neutral-400">Showing per-currency subtotals only</p>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Investment Table */}
           <div className="glass-panel">
@@ -1337,11 +1327,19 @@ function DashboardContent() {
                           )}
                           {/* 15. Book Cost */}
                           {isVisible("bookCost") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("bookCost", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing
+                              ? renderField("bookCost", false, [], "number")
+                              : <span>{formatCurrencyAmount(asset.bookCost, asset.currency)}</span>}
+                          </td>
                           )}
                           {/* 16. Market Value */}
                           {isVisible("marketValue") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("marketValue", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">
+                            {isEditing
+                              ? renderField("marketValue", false, [], "number")
+                              : <span>{formatCurrencyAmount(asset.marketValue, asset.currency)}</span>}
+                          </td>
                           )}
                           {/* 17. Profit/Loss */}
                           {isVisible("profitLoss") && (
