@@ -970,7 +970,7 @@ function DashboardContent() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-16 z-20">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-28 md:top-16 z-20">
                   <tr>
                     {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
                     {renderSortableHeader("Ticker", "ticker", `${stickyCol2} min-w-[90px]`)}
