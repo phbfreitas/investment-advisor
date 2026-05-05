@@ -23,6 +23,13 @@ import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib
 import { liveMergeAssets } from "@/app/dashboard/lib/liveMergeAssets";
 import { detectAnomaly } from "./lib/priceAnomaly";
 import type { PortfolioTotals } from "@/lib/portfolio-analytics";
+import {
+  formatPrice,
+  formatQuantity,
+  formatTotal,
+  formatRowPercent,
+  formatTopPercent,
+} from "@/lib/decimalFormat";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
@@ -884,20 +891,20 @@ function DashboardContent() {
             <div className="glass-panel p-6 flex flex-col justify-center">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Market Value</span>
               <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
-                ${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${formatTotal(totalMarketValue)}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
             </div>
             <div className="glass-panel p-6 flex flex-col justify-center">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Return</span>
               <h3 className={`text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                {totalReturn > 0 ? "+" : ""}{totalReturn.toFixed(2)}%
+                {formatTopPercent(totalReturn / 100)}
               </h3>
             </div>
             <div className="glass-panel p-6 flex flex-col justify-center">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Avg Dividend Yield</span>
               <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-                {(portfolioDividendYield * 100).toFixed(2)}%
+                {formatTopPercent(portfolioDividendYield, { withSign: false })}
               </h3>
             </div>
           </div>
@@ -1066,18 +1073,21 @@ function DashboardContent() {
                         return <span>{value}</span>;
                       };
 
-                      const renderNumber = (value: number | null | undefined, suffix = "", decimals = 2) => {
+                      const renderNumber = (value: number | null | undefined, suffix = "", decimals?: number) => {
                         if (value === null || value === undefined) {
                           return <NotFoundCell />;
                         }
-                        return <span>{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
+                        if (decimals !== undefined) {
+                          return <span>{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
+                        }
+                        return <span>{formatTotal(value)}{suffix}</span>;
                       };
 
                       const renderPercent = (value: number | null | undefined) => {
                         if (value === null || value === undefined) {
                           return <NotFoundCell />;
                         }
-                        return <span>{(value * 100).toFixed(2)}%</span>;
+                        return <span>{formatRowPercent(value)}</span>;
                       };
 
                       const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
@@ -1151,7 +1161,7 @@ function DashboardContent() {
                           if (displayValue === null || displayValue === undefined || typeof displayValue !== 'number') {
                             content = <NotFoundCell />;
                           } else {
-                            content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue.toLocaleString()}</span>;
+                            content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{formatTotal(displayValue)}</span>;
                           }
                         } else if (displayValue === null || displayValue === undefined || displayValue === "" || displayValue === "Not Found") {
                           content = <NotFoundCell />;
@@ -1180,7 +1190,7 @@ function DashboardContent() {
                         if (value === null || value === undefined || value === "" || value === 0) {
                           return <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>;
                         }
-                        return <span>{typeof value === 'number' ? value.toLocaleString() : value}{suffix}</span>;
+                        return <span>{typeof value === 'number' ? formatTotal(value) : value}{suffix}</span>;
                       };
 
                       return (
@@ -1304,7 +1314,7 @@ function DashboardContent() {
                                 const numPrice = Number(price);
                                 const formatted = isNaN(numPrice)
                                   ? "N/A"
-                                  : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                  : `$${formatPrice(numPrice)}`;
                                 const anomaly = anomalies[asset.id];
                                 return (
                                   <span className="inline-flex items-center gap-1">
@@ -1448,9 +1458,9 @@ function DashboardContent() {
                     return (
                       <tr key={`ghost-${ghost.assetSK}`} className="audit-highlight-delete">
                         <td className="px-3 py-2 text-red-400 line-through opacity-70" colSpan={4}>{ghost.ticker}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">{Number(s.quantity || 0).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.marketValue || 0).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.bookCost || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">{formatQuantity(Number(s.quantity || 0))}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${formatTotal(Number(s.marketValue || 0))}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${formatTotal(Number(s.bookCost || 0))}</td>
                         <td className="px-3 py-2 text-red-400 opacity-70 text-center" colSpan={19}>removed from portfolio</td>
                       </tr>
                     );
@@ -1474,13 +1484,13 @@ function DashboardContent() {
                       {isVisible("quantity") && <td />}
                       {isVisible("liveTickerPrice") && <td className="px-3 py-4 text-right">TOTAL:</td>}
                       {isVisible("bookCost") && <td />}
-                      {isVisible("marketValue") && <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("marketValue") && <td className="px-3 py-4">${formatTotal(totalMarketValue)}</td>}
                       {isVisible("profitLoss") && <td />}
                       {isVisible("yield") && <td />}
                       {isVisible("oneYearReturn") && <td />}
                       {isVisible("threeYearReturn") && <td />}
                       {isVisible("risk") && <td />}
-                      {isVisible("expectedAnnualDividends") && <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("expectedAnnualDividends") && <td className="px-3 py-4">${formatTotal(totalExpectedDividends)}</td>}
                       {isVisible("externalRating") && <td />}
                       {isVisible("exDividendDate") && <td />}
                       {isVisible("analystConsensus") && <td />}
@@ -1529,19 +1539,19 @@ function DashboardContent() {
                       Expected Dividends ({dividendPeriod === 1 ? "1 Month" : `${dividendPeriod} Months`})
                     </span>
                     <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                      ${(totalExpectedDividends / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends / 12 * dividendPeriod)}
                     </span>
                   </div>
                   <div className="text-center">
                     <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Monthly Average</span>
                     <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
-                      ${(totalExpectedDividends / 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends / 12)}
                     </span>
                   </div>
                   <div className="text-center">
                     <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Annual Total</span>
                     <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                      ${totalExpectedDividends.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends)}
                     </span>
                   </div>
                 </div>
@@ -1559,7 +1569,7 @@ function DashboardContent() {
                       <div key={type} className="bg-neutral-50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50 rounded-lg p-3">
                         <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-1">{type}</span>
                         <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                          ${(annual / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          ${formatTotal(annual / 12 * dividendPeriod)}
                         </span>
                         <span className="text-xs text-neutral-400 ml-1">/ {dividendPeriod}mo</span>
                       </div>
