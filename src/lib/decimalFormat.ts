@@ -1,7 +1,7 @@
 const NOT_FOUND = "Not Found";
 
 const isMissing = (v: number | null | undefined): v is null | undefined =>
-  v === null || v === undefined || !Number.isFinite(Number(v));
+  v == null || !Number.isFinite(v);
 
 export function formatPrice(value: number | null | undefined): string {
   if (isMissing(value)) return NOT_FOUND;

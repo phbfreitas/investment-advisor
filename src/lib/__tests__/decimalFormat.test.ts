@@ -59,6 +59,7 @@ describe("decimalFormat — top-of-page percent (2 dp)", () => {
 
   it("formatTopPercent omits sign when withSign=false", () => {
     expect(formatTopPercent(0.0456, { withSign: false })).toBe("4.56%");
+    expect(formatTopPercent(-0.0456, { withSign: false })).toBe("-4.56%");
   });
 
   it("renders Not Found for null/undefined/non-finite", () => {
