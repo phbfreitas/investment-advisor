@@ -120,7 +120,7 @@ export function InlineEditableCell({
     <div className="flex flex-col gap-1">
       {kind === "select" ? (
         <select
-          ref={el => (inputRef.current = el)}
+          ref={el => { inputRef.current = el; }}
           className={baseInput}
           value={draft}
           onChange={e => setDraft(e.target.value)}
@@ -131,7 +131,7 @@ export function InlineEditableCell({
         </select>
       ) : (
         <input
-          ref={el => (inputRef.current = el)}
+          ref={el => { inputRef.current = el; }}
           type={kind === "number" ? "number" : "text"}
           className={baseInput}
           value={draft}
