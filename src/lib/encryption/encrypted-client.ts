@@ -41,6 +41,15 @@ export class EncryptedDocumentClient {
     if (command instanceof QueryCommand || command instanceof ScanCommand) {
       return this.handleMultiItem(command);
     }
+    if (command instanceof UpdateCommand) {
+      // 5A: UpdateCommand on the encrypted client is unsafe — UpdateExpression /
+      // ExpressionAttributeValues / ReturnValues all bypass classification.
+      // Callers must use PutCommand (encrypts on write) until full Update support
+      // lands. See docs/superpowers/triage/2026-04-30-3A-deferred-followups.md Item 2.
+      throw new Error(
+        "EncryptedDocumentClient: UpdateCommand is not supported; use PutCommand or call the raw DDB client directly when classified fields are not involved."
+      );
+    }
     // DeleteCommand and anything else passes through unchanged
     return this.raw.send(command as any);
   }

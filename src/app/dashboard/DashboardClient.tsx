@@ -20,6 +20,7 @@ import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY, ColumnManagerPopo
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
+import { liveMergeAssets } from "@/app/dashboard/lib/liveMergeAssets";
 import { detectAnomaly } from "./lib/priceAnomaly";
 import type { PortfolioTotals } from "@/lib/portfolio-analytics";
 
@@ -199,6 +200,14 @@ function DashboardContent() {
   }, [assets]);
   const managementStyles = [...MGMT_STYLES];
   const risks = useMemo(() => Array.from(new Set(assets.map(a => a.risk).filter(Boolean))), [assets]);
+
+  // 5A Source of Truth: see docs/superpowers/plans/2026-05-03-5a-foundations.md.
+  // Both HoldingsTab totals and BreakdownTab charts consume this array so the
+  // table's live price flows through to chart aggregations without a refetch.
+  const liveMergedAssets = useMemo(
+    () => liveMergeAssets(assets, marketData),
+    [assets, marketData]
+  );
 
   const fetchMarketData = async (assetsToCheck: Asset[]) => {
     const validAssets = assetsToCheck.filter(a => Boolean(a.ticker));
@@ -440,11 +449,27 @@ function DashboardContent() {
       const method = editingId === "NEW" ? "POST" : "PUT";
       const url = editingId === "NEW" ? "/api/assets" : `/api/assets/${editingId}`;
 
+      // 5A: on edit-mode PUT, send expectedUpdatedAt so the server rejects
+      // concurrent overwrites (e.g., phone tab vs laptop tab). New rows skip
+      // this — POST has no prior version. See 3A deferred follow-ups Item 1.
+      const body = editingId === "NEW"
+        ? editForm
+        : { ...editForm, expectedUpdatedAt: editForm.updatedAt };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(body),
       });
+
+      if (res.status === 409) {
+        setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
+        await fetchAssets();
+        setEditingId(null);
+        setEditForm({});
+        setMismatchState(null);
+        return;
+      }
 
       if (!res.ok) throw new Error("Failed to save asset");
 
@@ -603,8 +628,22 @@ function DashboardContent() {
       const yieldForCalc = data.dividendYield ?? 0;
       const bookCostNum = editForm.bookCost || 0;
 
+      // Capture the persisted ticker from the assets array (server-fetched,
+      // immutable mid-edit). At this point editForm.ticker has already been
+      // updated to the new symbol via onChange, so prev.ticker would equal
+      // data.symbol and the tickerChanged branch in applyLookupRespectingLocks
+      // would never fire. We override prev.ticker with the persisted ticker so
+      // the comparison is against the asset's pre-edit state.
+      // For NEW assets there's no persisted state — fall through to prev.
+      const persistedTicker = editingId && editingId !== "NEW"
+        ? assets.find(a => a.id === editingId)?.ticker
+        : undefined;
+
       setEditForm(prev => {
-        const lookupPatch = applyLookupRespectingLocks(prev, data);
+        const lookupPatch = applyLookupRespectingLocks(
+          persistedTicker !== undefined ? { ...prev, ticker: persistedTicker } : prev,
+          { ...data, symbol },
+        );
         return {
           ...prev,
           ...lookupPatch,
@@ -699,7 +738,11 @@ function DashboardContent() {
 
   const clearFilters = () => setFilters({});
 
-  const totalMarketValue = assets.reduce((acc, curr) => acc + (Number(curr.marketValue) || 0), 0);
+  // 5A Source of Truth: totalMarketValue feeds the header KPI, footer totals,
+  // totalReturn, and the divisor of portfolioDividendYield — all chart/totals
+  // displays. Source it from the live-merged array so it tracks the table.
+  const totalMarketValue = liveMergedAssets.reduce((acc, curr) => acc + (Number(curr.marketValue) || 0), 0);
+  // expectedAnnualDividends is independent of live price → leave on raw assets.
   const totalExpectedDividends = assets.reduce((acc, curr) => acc + (Number(curr.expectedAnnualDividends) || 0), 0);
 
   const visibleColCount = useMemo(() => {
@@ -718,8 +761,11 @@ function DashboardContent() {
   const totalCostBasis = assets.reduce((acc, curr) => acc + (Number(curr.bookCost) || 0), 0);
   const totalReturn = totalCostBasis > 0 ? ((totalMarketValue - totalCostBasis) / totalCostBasis) * 100 : 0;
 
+  // 5A Source of Truth: weights derive from marketValue → must use the same
+  // live-merged source as the divisor so weights sum to 1 and the KPI tracks
+  // the table's live values.
   const portfolioDividendYield = totalMarketValue > 0
-    ? assets.reduce((acc, curr) => {
+    ? liveMergedAssets.reduce((acc, curr) => {
       const yieldPercent = Number(curr.yield) || 0;
       const weight = (Number(curr.marketValue) || 0) / totalMarketValue;
       return acc + (weight * yieldPercent);
@@ -1528,7 +1574,7 @@ function DashboardContent() {
       </div>
       </HoldingsTab>
       <BreakdownTab
-        assets={assets}
+        assets={liveMergedAssets}
         isLoading={isLoading}
         onSwitchToHoldings={switchToHoldings}
       />

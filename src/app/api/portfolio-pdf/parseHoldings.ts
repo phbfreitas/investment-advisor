@@ -32,6 +32,22 @@ const CURRENCY_CONFIGS: CurrencyConfig[] = [
     },
 ];
 
+// 5A: rows starting with these tokens are footer/totals/section markers, never holdings.
+// Real ticker symbols are never these strings, so a hard reject list is safe.
+const NON_TICKER_LEAD_TOKENS = new Set([
+    "TOTAL", "SUBTOTAL", "BALANCE", "GRAND", "SUMMARY", "ENDING",
+    "OPENING", "CLOSING", "PAGE", "EOD", "EOY", "FX", "USD", "CAD",
+    "EUR", "GBP", "DR", "CR", "NET", "GROSS", "MTD", "YTD", "QTD",
+]);
+
+function isFooterRow(line: string): boolean {
+    // Match the leading word (first run of uppercase letters/spaces).
+    const leadMatch = line.match(/^([A-Z][A-Z\s.&]*?)(?=\s|$)/);
+    if (!leadMatch) return false;
+    const leadWord = leadMatch[1].trim().split(/\s+/)[0]; // first whitespace-delimited token
+    return NON_TICKER_LEAD_TOKENS.has(leadWord);
+}
+
 function detectDocumentDefaultCurrency(text: string): CurrencyCode {
     for (const cfg of CURRENCY_CONFIGS) {
         if (cfg.documentRegex.test(text)) return cfg.code;
@@ -106,7 +122,10 @@ export function parseHoldings(text: string): ParsedHolding[] {
     let sectionCurrency: CurrencyCode | null = null;
 
     // Split into lines for row-by-row parsing
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = text
+        .split('\n')
+        .map(l => l.replace(/^[\s﻿​ ]+/, '').trim())
+        .filter(Boolean);
 
     // Standard Pattern: TICKER.TO or TICKER followed by numbers (qty, cost, value)
     // Safe generic holding pattern (Ticker Qty Price Value)
@@ -123,6 +142,11 @@ export function parseHoldings(text: string): ParsedHolding[] {
         if (headerMatch !== null) {
             sectionCurrency = headerMatch;
             // Fall through — header line might also contain a holding pattern.
+        }
+
+        // 5A: hard-reject footer/totals rows before regex matching.
+        if (isFooterRow(line)) {
+            continue;
         }
 
         // 1. Try generic safe pattern

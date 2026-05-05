@@ -127,6 +127,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Asset not found" }, { status: 404 });
         }
 
+        // 5A: optimistic concurrency. If the client sends expectedUpdatedAt and it
+        // doesn't match the asset's current updatedAt, reject with 409 — a parallel
+        // session has modified the asset and the client's payload is stale. Omitting
+        // expectedUpdatedAt skips the check (legacy / non-edit-mode callers).
+        const expectedUpdatedAt: string | undefined = typeof data.expectedUpdatedAt === "string"
+            ? data.expectedUpdatedAt
+            : undefined;
+        if (expectedUpdatedAt && existingAsset.updatedAt !== expectedUpdatedAt) {
+            return NextResponse.json(
+                { error: "Asset was modified by another session. Refresh and try again." },
+                { status: 409 }
+            );
+        }
+
         const incomingSecurityType = data.securityType !== undefined
             ? normalizeSecurityType(data.securityType)
             : normalizeSecurityType(existingAsset.securityType);
