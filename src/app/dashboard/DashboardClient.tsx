@@ -1325,7 +1325,7 @@ function DashboardContent() {
                             )}
                           </td>
                           )}
-                          {/* 15. Book Cost */}
+                          {/* 15. Book Cost — Task 7: pass formatCurrencyAmount as displayRenderer to InlineEditableCell (don't fall back to plain formatTotal — must stay native-currency). */}
                           {isVisible("bookCost") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing
@@ -1333,7 +1333,7 @@ function DashboardContent() {
                               : <span>{formatCurrencyAmount(asset.bookCost, asset.currency)}</span>}
                           </td>
                           )}
-                          {/* 16. Market Value */}
+                          {/* 16. Market Value — Task 7: pass formatCurrencyAmount as displayRenderer to InlineEditableCell (don't fall back to plain formatTotal — must stay native-currency). */}
                           {isVisible("marketValue") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">
                             {isEditing
