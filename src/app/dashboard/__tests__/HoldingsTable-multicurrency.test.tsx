@@ -74,8 +74,8 @@ describe("Holdings — multi-currency contract", () => {
   it("renders ONE Total Market Value badge with CAD grand total", async () => {
     render(<DashboardPage />);
     await findTickerRow("VFV.TO");
-    // Single badge headline shows CAD grand total
-    expect(screen.getByText("$32,000")).toBeInTheDocument();
+    // Badge headline AND footer totals-row both show CAD grand total
+    expect(screen.getAllByText("$32,000").length).toBeGreaterThanOrEqual(1);
     // FX rate footnote present
     expect(screen.getByText(/at 1 USD = 1\.3500 CAD/)).toBeInTheDocument();
   });

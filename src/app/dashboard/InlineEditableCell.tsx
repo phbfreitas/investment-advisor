@@ -89,7 +89,7 @@ export function InlineEditableCell({
     if (e.key === "Escape") cancel();
     if (e.key === "Enter" && kind !== "select") {
       e.preventDefault();
-      void commit();
+      if (!saving) void commit();
     }
   };
 

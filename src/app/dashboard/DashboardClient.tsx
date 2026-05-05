@@ -1615,8 +1615,8 @@ function DashboardContent() {
                                       value={numPrice}
                                       ariaLabel={`Edit live price for ${asset.ticker}`}
                                       display={(v) =>
-                                        typeof v === "number" && !isNaN(v)
-                                          ? <span>${formatPrice(v)}</span>
+                                        typeof v === "number" && !Number.isNaN(v)
+                                          ? <span>{formatCurrencyAmount(v, asset.currency)}</span>
                                           : <span>N/A</span>
                                       }
                                       onSave={async (next) => {
@@ -1679,7 +1679,7 @@ function DashboardContent() {
                                 kind="number"
                                 value={asset.profitLoss}
                                 ariaLabel={`Edit profit/loss for ${asset.ticker}`}
-                                display={(v) => typeof v === "number" ? <span>{formatTotal(v)}</span> : <NotFoundCell />}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
                                 onSave={async (next) => {
                                   await saveAssetField(asset.id, { profitLoss: typeof next === "number" ? next : 0 }, asset.updatedAt);
                                 }}
@@ -1929,7 +1929,7 @@ function DashboardContent() {
                       {isVisible("quantity") && <td />}
                       {isVisible("liveTickerPrice") && <td className="px-3 py-4 text-right">TOTAL:</td>}
                       {isVisible("bookCost") && <td />}
-                      {isVisible("marketValue") && <td className="px-3 py-4">${formatTotal(totalMarketValue)}</td>}
+                      {isVisible("marketValue") && <td className="px-3 py-4">${formatTotal(portfolioTotals?.grandTotalCad ?? totalMarketValue)}</td>}
                       {isVisible("profitLoss") && <td />}
                       {isVisible("yield") && <td />}
                       {isVisible("oneYearReturn") && <td />}
