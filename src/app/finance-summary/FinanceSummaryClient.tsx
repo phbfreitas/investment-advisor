@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Wallet, Save, Loader2, AlertCircle, Plus, Trash2, LineChart, Home, Landmark } from "lucide-react";
 import type { BudgetData, RentalData, WealthData } from "@/types";
+import { formatTotal } from "@/lib/decimalFormat";
 
 type CashFlowRow = {
     id: string;
@@ -438,7 +439,7 @@ export default function FinanceSummaryClient() {
                             <div className="glass-panel p-6 rounded-2xl space-y-4">
                                 <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
                                     <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Income</h3>
-                                    <span className="text-teal-600 dark:text-teal-500 font-semibold text-lg">${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="text-teal-600 dark:text-teal-500 font-semibold text-lg">${formatTotal(totalIncome)}</span>
                                 </div>
                                 <div className="space-y-4">
                                     <InputField label="Paycheck" name="budgetPaycheck" value={budgetData.budgetPaycheck} onChange={handleBudgetChange} />
@@ -452,7 +453,7 @@ export default function FinanceSummaryClient() {
                             <div className="glass-panel p-6 rounded-2xl space-y-4">
                                 <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
                                     <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Expenses</h3>
-                                    <span className="text-red-500 dark:text-red-400 font-semibold text-lg">${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="text-red-500 dark:text-red-400 font-semibold text-lg">${formatTotal(totalExpenses)}</span>
                                 </div>
                                 <div className="space-y-4">
                                     <InputField label="Fixed: Home" name="budgetFixedHome" value={budgetData.budgetFixedHome} onChange={handleBudgetChange} />
@@ -467,7 +468,7 @@ export default function FinanceSummaryClient() {
                             <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
                                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Savings</h3>
                                 <div className="text-4xl font-bold text-teal-600 dark:text-teal-400 mt-4 tracking-tight">
-                                    ${totalBudgetSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ${formatTotal(totalBudgetSavings)}
                                 </div>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                                     Total Income - Total Expenses
@@ -673,7 +674,7 @@ export default function FinanceSummaryClient() {
                             <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
                                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Net Profit / Loss</h3>
                                 <div className={`text-4xl font-bold mt-4 tracking-tight ${rentalNetProfit >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-500 dark:text-red-400'}`}>
-                                    ${rentalNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ${formatTotal(rentalNetProfit)}
                                 </div>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                                     Rental Income - Rental Expenses
@@ -727,7 +728,7 @@ export default function FinanceSummaryClient() {
                                 <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
                                     <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Assets</h3>
                                     <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">
-                                        Total: ${totalAssets.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        Total: ${formatTotal(totalAssets)}
                                     </span>
                                 </div>
                                 <div className="space-y-4">
@@ -744,7 +745,7 @@ export default function FinanceSummaryClient() {
                                             <input
                                                 type="text"
                                                 disabled
-                                                value={totalInvestmentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                value={formatTotal(totalInvestmentValue)}
                                                 className="w-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg pl-7 pr-3 py-2 text-sm text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
                                             />
                                         </div>
@@ -762,7 +763,7 @@ export default function FinanceSummaryClient() {
                                 <div className="flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 pb-2">
                                     <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200">Liabilities</h3>
                                     <span className="text-sm font-semibold text-red-500 dark:text-red-400">
-                                        Total: ${totalLiabilities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        Total: ${formatTotal(totalLiabilities)}
                                     </span>
                                 </div>
                                 <div className="space-y-4">
@@ -779,7 +780,7 @@ export default function FinanceSummaryClient() {
                             <div className="glass-panel p-6 rounded-2xl space-y-4 flex flex-col items-center justify-center bg-teal-50/50 dark:bg-teal-900/10">
                                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-200 border-b border-neutral-200 dark:border-neutral-800 pb-2 w-full text-center">Net Worth</h3>
                                 <div className={`text-4xl font-bold mt-4 tracking-tight ${netWorth >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-red-500 dark:text-red-400'}`}>
-                                    ${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ${formatTotal(netWorth)}
                                 </div>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                                     Total Assets - Total Liabilities

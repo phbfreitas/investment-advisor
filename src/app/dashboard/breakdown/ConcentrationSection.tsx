@@ -3,9 +3,8 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, LabelList } from "recharts";
 import type { TopHoldings } from "./lib/types";
 import { paletteByIndex } from "./lib/colors";
-
-const fmtCurrency = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+import { formatRowPercent, formatCurrencyAmount } from "@/lib/decimalFormat";
+const fmtCurrency = (n: number) => formatCurrencyAmount(n, "CAD");
 
 interface ConcentrationSectionProps {
   topHoldings: TopHoldings;
@@ -43,7 +42,7 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
                 formatter={(value, _name, props) => {
                   const numVal = typeof value === "number" ? value : Number(value ?? 0);
                   const p = (props as { payload?: { percent?: number } }).payload?.percent ?? 0;
-                  return [`${fmtCurrency(numVal)} · ${p.toFixed(1)}%`, "Value"];
+                  return [`${fmtCurrency(numVal)} · ${formatRowPercent(p / 100)}`, "Value"];
                 }}
                 contentStyle={{ borderRadius: 6, fontSize: 12 }}
               />
@@ -66,7 +65,7 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
                     const cy = (y ?? 0) + (height ?? 0) / 2 + 4;
                     return (
                       <text x={cx} y={cy} fontSize={11} fill="currentColor">
-                        {`${fmtCurrency(value)} · ${pct.toFixed(1)}%`}
+                        {`${fmtCurrency(value)} · ${formatRowPercent(pct / 100)}`}
                       </text>
                     );
                   }}
@@ -88,7 +87,7 @@ export function ConcentrationSection({ topHoldings }: ConcentrationSectionProps)
                 <tr key={r.ticker}>
                   <td>{r.ticker}</td>
                   <td>{r.marketValue}</td>
-                  <td>{r.percent.toFixed(2)}%</td>
+                  <td>{formatRowPercent(r.percent / 100)}</td>
                 </tr>
               ))}
             </tbody>

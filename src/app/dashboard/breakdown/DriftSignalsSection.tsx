@@ -4,9 +4,8 @@ import { useState } from "react";
 import { AlertTriangle, AlertCircle, Info, ChevronDown } from "lucide-react";
 import type { DriftSignal, DriftSeverity } from "./lib/types";
 import { THRESHOLDS } from "./lib/thresholds";
-
-const fmtCurrency = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+import { formatRowPercent, formatCurrencyAmount } from "@/lib/decimalFormat";
+const fmtCurrency = (n: number) => formatCurrencyAmount(n, "CAD");
 
 const SEVERITY_STYLES: Record<DriftSeverity, { icon: typeof AlertCircle; cls: string; iconCls: string }> = {
   red:     { icon: AlertCircle,    cls: "border-l-red-500 bg-red-500/5",         iconCls: "text-red-500" },
@@ -77,7 +76,7 @@ export function DriftSignalsSection({ signals }: DriftSignalsSectionProps) {
                   {s.contributors.map(c => (
                     <li key={c.label} className="flex justify-between text-xs text-neutral-600 dark:text-neutral-400">
                       <span>{c.label}</span>
-                      <span>{fmtCurrency(c.value)} · {c.percent.toFixed(1)}%</span>
+                      <span>{fmtCurrency(c.value)} · {formatRowPercent(c.percent / 100)}</span>
                     </li>
                   ))}
                 </ul>

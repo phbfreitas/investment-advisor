@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense, Fragment, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
+import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
 import type { Asset, LockableField, MarketData } from "@/types";
 import {
   STRATEGY_TYPES,
@@ -17,12 +17,21 @@ import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { NotFoundCell } from "@/components/NotFoundCell";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY, ColumnManagerPopover } from "./HoldingsTab";
+import { InlineEditableCell } from "./InlineEditableCell";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
 import { liveMergeAssets } from "@/app/dashboard/lib/liveMergeAssets";
 import { detectAnomaly } from "./lib/priceAnomaly";
 import type { PortfolioTotals } from "@/lib/portfolio-analytics";
+import {
+  formatPrice,
+  formatQuantity,
+  formatTotal,
+  formatRowPercent,
+  formatTopPercent,
+  formatCurrencyAmount,
+} from "@/lib/decimalFormat";
 
 const LOCKABLE_FIELD_SET = new Set<string>(LOCKABLE_FIELDS);
 const isLockableField = (field: keyof Asset): field is LockableField =>
@@ -139,37 +148,44 @@ function DashboardContent() {
     try {
       const asset = assets.find(a => a.id === assetId);
       if (!asset) return;
-      // Send only the exchange fields — the server merges on top of its own DB copy,
-      // eliminating the stale-state overwrite risk that a full-document PUT carries.
-      const res = await fetch(`/api/assets/${assetId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+
+      // First save: exchange + userOverrides via the central OCC-aware helper.
+      // saveAssetField runs fetchAssets internally on success, but its result
+      // doesn't expose the refreshed `updatedAt` synchronously — we re-fetch
+      // /api/profile inline (same pattern as the ticker cascade) to get the
+      // fresh OCC token before issuing the price-refresh PUT.
+      await saveAssetField(
+        assetId,
+        {
           exchangeSuffix: suffix,
           exchangeName: name,
           userOverrides: { ...asset.userOverrides, exchange: true },
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to save exchange");
+        },
+        asset.updatedAt,
+      );
 
-      // Immediately re-fetch the price using the new exchange suffix so the
-      // stored liveTickerPrice reflects the correct listing (e.g., HYLD.TO, not HYLD).
+      // Lookup with the new exchange suffix to re-price under the correct listing.
       const lookupRes = await fetch(
         `/api/ticker-lookup?symbol=${encodeURIComponent(asset.ticker)}&assetId=${encodeURIComponent(assetId)}`
       );
-      if (lookupRes.ok) {
-        const lookupData = await lookupRes.json();
-        if (!lookupData.currencyMismatch && lookupData.currentPrice) {
-          await fetch(`/api/assets/${assetId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ liveTickerPrice: lookupData.currentPrice }),
-          });
-        }
-      }
+      if (!lookupRes.ok) return;
+      const lookupData = await lookupRes.json();
+      if (lookupData.currencyMismatch || !lookupData.currentPrice) return;
 
-      fetchAssets();
+      // Refresh to capture the post-first-save `updatedAt` for the second PUT.
+      const fresh = await fetch("/api/profile").then(r => r.json());
+      const refreshed = (fresh.assets as Asset[] | undefined)?.find(a => a.id === assetId);
+      if (!refreshed) return;
+
+      await saveAssetField(
+        assetId,
+        { liveTickerPrice: lookupData.currentPrice },
+        refreshed.updatedAt,
+      );
     } catch (err) {
+      // saveAssetField throws "conflict" on 409 (banner + refetch already shown
+      // by the helper) and "Failed to save asset" on other failures.
+      if (err instanceof Error && err.message === "conflict") return;
       const msg = err instanceof Error ? err.message : "Failed to save exchange";
       setMessage({ text: msg, type: "error" });
     }
@@ -392,11 +408,6 @@ function DashboardContent() {
     }
   };
 
-  const startEdit = (asset: Asset) => {
-    setEditingId(asset.id);
-    setEditForm({ ...asset });
-  };
-
   const handleEditChange = (field: keyof Asset, value: string | number) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
@@ -441,6 +452,30 @@ function DashboardContent() {
       const message = err instanceof Error ? err.message : "Failed to unlock field";
       setMessage({ text: message, type: "error" });
     }
+  };
+
+  // 5B Task 7 — partial-PUT helper used by every InlineEditableCell save.
+  // Sends ONLY the changed field(s) plus expectedUpdatedAt so concurrent
+  // edits across cells don't trample each other (the route merges over the
+  // existing DB row). On 409, refresh the table and surface the banner.
+  const saveAssetField = async (
+    assetId: string,
+    patch: Partial<Asset>,
+    expectedUpdatedAt: string | undefined,
+  ) => {
+    const body = expectedUpdatedAt ? { ...patch, expectedUpdatedAt } : patch;
+    const res = await fetch(`/api/assets/${assetId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 409) {
+      setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
+      await fetchAssets();
+      throw new Error("conflict");
+    }
+    if (!res.ok) throw new Error("Failed to save asset");
+    await fetchAssets();
   };
 
   const saveEdit = async () => {
@@ -880,59 +915,48 @@ function DashboardContent() {
           )}
 
           {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-panel p-6 flex flex-col justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {/* Total Market Value — single badge, CAD-aggregating */}
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Market Value</span>
-              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center">
-                ${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center break-words">
+                {portfolioTotals?.fxUnavailable
+                  ? <span className="text-base font-medium">FX rate unavailable</span>
+                  : <>${formatTotal(portfolioTotals?.grandTotalCad ?? totalMarketValue)}</>}
                 {isMarketLoading && <Loader2 className="h-4 w-4 animate-spin ml-3 text-teal-600" />}
               </h3>
+              {portfolioTotals && (
+                <div className="mt-3 flex flex-col gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="flex justify-between gap-4">
+                    <span>CAD subtotal</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">${formatTotal(portfolioTotals.cadTotal)} CAD</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>USD subtotal</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">US${formatTotal(portfolioTotals.usdTotal)}</span>
+                  </div>
+                  {!portfolioTotals.fxUnavailable && portfolioTotals.usdToCadRate && (
+                    <span className="text-neutral-400 dark:text-neutral-500">at 1 USD = {portfolioTotals.usdToCadRate.toFixed(4)} CAD · as of today</span>
+                  )}
+                  {portfolioTotals.fxUnavailable && (
+                    <span className="text-neutral-400 dark:text-neutral-500">Showing per-currency subtotals only</span>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="glass-panel p-6 flex flex-col justify-center">
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Total Return</span>
-              <h3 className={`text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                {totalReturn > 0 ? "+" : ""}{totalReturn.toFixed(2)}%
+              <h3 className={`text-2xl md:text-3xl font-semibold ${totalReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                {formatTopPercent(totalReturn / 100)}
               </h3>
             </div>
-            <div className="glass-panel p-6 flex flex-col justify-center">
+            <div className="glass-panel p-4 md:p-6 flex flex-col justify-center min-w-0">
               <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2">Avg Dividend Yield</span>
-              <h3 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-                {(portfolioDividendYield * 100).toFixed(2)}%
+              <h3 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {formatTopPercent(portfolioDividendYield, { withSign: false })}
               </h3>
             </div>
           </div>
-
-          {/* FX Portfolio Totals */}
-          {portfolioTotals && (
-            <div className="glass-panel p-6">
-              <div className="flex flex-col gap-1 text-sm">
-                <div className="flex justify-between gap-8">
-                  <span className="text-neutral-500 dark:text-neutral-400">CAD Portfolio</span>
-                  <span className="font-medium">${portfolioTotals.cadTotal.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-neutral-500 dark:text-neutral-400">USD Portfolio</span>
-                  <span className="font-medium">${portfolioTotals.usdTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })} USD</span>
-                </div>
-                <div className="border-t border-neutral-200 dark:border-neutral-700 pt-1 flex justify-between gap-8">
-                  <span className="text-neutral-700 dark:text-neutral-300 font-medium">Grand Total</span>
-                  <span className="font-semibold">
-                    {portfolioTotals.fxUnavailable
-                      ? "FX rate unavailable"
-                      : `$${portfolioTotals.grandTotalCad.toLocaleString("en-CA", { maximumFractionDigits: 0 })} CAD`}
-                  </span>
-                </div>
-                {!portfolioTotals.fxUnavailable && portfolioTotals.usdToCadRate && (
-                  <p className="text-xs text-neutral-400">
-                    at 1 USD = {portfolioTotals.usdToCadRate.toFixed(4)} CAD · as of today
-                  </p>
-                )}
-                {portfolioTotals.fxUnavailable && (
-                  <p className="text-xs text-neutral-400">Showing per-currency subtotals only</p>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Investment Table */}
           <div className="glass-panel">
@@ -971,9 +995,9 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="overflow-x-auto max-h-[75vh]">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-0 z-20">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50 text-neutral-500 dark:text-neutral-400 font-medium transition-colors duration-300 sticky top-28 md:top-16 z-20">
                   <tr>
                     {renderSortableHeader("Account Name", "account", `${stickyCol1} min-w-[120px]`)}
                     {renderSortableHeader("Ticker", "ticker", `${stickyCol2} min-w-[90px]`)}
@@ -985,11 +1009,7 @@ function DashboardContent() {
                     {isVisible("sector") && renderSortableHeader("Sector", "sector")}
                     {isVisible("market") && renderSortableHeader("Market", "market")}
                     {isVisible("currency") && renderSortableHeader("Currency", "currency")}
-                    {isVisible("exchange") && (
-                      <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider whitespace-nowrap">
-                        Exchange
-                      </th>
-                    )}
+                    {isVisible("exchange") && renderSortableHeader("Exchange", "exchangeName")}
                     {isVisible("managementStyle") && renderSortableHeader("Mgt Style", "managementStyle")}
                     {isVisible("managementFee") && renderSortableHeader("Mgt Fee %", "managementFee")}
                     {isVisible("quantity") && renderSortableHeader("# Tickers", "quantity")}
@@ -1019,7 +1039,7 @@ function DashboardContent() {
                     {isVisible("sector") && renderFilterInput("sector")}
                     {isVisible("market") && renderFilterInput("market")}
                     {isVisible("currency") && renderFilterInput("currency", "w-16")}
-                    {isVisible("exchange") && <td className="px-2 py-2" />}
+                    {isVisible("exchange") && renderFilterInput("exchangeName")}
                     {isVisible("managementStyle") && renderFilterInput("managementStyle", "w-24")}
                     {isVisible("managementFee") && renderFilterInput("managementFee", "w-16")}
                     {isVisible("quantity") && renderFilterInput("quantity", "w-20")}
@@ -1056,30 +1076,9 @@ function DashboardContent() {
                     [...sortedAssets, ...(editingId === "NEW" ? [editForm as Asset] : [])].map((asset) => {
                       const isEditing = editingId === asset.id;
 
-                      // Helper that renders a value or NotFoundCell when missing.
-                      // For numbers, treat null as missing; 0 is valid.
-                      // For strings, treat "", null, undefined, or "Not Found" as missing.
-                      const renderText = (value: string | null | undefined) => {
-                        if (value === null || value === undefined || value === "" || value === "Not Found") {
-                          return <NotFoundCell />;
-                        }
-                        return <span>{value}</span>;
-                      };
-
-                      const renderNumber = (value: number | null | undefined, suffix = "", decimals = 2) => {
-                        if (value === null || value === undefined) {
-                          return <NotFoundCell />;
-                        }
-                        return <span>{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
-                      };
-
-                      const renderPercent = (value: number | null | undefined) => {
-                        if (value === null || value === undefined) {
-                          return <NotFoundCell />;
-                        }
-                        return <span>{(value * 100).toFixed(2)}%</span>;
-                      };
-
+                      // 5B Task 7: display-mode helpers were inlined into each
+                      // InlineEditableCell's `display` prop. `renderField` is still
+                      // used by the "Add Row" (NEW) row-mode path below.
                       const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
                         const lockable = isLockableField(field);
                         const lockableField = lockable ? (field as LockableField) : null;
@@ -1151,7 +1150,7 @@ function DashboardContent() {
                           if (displayValue === null || displayValue === undefined || typeof displayValue !== 'number') {
                             content = <NotFoundCell />;
                           } else {
-                            content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{displayValue.toLocaleString()}</span>;
+                            content = <span className={bgClass ? `px-2 py-0.5 rounded ${bgClass}` : ''}>{formatTotal(displayValue)}</span>;
                           }
                         } else if (displayValue === null || displayValue === undefined || displayValue === "" || displayValue === "Not Found") {
                           content = <NotFoundCell />;
@@ -1174,14 +1173,9 @@ function DashboardContent() {
                         return content;
                       };
 
-                      // Legacy "—" indicator kept for ext-rating, ex-div date, analyst, beta where
-                      // a softer dash is preferable to the prominent yellow NotFoundCell.
-                      const naIndicator = (value: string | number | null | undefined, suffix = "") => {
-                        if (value === null || value === undefined || value === "" || value === 0) {
-                          return <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>;
-                        }
-                        return <span>{typeof value === 'number' ? value.toLocaleString() : value}{suffix}</span>;
-                      };
+                      // 5B Task 7: the legacy `naIndicator` softer-dash helper was
+                      // inlined into the per-cell `display` prop for ext-rating,
+                      // ex-div date, analyst, and beta cells.
 
                       return (
                         <Fragment key={asset.id}>
@@ -1194,7 +1188,19 @@ function DashboardContent() {
                                 <datalist id="account-suggestions">{accounts.map(a => <option key={a} value={a} />)}</datalist>
                               </>
                             ) : (
-                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.account}</span>
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.account ?? ""}
+                                ariaLabel={`Edit account for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">
+                                    {v ?? ""}
+                                  </span>
+                                )}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { account: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
                             )}
                           </td>
                           {/* 2. Ticker */}
@@ -1202,36 +1208,230 @@ function DashboardContent() {
                             {isEditing ? (
                               <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.ticker as string) || ""} onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())} onBlur={() => handleTickerLookup(editForm.ticker || "")} />
                             ) : (
-                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.ticker}</span>
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.ticker ?? ""}
+                                ariaLabel={`Edit ticker for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">
+                                    {v ?? ""}
+                                  </span>
+                                )}
+                                onSave={async (next) => {
+                                  const newTicker = String(next ?? "").toUpperCase();
+                                  if (!newTicker) return;
+                                  await saveAssetField(asset.id, { ticker: newTicker }, asset.updatedAt);
+                                  // After persisting, run the lookup to cascade classification.
+                                  // fetchAssets ran in saveAssetField above, so pull the
+                                  // freshly-persisted asset to get the new expectedUpdatedAt
+                                  // before issuing the cascade PUT.
+                                  try {
+                                    const lookupRes = await fetch(
+                                      `/api/ticker-lookup?symbol=${encodeURIComponent(newTicker)}&assetId=${encodeURIComponent(asset.id)}`
+                                    );
+                                    if (!lookupRes.ok) return;
+                                    const lookup = await lookupRes.json();
+                                    if (lookup.currencyMismatch) {
+                                      setMismatchState({
+                                        symbol: newTicker,
+                                        detectedCurrency: lookup.detectedCurrency ?? "Unknown",
+                                        storedCurrency: asset.currency ?? "Unknown",
+                                      });
+                                      // Plan: currency-mismatch is the one path that keeps using row-mode so the
+                                      // existing exchange-retry banner renders. Drop the row into edit mode with
+                                      // the new ticker pre-filled; user picks the right exchange suffix from the
+                                      // banner buttons (which call handleTickerLookup with override).
+                                      setEditingId(asset.id);
+                                      setEditForm({ ...asset, ticker: newTicker });
+                                      return;
+                                    }
+                                    // Pass the OLD ticker (asset.ticker is pre-save here because the parent state hasn't refetched yet).
+                                    // applyLookupRespectingLocks compares prev.ticker vs lookup.symbol to decide whether the ticker
+                                    // genuinely changed; if we passed newTicker as prev, the comparison would be a no-op and the
+                                    // classification cascade would not fire.
+                                    const cascade = applyLookupRespectingLocks(
+                                      { ...asset, ticker: asset.ticker },
+                                      { ...lookup, symbol: newTicker },
+                                    );
+                                    const fresh = await fetch("/api/profile").then((r) => r.json());
+                                    const refreshed = (fresh.assets as Asset[] | undefined)?.find((a) => a.id === asset.id);
+                                    if (refreshed) {
+                                      await saveAssetField(asset.id, cascade, refreshed.updatedAt);
+                                    }
+                                  } catch {
+                                    // Lookup is a best-effort cascade; the primary ticker save already succeeded.
+                                  }
+                                }}
+                              />
                             )}
                           </td>
                           {/* 3. Acct Type */}
                           {isVisible("accountType") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[90px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.accountType ?? ""}
+                                ariaLabel={`Edit account type for ${asset.ticker}`}
+                                display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { accountType: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 4. Acct # */}
                           {isVisible("accountNumber") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[80px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.accountNumber ?? ""}
+                                ariaLabel={`Edit account number for ${asset.ticker}`}
+                                display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { accountNumber: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 5. Security Type */}
                           {isVisible("securityType") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.securityType === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "securityType")}
+                                    label={LOCKABLE_FIELD_LABELS.securityType}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.securityType ?? ""}
+                                    options={securityTypes}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit security type for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { securityType: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, securityType: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 6. Strategy Type */}
                           {isVisible("strategyType") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.strategyType === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "strategyType")}
+                                    label={LOCKABLE_FIELD_LABELS.strategyType}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.strategyType ?? ""}
+                                    options={strategyTypes}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit strategy type for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { strategyType: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, strategyType: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 7. Call */}
                           {isVisible("call") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.call === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "call")}
+                                    label={LOCKABLE_FIELD_LABELS.call}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.call ?? ""}
+                                    options={calls}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit call for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { call: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, call: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 8. Sector */}
                           {isVisible("sector") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.sector === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "sector")}
+                                    label={LOCKABLE_FIELD_LABELS.sector}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.sector ?? ""}
+                                    options={sectors}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit sector for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { sector: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, sector: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 9. Market */}
                           {isVisible("market") && (
@@ -1246,14 +1446,73 @@ function DashboardContent() {
                                 : undefined
                             }
                           >
-                            {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.market === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "market")}
+                                    label={LOCKABLE_FIELD_LABELS.market}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.market ?? ""}
+                                    options={markets}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit market for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      // 3C: clear marketComputedAt so unlock self-heals on next refresh.
+                                      await saveAssetField(
+                                        asset.id,
+                                        { market: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, market: true }, marketComputedAt: null },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 10. Currency */}
                           {isVisible("currency") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.currency === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "currency")}
+                                    label={LOCKABLE_FIELD_LABELS.currency}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.currency ?? ""}
+                                    options={currencies}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit currency for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { currency: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, currency: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
-                          {/* 10b. Exchange */}
+                          {/* 10b. Exchange — kept as ExchangeCell; its lookup-after-save logic is special. */}
                           {isVisible("exchange") && (
                             <td className="px-3 py-2 whitespace-nowrap text-sm">
                               <ExchangeCell asset={asset} onSave={handleExchangeSave} />
@@ -1262,36 +1521,89 @@ function DashboardContent() {
                           {/* 11. Mgt Style — N/A if missing */}
                           {isVisible("managementStyle") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
-                              <span className="inline-flex items-center">
-                                <LockedFieldIcon
-                                  isLocked={asset.userOverrides?.managementStyle === true}
-                                  onUnlock={() => handleUnlockField(asset, "managementStyle")}
-                                  label={LOCKABLE_FIELD_LABELS.managementStyle}
-                                />
-                                <span>{asset.managementStyle || "N/A"}</span>
-                              </span>
-                            )}
+                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.managementStyle === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "managementStyle")}
+                                    label={LOCKABLE_FIELD_LABELS.managementStyle}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.managementStyle ?? ""}
+                                    options={managementStyles}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit management style for ${asset.ticker}`}
+                                    display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { managementStyle: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, managementStyle: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 12. Mgt Fee % — Companies are legitimately 0; otherwise NotFoundCell when null */}
                           {isVisible("managementFee") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementFee", false, [], "number") : (
-                              <span className="inline-flex items-center">
-                                <LockedFieldIcon
-                                  isLocked={asset.userOverrides?.managementFee === true}
-                                  onUnlock={() => handleUnlockField(asset, "managementFee")}
-                                  label={LOCKABLE_FIELD_LABELS.managementFee}
-                                />
-                                {asset.securityType === "Company" ? <span>0.00%</span> : renderNumber(asset.managementFee, "%", 2)}
-                              </span>
-                            )}
+                            {isEditing ? renderField("managementFee", false, [], "number") : (() => {
+                              const isLocked = asset.userOverrides?.managementFee === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "managementFee")}
+                                    label={LOCKABLE_FIELD_LABELS.managementFee}
+                                  />
+                                  {asset.securityType === "Company" ? (
+                                    <span>0.00%</span>
+                                  ) : (
+                                    <InlineEditableCell
+                                      kind="number"
+                                      value={asset.managementFee}
+                                      disabled={isLocked}
+                                      ariaLabel={`Edit management fee for ${asset.ticker}`}
+                                      display={(v) =>
+                                        typeof v === "number"
+                                          ? <span>{v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                                          : <NotFoundCell />
+                                      }
+                                      onSave={async (next) => {
+                                        await saveAssetField(
+                                          asset.id,
+                                          { managementFee: (typeof next === "number" ? next : null), userOverrides: { ...asset.userOverrides, managementFee: true } },
+                                          asset.updatedAt,
+                                        );
+                                      }}
+                                    />
+                                  )}
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 13. Quantity */}
                           {isVisible("quantity") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("quantity", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.quantity}
+                                ariaLabel={`Edit quantity for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatQuantity(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { quantity: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 14. Live $ — backslash fix */}
                           {isVisible("liveTickerPrice") && (
@@ -1302,13 +1614,22 @@ function DashboardContent() {
                               (() => {
                                 const price = marketData[asset.id]?.currentPrice ?? asset.liveTickerPrice;
                                 const numPrice = Number(price);
-                                const formatted = isNaN(numPrice)
-                                  ? "N/A"
-                                  : `$${numPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                 const anomaly = anomalies[asset.id];
                                 return (
                                   <span className="inline-flex items-center gap-1">
-                                    <span>{formatted}</span>
+                                    <InlineEditableCell
+                                      kind="number"
+                                      value={numPrice}
+                                      ariaLabel={`Edit live price for ${asset.ticker}`}
+                                      display={(v) =>
+                                        typeof v === "number" && !Number.isNaN(v)
+                                          ? <span>{formatCurrencyAmount(v, asset.currency)}</span>
+                                          : <span>N/A</span>
+                                      }
+                                      onSave={async (next) => {
+                                        await saveAssetField(asset.id, { liveTickerPrice: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                      }}
+                                    />
                                     {anomaly && (
                                       <span
                                         title={`Changed from $${anomaly.prior.toFixed(2)} (${anomaly.deltaPct >= 0 ? "+" : ""}${anomaly.deltaPct.toFixed(1)}%)`}
@@ -1325,67 +1646,209 @@ function DashboardContent() {
                             )}
                           </td>
                           )}
-                          {/* 15. Book Cost */}
+                          {/* 15. Book Cost — native-currency display via formatCurrencyAmount. */}
                           {isVisible("bookCost") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("bookCost", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("bookCost", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.bookCost}
+                                ariaLabel={`Edit book cost for ${asset.ticker}`}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { bookCost: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
-                          {/* 16. Market Value */}
+                          {/* 16. Market Value — native-currency display via formatCurrencyAmount. */}
                           {isVisible("marketValue") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">{renderField("marketValue", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">
+                            {isEditing ? renderField("marketValue", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.marketValue}
+                                ariaLabel={`Edit market value for ${asset.ticker}`}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { marketValue: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 17. Profit/Loss */}
                           {isVisible("profitLoss") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("profitLoss", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.profitLoss}
+                                ariaLabel={`Edit profit/loss for ${asset.ticker}`}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { profitLoss: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 18. Yield % */}
                           {isVisible("yield") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("yield", false, [], "number") : renderPercent(asset.yield)}
+                            {isEditing ? renderField("yield", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.yield}
+                                ariaLabel={`Edit yield for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { yield: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 19. 1YR Return % */}
                           {isVisible("oneYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("oneYearReturn", false, [], "number") : renderPercent(asset.oneYearReturn)}
+                            {isEditing ? renderField("oneYearReturn", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.oneYearReturn}
+                                ariaLabel={`Edit one year return for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { oneYearReturn: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 20. 3YR Return % */}
                           {isVisible("threeYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : renderPercent(asset.threeYearReturn ?? asset.fiveYearReturn ?? null)}
+                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.threeYearReturn ?? asset.fiveYearReturn ?? null}
+                                ariaLabel={`Edit three year return for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { threeYearReturn: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 21. Risk */}
                           {isVisible("risk") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.risk ?? ""}
+                                ariaLabel={`Edit risk for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                )}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { risk: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 22. Expected Div */}
                           {isVisible("expectedAnnualDividends") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("expectedAnnualDividends", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.expectedAnnualDividends}
+                                ariaLabel={`Edit expected annual dividends for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatTotal(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { expectedAnnualDividends: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 23. Ext. Rating */}
                           {isVisible("externalRating") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("externalRating", false, [], "text") : naIndicator(asset.externalRating)}
+                            {isEditing ? renderField("externalRating", false, [], "text") : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.externalRating ?? ""}
+                                ariaLabel={`Edit external rating for ${asset.ticker}`}
+                                display={(v) => v && v !== "" && v !== "Not Found"
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { externalRating: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 24. Ex-Div Date */}
                           {isVisible("exDividendDate") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : naIndicator(asset.exDividendDate)}
+                            {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.exDividendDate ?? ""}
+                                ariaLabel={`Edit ex-dividend date for ${asset.ticker}`}
+                                display={(v) => v && v !== ""
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { exDividendDate: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 25. Analyst */}
                           {isVisible("analystConsensus") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : naIndicator(asset.analystConsensus)}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.analystConsensus ?? ""}
+                                ariaLabel={`Edit analyst consensus for ${asset.ticker}`}
+                                display={(v) => v && v !== ""
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { analystConsensus: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 26. Beta */}
                           {isVisible("beta") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="number" className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.beta as number) ?? 0} onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)} /> : (
-                              asset.beta ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(asset.beta).toLocaleString()}</span> : naIndicator(null)
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.beta ?? null}
+                                ariaLabel={`Edit beta for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" && v !== 0
+                                  ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(v).toLocaleString()}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { beta: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
                             )}
                           </td>
                           )}
@@ -1393,14 +1856,13 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               {isEditing ? (
-                                <button onClick={saveEdit} disabled={isSaving} className="text-teal-600 hover:text-teal-700 dark:text-teal-500 p-1">
+                                <button onClick={saveEdit} disabled={isSaving} className="text-teal-600 hover:text-teal-700 dark:text-teal-500 p-1" aria-label="Save new row">
                                   {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                 </button>
                               ) : (
-                                <>
-                                  <button onClick={() => startEdit(asset)} className="text-blue-500 hover:text-blue-700 p-1"><Edit2 className="h-4 w-4" /></button>
-                                  <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1"><Trash2 className="h-4 w-4" /></button>
-                                </>
+                                /* 5B Task 7: pencil/edit removed — every cell enters inline edit on tap. Currency-mismatch
+                                   row-mode fallback is reached via the mismatchState banner in the row below. */
+                                <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1" aria-label={`Delete ${asset.ticker}`}><Trash2 className="h-4 w-4" /></button>
                               )}
                             </div>
                           </td>
@@ -1448,9 +1910,9 @@ function DashboardContent() {
                     return (
                       <tr key={`ghost-${ghost.assetSK}`} className="audit-highlight-delete">
                         <td className="px-3 py-2 text-red-400 line-through opacity-70" colSpan={4}>{ghost.ticker}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">{Number(s.quantity || 0).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.marketValue || 0).toLocaleString()}</td>
-                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${Number(s.bookCost || 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">{formatQuantity(Number(s.quantity || 0))}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${formatTotal(Number(s.marketValue || 0))}</td>
+                        <td className="px-3 py-2 text-red-400 line-through opacity-70 text-right">${formatTotal(Number(s.bookCost || 0))}</td>
                         <td className="px-3 py-2 text-red-400 opacity-70 text-center" colSpan={19}>removed from portfolio</td>
                       </tr>
                     );
@@ -1474,13 +1936,13 @@ function DashboardContent() {
                       {isVisible("quantity") && <td />}
                       {isVisible("liveTickerPrice") && <td className="px-3 py-4 text-right">TOTAL:</td>}
                       {isVisible("bookCost") && <td />}
-                      {isVisible("marketValue") && <td className="px-3 py-4">${totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("marketValue") && <td className="px-3 py-4">${formatTotal(portfolioTotals?.grandTotalCad ?? totalMarketValue)}</td>}
                       {isVisible("profitLoss") && <td />}
                       {isVisible("yield") && <td />}
                       {isVisible("oneYearReturn") && <td />}
                       {isVisible("threeYearReturn") && <td />}
                       {isVisible("risk") && <td />}
-                      {isVisible("expectedAnnualDividends") && <td className="px-3 py-4">${totalExpectedDividends.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>}
+                      {isVisible("expectedAnnualDividends") && <td className="px-3 py-4">${formatTotal(totalExpectedDividends)}</td>}
                       {isVisible("externalRating") && <td />}
                       {isVisible("exDividendDate") && <td />}
                       {isVisible("analystConsensus") && <td />}
@@ -1529,19 +1991,19 @@ function DashboardContent() {
                       Expected Dividends ({dividendPeriod === 1 ? "1 Month" : `${dividendPeriod} Months`})
                     </span>
                     <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                      ${(totalExpectedDividends / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends / 12 * dividendPeriod)}
                     </span>
                   </div>
                   <div className="text-center">
                     <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Monthly Average</span>
                     <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
-                      ${(totalExpectedDividends / 12).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends / 12)}
                     </span>
                   </div>
                   <div className="text-center">
                     <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400 block mb-1">Annual Total</span>
                     <span className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                      ${totalExpectedDividends.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${formatTotal(totalExpectedDividends)}
                     </span>
                   </div>
                 </div>
@@ -1559,7 +2021,7 @@ function DashboardContent() {
                       <div key={type} className="bg-neutral-50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50 rounded-lg p-3">
                         <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-1">{type}</span>
                         <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                          ${(annual / 12 * dividendPeriod).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          ${formatTotal(annual / 12 * dividendPeriod)}
                         </span>
                         <span className="text-xs text-neutral-400 ml-1">/ {dividendPeriod}mo</span>
                       </div>
