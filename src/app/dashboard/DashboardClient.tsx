@@ -1233,6 +1233,12 @@ function DashboardContent() {
                                         detectedCurrency: lookup.detectedCurrency ?? "Unknown",
                                         storedCurrency: asset.currency ?? "Unknown",
                                       });
+                                      // Plan: currency-mismatch is the one path that keeps using row-mode so the
+                                      // existing exchange-retry banner renders. Drop the row into edit mode with
+                                      // the new ticker pre-filled; user picks the right exchange suffix from the
+                                      // banner buttons (which call handleTickerLookup with override).
+                                      setEditingId(asset.id);
+                                      setEditForm({ ...asset, ticker: newTicker });
                                       return;
                                     }
                                     const cascade = applyLookupRespectingLocks(
