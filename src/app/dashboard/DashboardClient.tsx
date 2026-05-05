@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense, Fragment, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, Edit2, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
+import { Upload, Download, Plus, RefreshCw, BarChart3, Loader2, AlertCircle, Trash2, Save, ArrowUpDown, ArrowUp, ArrowDown, FilterX, RotateCcw, Lock } from "lucide-react";
 import type { Asset, LockableField, MarketData } from "@/types";
 import {
   STRATEGY_TYPES,
@@ -17,6 +17,7 @@ import { AuditToast, type AuditToastData } from "@/components/AuditToast";
 import { NotFoundCell } from "@/components/NotFoundCell";
 import { TimeMachineDrawer } from "@/components/TimeMachine";
 import { HoldingsTab, ExchangeCell, DEFAULT_COLUMN_VISIBILITY, ColumnManagerPopover } from "./HoldingsTab";
+import { InlineEditableCell } from "./InlineEditableCell";
 import { PortfolioTabs } from "./PortfolioTabs";
 import { BreakdownTab } from "./breakdown/BreakdownTab";
 import { applyLookupRespectingLocks, LOCKABLE_FIELDS } from "@/app/dashboard/lib/applyLookupRespectingLocks";
@@ -400,11 +401,6 @@ function DashboardContent() {
     }
   };
 
-  const startEdit = (asset: Asset) => {
-    setEditingId(asset.id);
-    setEditForm({ ...asset });
-  };
-
   const handleEditChange = (field: keyof Asset, value: string | number) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
@@ -450,6 +446,32 @@ function DashboardContent() {
       setMessage({ text: message, type: "error" });
     }
   };
+
+  // 5B Task 7 — partial-PUT helper used by every InlineEditableCell save.
+  // Sends ONLY the changed field(s) plus expectedUpdatedAt so concurrent
+  // edits across cells don't trample each other (the route merges over the
+  // existing DB row). On 409, refresh the table and surface the banner.
+  const saveAssetField = useCallback(
+    async (assetId: string, patch: Partial<Asset>, expectedUpdatedAt: string | undefined) => {
+      const body = expectedUpdatedAt ? { ...patch, expectedUpdatedAt } : patch;
+      const res = await fetch(`/api/assets/${assetId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 409) {
+        setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
+        await fetchAssets();
+        throw new Error("conflict");
+      }
+      if (!res.ok) throw new Error("Failed to save asset");
+      await fetchAssets();
+    },
+    // fetchAssets and setMessage close over stable refs; matches the existing
+    // pattern used by other handlers in this file (no useCallback dep churn).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const saveEdit = async () => {
     setIsSaving(true);
@@ -1049,33 +1071,9 @@ function DashboardContent() {
                     [...sortedAssets, ...(editingId === "NEW" ? [editForm as Asset] : [])].map((asset) => {
                       const isEditing = editingId === asset.id;
 
-                      // Helper that renders a value or NotFoundCell when missing.
-                      // For numbers, treat null as missing; 0 is valid.
-                      // For strings, treat "", null, undefined, or "Not Found" as missing.
-                      const renderText = (value: string | null | undefined) => {
-                        if (value === null || value === undefined || value === "" || value === "Not Found") {
-                          return <NotFoundCell />;
-                        }
-                        return <span>{value}</span>;
-                      };
-
-                      const renderNumber = (value: number | null | undefined, suffix = "", decimals?: number) => {
-                        if (value === null || value === undefined) {
-                          return <NotFoundCell />;
-                        }
-                        if (decimals !== undefined) {
-                          return <span>{value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</span>;
-                        }
-                        return <span>{formatTotal(value)}{suffix}</span>;
-                      };
-
-                      const renderPercent = (value: number | null | undefined) => {
-                        if (value === null || value === undefined) {
-                          return <NotFoundCell />;
-                        }
-                        return <span>{formatRowPercent(value)}</span>;
-                      };
-
+                      // 5B Task 7: display-mode helpers were inlined into each
+                      // InlineEditableCell's `display` prop. `renderField` is still
+                      // used by the "Add Row" (NEW) row-mode path below.
                       const renderField = (field: keyof Asset, isSelect: boolean, options: string[] = [], type: string = "text", bgClass = "") => {
                         const lockable = isLockableField(field);
                         const lockableField = lockable ? (field as LockableField) : null;
@@ -1170,14 +1168,9 @@ function DashboardContent() {
                         return content;
                       };
 
-                      // Legacy "—" indicator kept for ext-rating, ex-div date, analyst, beta where
-                      // a softer dash is preferable to the prominent yellow NotFoundCell.
-                      const naIndicator = (value: string | number | null | undefined, suffix = "") => {
-                        if (value === null || value === undefined || value === "" || value === 0) {
-                          return <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>;
-                        }
-                        return <span>{typeof value === 'number' ? formatTotal(value) : value}{suffix}</span>;
-                      };
+                      // 5B Task 7: the legacy `naIndicator` softer-dash helper was
+                      // inlined into the per-cell `display` prop for ext-rating,
+                      // ex-div date, analyst, and beta cells.
 
                       return (
                         <Fragment key={asset.id}>
@@ -1190,7 +1183,19 @@ function DashboardContent() {
                                 <datalist id="account-suggestions">{accounts.map(a => <option key={a} value={a} />)}</datalist>
                               </>
                             ) : (
-                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.account}</span>
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.account ?? ""}
+                                ariaLabel={`Edit account for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">
+                                    {v ?? ""}
+                                  </span>
+                                )}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { account: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
                             )}
                           </td>
                           {/* 2. Ticker */}
@@ -1198,36 +1203,221 @@ function DashboardContent() {
                             {isEditing ? (
                               <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.ticker as string) || ""} onChange={(e) => handleEditChange("ticker", e.target.value.toUpperCase())} onBlur={() => handleTickerLookup(editForm.ticker || "")} />
                             ) : (
-                              <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{asset.ticker}</span>
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.ticker ?? ""}
+                                ariaLabel={`Edit ticker for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">
+                                    {v ?? ""}
+                                  </span>
+                                )}
+                                onSave={async (next) => {
+                                  const newTicker = String(next ?? "").toUpperCase();
+                                  if (!newTicker) return;
+                                  await saveAssetField(asset.id, { ticker: newTicker }, asset.updatedAt);
+                                  // After persisting, run the lookup to cascade classification.
+                                  // applyLookupRespectingLocks needs the pre-edit ticker so its
+                                  // tickerChanged branch fires. fetchAssets ran in saveAssetField
+                                  // above, so pull the freshly-persisted asset to get the new
+                                  // expectedUpdatedAt before issuing the cascade PUT.
+                                  try {
+                                    const lookupRes = await fetch(
+                                      `/api/ticker-lookup?symbol=${encodeURIComponent(newTicker)}&assetId=${encodeURIComponent(asset.id)}`
+                                    );
+                                    if (!lookupRes.ok) return;
+                                    const lookup = await lookupRes.json();
+                                    if (lookup.currencyMismatch) {
+                                      setMismatchState({
+                                        symbol: newTicker,
+                                        detectedCurrency: lookup.detectedCurrency ?? "Unknown",
+                                        storedCurrency: asset.currency ?? "Unknown",
+                                      });
+                                      return;
+                                    }
+                                    const cascade = applyLookupRespectingLocks(
+                                      { ...asset, ticker: asset.ticker },
+                                      { ...lookup, symbol: newTicker },
+                                    );
+                                    const fresh = await fetch("/api/profile").then((r) => r.json());
+                                    const refreshed = (fresh.assets as Asset[] | undefined)?.find((a) => a.id === asset.id);
+                                    if (refreshed) {
+                                      await saveAssetField(asset.id, cascade, refreshed.updatedAt);
+                                    }
+                                  } catch {
+                                    // Lookup is a best-effort cascade; the primary ticker save already succeeded.
+                                  }
+                                }}
+                              />
                             )}
                           </td>
                           {/* 3. Acct Type */}
                           {isVisible("accountType") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[90px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : <span>{asset.accountType || "N/A"}</span>}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountType as string) ?? ""} onChange={(e) => handleEditChange("accountType", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.accountType ?? ""}
+                                ariaLabel={`Edit account type for ${asset.ticker}`}
+                                display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { accountType: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 4. Acct # */}
                           {isVisible("accountNumber") && (
                           <td className={`px-3 py-3 text-neutral-700 dark:text-neutral-300 min-w-[80px]`}>
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : <span>{asset.accountNumber || "N/A"}</span>}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.accountNumber as string) ?? ""} onChange={(e) => handleEditChange("accountNumber", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.accountNumber ?? ""}
+                                ariaLabel={`Edit account number for ${asset.ticker}`}
+                                display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { accountNumber: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 5. Security Type */}
                           {isVisible("securityType") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("securityType", true, securityTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.securityType === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "securityType")}
+                                    label={LOCKABLE_FIELD_LABELS.securityType}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.securityType ?? ""}
+                                    options={securityTypes}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit security type for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { securityType: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, securityType: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 6. Strategy Type */}
                           {isVisible("strategyType") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("strategyType", true, strategyTypes, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.strategyType === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "strategyType")}
+                                    label={LOCKABLE_FIELD_LABELS.strategyType}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.strategyType ?? ""}
+                                    options={strategyTypes}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit strategy type for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { strategyType: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, strategyType: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 7. Call */}
                           {isVisible("call") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("call", true, calls, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.call === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "call")}
+                                    label={LOCKABLE_FIELD_LABELS.call}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.call ?? ""}
+                                    options={calls}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit call for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { call: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, call: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 8. Sector */}
                           {isVisible("sector") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("sector", true, sectors, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.sector === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "sector")}
+                                    label={LOCKABLE_FIELD_LABELS.sector}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.sector ?? ""}
+                                    options={sectors}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit sector for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { sector: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, sector: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
                           {/* 9. Market */}
                           {isVisible("market") && (
@@ -1242,14 +1432,73 @@ function DashboardContent() {
                                 : undefined
                             }
                           >
-                            {renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}
+                            {isEditing ? renderField("market", true, markets, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.market === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "market")}
+                                    label={LOCKABLE_FIELD_LABELS.market}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.market ?? ""}
+                                    options={markets}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit market for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      // 3C: clear marketComputedAt so unlock self-heals on next refresh.
+                                      await saveAssetField(
+                                        asset.id,
+                                        { market: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, market: true }, marketComputedAt: null },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 10. Currency */}
                           {isVisible("currency") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("currency", true, currencies, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.currency === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "currency")}
+                                    label={LOCKABLE_FIELD_LABELS.currency}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.currency ?? ""}
+                                    options={currencies}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit currency for ${asset.ticker}`}
+                                    display={(v) => (
+                                      <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                    )}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { currency: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, currency: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
+                          </td>
                           )}
-                          {/* 10b. Exchange */}
+                          {/* 10b. Exchange — kept as ExchangeCell; its lookup-after-save logic is special. */}
                           {isVisible("exchange") && (
                             <td className="px-3 py-2 whitespace-nowrap text-sm">
                               <ExchangeCell asset={asset} onSave={handleExchangeSave} />
@@ -1258,36 +1507,89 @@ function DashboardContent() {
                           {/* 11. Mgt Style — N/A if missing */}
                           {isVisible("managementStyle") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
-                              <span className="inline-flex items-center">
-                                <LockedFieldIcon
-                                  isLocked={asset.userOverrides?.managementStyle === true}
-                                  onUnlock={() => handleUnlockField(asset, "managementStyle")}
-                                  label={LOCKABLE_FIELD_LABELS.managementStyle}
-                                />
-                                <span>{asset.managementStyle || "N/A"}</span>
-                              </span>
-                            )}
+                            {isEditing ? renderField("managementStyle", true, managementStyles, "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (() => {
+                              const isLocked = asset.userOverrides?.managementStyle === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "managementStyle")}
+                                    label={LOCKABLE_FIELD_LABELS.managementStyle}
+                                  />
+                                  <InlineEditableCell
+                                    kind="select"
+                                    value={asset.managementStyle ?? ""}
+                                    options={managementStyles}
+                                    disabled={isLocked}
+                                    ariaLabel={`Edit management style for ${asset.ticker}`}
+                                    display={(v) => <span>{v && v !== "" ? v : "N/A"}</span>}
+                                    onSave={async (next) => {
+                                      await saveAssetField(
+                                        asset.id,
+                                        { managementStyle: ((next ?? "") as string), userOverrides: { ...asset.userOverrides, managementStyle: true } },
+                                        asset.updatedAt,
+                                      );
+                                    }}
+                                  />
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 12. Mgt Fee % — Companies are legitimately 0; otherwise NotFoundCell when null */}
                           {isVisible("managementFee") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("managementFee", false, [], "number") : (
-                              <span className="inline-flex items-center">
-                                <LockedFieldIcon
-                                  isLocked={asset.userOverrides?.managementFee === true}
-                                  onUnlock={() => handleUnlockField(asset, "managementFee")}
-                                  label={LOCKABLE_FIELD_LABELS.managementFee}
-                                />
-                                {asset.securityType === "Company" ? <span>0.00%</span> : renderNumber(asset.managementFee, "%", 2)}
-                              </span>
-                            )}
+                            {isEditing ? renderField("managementFee", false, [], "number") : (() => {
+                              const isLocked = asset.userOverrides?.managementFee === true;
+                              return (
+                                <span className="inline-flex items-center">
+                                  <LockedFieldIcon
+                                    isLocked={isLocked}
+                                    onUnlock={() => handleUnlockField(asset, "managementFee")}
+                                    label={LOCKABLE_FIELD_LABELS.managementFee}
+                                  />
+                                  {asset.securityType === "Company" ? (
+                                    <span>0.00%</span>
+                                  ) : (
+                                    <InlineEditableCell
+                                      kind="number"
+                                      value={asset.managementFee}
+                                      disabled={isLocked}
+                                      ariaLabel={`Edit management fee for ${asset.ticker}`}
+                                      display={(v) =>
+                                        typeof v === "number"
+                                          ? <span>{v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</span>
+                                          : <NotFoundCell />
+                                      }
+                                      onSave={async (next) => {
+                                        await saveAssetField(
+                                          asset.id,
+                                          { managementFee: (typeof next === "number" ? next : null), userOverrides: { ...asset.userOverrides, managementFee: true } },
+                                          asset.updatedAt,
+                                        );
+                                      }}
+                                    />
+                                  )}
+                                </span>
+                              );
+                            })()}
                           </td>
                           )}
                           {/* 13. Quantity */}
                           {isVisible("quantity") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("quantity", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("quantity", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.quantity}
+                                ariaLabel={`Edit quantity for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatQuantity(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { quantity: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 14. Live $ — backslash fix */}
                           {isVisible("liveTickerPrice") && (
@@ -1298,13 +1600,22 @@ function DashboardContent() {
                               (() => {
                                 const price = marketData[asset.id]?.currentPrice ?? asset.liveTickerPrice;
                                 const numPrice = Number(price);
-                                const formatted = isNaN(numPrice)
-                                  ? "N/A"
-                                  : `$${formatPrice(numPrice)}`;
                                 const anomaly = anomalies[asset.id];
                                 return (
                                   <span className="inline-flex items-center gap-1">
-                                    <span>{formatted}</span>
+                                    <InlineEditableCell
+                                      kind="number"
+                                      value={numPrice}
+                                      ariaLabel={`Edit live price for ${asset.ticker}`}
+                                      display={(v) =>
+                                        typeof v === "number" && !isNaN(v)
+                                          ? <span>${formatPrice(v)}</span>
+                                          : <span>N/A</span>
+                                      }
+                                      onSave={async (next) => {
+                                        await saveAssetField(asset.id, { liveTickerPrice: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                      }}
+                                    />
                                     {anomaly && (
                                       <span
                                         title={`Changed from $${anomaly.prior.toFixed(2)} (${anomaly.deltaPct >= 0 ? "+" : ""}${anomaly.deltaPct.toFixed(1)}%)`}
@@ -1321,75 +1632,209 @@ function DashboardContent() {
                             )}
                           </td>
                           )}
-                          {/* 15. Book Cost — Task 7: pass formatCurrencyAmount as displayRenderer to InlineEditableCell (don't fall back to plain formatTotal — must stay native-currency). */}
+                          {/* 15. Book Cost — native-currency display via formatCurrencyAmount. */}
                           {isVisible("bookCost") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing
-                              ? renderField("bookCost", false, [], "number")
-                              : <span>{formatCurrencyAmount(asset.bookCost, asset.currency)}</span>}
+                            {isEditing ? renderField("bookCost", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.bookCost}
+                                ariaLabel={`Edit book cost for ${asset.ticker}`}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { bookCost: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
-                          {/* 16. Market Value — Task 7: pass formatCurrencyAmount as displayRenderer to InlineEditableCell (don't fall back to plain formatTotal — must stay native-currency). */}
+                          {/* 16. Market Value — native-currency display via formatCurrencyAmount. */}
                           {isVisible("marketValue") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300 font-semibold">
-                            {isEditing
-                              ? renderField("marketValue", false, [], "number")
-                              : <span>{formatCurrencyAmount(asset.marketValue, asset.currency)}</span>}
+                            {isEditing ? renderField("marketValue", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.marketValue}
+                                ariaLabel={`Edit market value for ${asset.ticker}`}
+                                display={(v) => <span>{formatCurrencyAmount(typeof v === "number" ? v : null, asset.currency)}</span>}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { marketValue: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 17. Profit/Loss */}
                           {isVisible("profitLoss") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("profitLoss", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("profitLoss", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.profitLoss}
+                                ariaLabel={`Edit profit/loss for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatTotal(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { profitLoss: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 18. Yield % */}
                           {isVisible("yield") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("yield", false, [], "number") : renderPercent(asset.yield)}
+                            {isEditing ? renderField("yield", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.yield}
+                                ariaLabel={`Edit yield for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { yield: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 19. 1YR Return % */}
                           {isVisible("oneYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("oneYearReturn", false, [], "number") : renderPercent(asset.oneYearReturn)}
+                            {isEditing ? renderField("oneYearReturn", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.oneYearReturn}
+                                ariaLabel={`Edit one year return for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { oneYearReturn: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 20. 3YR Return % */}
                           {isVisible("threeYearReturn") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : renderPercent(asset.threeYearReturn ?? asset.fiveYearReturn ?? null)}
+                            {isEditing ? <input type="number" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.threeYearReturn as number | null) ?? ""} onChange={(e) => handleEditChange("threeYearReturn", parseFloat(e.target.value) || 0)} /> : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.threeYearReturn ?? asset.fiveYearReturn ?? null}
+                                ariaLabel={`Edit three year return for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatRowPercent(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { threeYearReturn: typeof next === "number" ? next : null }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 21. Risk */}
                           {isVisible("risk") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("risk", false, [], "text", "bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50") : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.risk ?? ""}
+                                ariaLabel={`Edit risk for ${asset.ticker}`}
+                                display={(v) => (
+                                  <span className="px-2 py-0.5 rounded bg-neutral-100/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700/50">{v && v !== "" ? v : "—"}</span>
+                                )}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { risk: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 22. Expected Div */}
                           {isVisible("expectedAnnualDividends") && (
-                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">{renderField("expectedAnnualDividends", false, [], "number")}</td>
+                          <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
+                            {isEditing ? renderField("expectedAnnualDividends", false, [], "number") : (
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.expectedAnnualDividends}
+                                ariaLabel={`Edit expected annual dividends for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" ? <span>{formatTotal(v)}</span> : <NotFoundCell />}
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { expectedAnnualDividends: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
+                            )}
+                          </td>
                           )}
                           {/* 23. Ext. Rating */}
                           {isVisible("externalRating") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? renderField("externalRating", false, [], "text") : naIndicator(asset.externalRating)}
+                            {isEditing ? renderField("externalRating", false, [], "text") : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.externalRating ?? ""}
+                                ariaLabel={`Edit external rating for ${asset.ticker}`}
+                                display={(v) => v && v !== "" && v !== "Not Found"
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { externalRating: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 24. Ex-Div Date */}
                           {isVisible("exDividendDate") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : naIndicator(asset.exDividendDate)}
+                            {isEditing ? <input type="text" className="w-24 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.exDividendDate as string) ?? ""} onChange={(e) => handleEditChange("exDividendDate", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.exDividendDate ?? ""}
+                                ariaLabel={`Edit ex-dividend date for ${asset.ticker}`}
+                                display={(v) => v && v !== ""
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { exDividendDate: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 25. Analyst */}
                           {isVisible("analystConsensus") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : naIndicator(asset.analystConsensus)}
+                            {isEditing ? <input type="text" className="w-20 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.analystConsensus as string) ?? ""} onChange={(e) => handleEditChange("analystConsensus", e.target.value)} /> : (
+                              <InlineEditableCell
+                                kind="text"
+                                value={asset.analystConsensus ?? ""}
+                                ariaLabel={`Edit analyst consensus for ${asset.ticker}`}
+                                display={(v) => v && v !== ""
+                                  ? <span>{v}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { analystConsensus: (next ?? "") as string }, asset.updatedAt);
+                                }}
+                              />
+                            )}
                           </td>
                           )}
                           {/* 26. Beta */}
                           {isVisible("beta") && (
                           <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
                             {isEditing ? <input type="number" className="w-16 p-1 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900" value={(editForm.beta as number) ?? 0} onChange={(e) => handleEditChange("beta", parseFloat(e.target.value) || 0)} /> : (
-                              asset.beta ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(asset.beta).toLocaleString()}</span> : naIndicator(null)
+                              <InlineEditableCell
+                                kind="number"
+                                value={asset.beta ?? null}
+                                ariaLabel={`Edit beta for ${asset.ticker}`}
+                                display={(v) => typeof v === "number" && v !== 0
+                                  ? <span className={asset.riskFlag === "Risk Spike" ? "text-red-600 dark:text-red-400" : ""}>{Number(v).toLocaleString()}</span>
+                                  : <span className="text-neutral-300 dark:text-neutral-600 italic cursor-help" title="Not available from market data">—</span>
+                                }
+                                onSave={async (next) => {
+                                  await saveAssetField(asset.id, { beta: typeof next === "number" ? next : 0 }, asset.updatedAt);
+                                }}
+                              />
                             )}
                           </td>
                           )}
@@ -1397,14 +1842,13 @@ function DashboardContent() {
                           <td className="px-3 py-3 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               {isEditing ? (
-                                <button onClick={saveEdit} disabled={isSaving} className="text-teal-600 hover:text-teal-700 dark:text-teal-500 p-1">
+                                <button onClick={saveEdit} disabled={isSaving} className="text-teal-600 hover:text-teal-700 dark:text-teal-500 p-1" aria-label="Save new row">
                                   {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                 </button>
                               ) : (
-                                <>
-                                  <button onClick={() => startEdit(asset)} className="text-blue-500 hover:text-blue-700 p-1"><Edit2 className="h-4 w-4" /></button>
-                                  <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1"><Trash2 className="h-4 w-4" /></button>
-                                </>
+                                /* 5B Task 7: pencil/edit removed — every cell enters inline edit on tap. Currency-mismatch
+                                   row-mode fallback is reached via the mismatchState banner in the row below. */
+                                <button onClick={() => handleDeleteAsset(asset.id)} className="text-neutral-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1" aria-label={`Delete ${asset.ticker}`}><Trash2 className="h-4 w-4" /></button>
                               )}
                             </div>
                           </td>
