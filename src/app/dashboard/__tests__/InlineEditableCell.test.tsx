@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { InlineEditableCell } from "../InlineEditableCell";
 
 describe("InlineEditableCell", () => {
@@ -21,7 +21,9 @@ describe("InlineEditableCell", () => {
     render(<InlineEditableCell kind="text" value="hello" onSave={onSave} ariaLabel="edit-label" />);
     fireEvent.click(screen.getByText("hello"));
     fireEvent.change(screen.getByDisplayValue("hello"), { target: { value: "world" } });
-    fireEvent.click(screen.getByText("Save"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
     expect(onSave).toHaveBeenCalledWith("world");
   });
 
@@ -30,7 +32,9 @@ describe("InlineEditableCell", () => {
     render(<InlineEditableCell kind="text" value="hello" onSave={onSave} ariaLabel="edit-label" />);
     fireEvent.click(screen.getByText("hello"));
     fireEvent.change(screen.getByDisplayValue("hello"), { target: { value: "world" } });
-    fireEvent.click(screen.getByText("Save"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
     // After resolution, display mode shows the new value.
     expect(await screen.findByText("world")).toBeInTheDocument();
   });
@@ -53,30 +57,36 @@ describe("InlineEditableCell", () => {
     expect(screen.getByText("hello")).toBeInTheDocument();
   });
 
-  it("Enter key saves in text mode", () => {
+  it("Enter key saves in text mode", async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     render(<InlineEditableCell kind="text" value="hello" onSave={onSave} ariaLabel="edit-label" />);
     fireEvent.click(screen.getByText("hello"));
     fireEvent.change(screen.getByDisplayValue("hello"), { target: { value: "world" } });
-    fireEvent.keyDown(screen.getByDisplayValue("world"), { key: "Enter" });
+    await act(async () => {
+      fireEvent.keyDown(screen.getByDisplayValue("world"), { key: "Enter" });
+    });
     expect(onSave).toHaveBeenCalledWith("world");
   });
 
-  it("number kind parses input to number on save", () => {
+  it("number kind parses input to number on save", async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     render(<InlineEditableCell kind="number" value={100} onSave={onSave} ariaLabel="edit-qty" />);
     fireEvent.click(screen.getByText("100"));
     fireEvent.change(screen.getByDisplayValue("100"), { target: { value: "150" } });
-    fireEvent.click(screen.getByText("Save"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
     expect(onSave).toHaveBeenCalledWith(150);
   });
 
-  it("select kind renders an option list and saves the selected value", () => {
+  it("select kind renders an option list and saves the selected value", async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     render(<InlineEditableCell kind="select" value="A" options={["A", "B", "C"]} onSave={onSave} ariaLabel="edit-class" />);
     fireEvent.click(screen.getByText("A"));
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "B" } });
-    fireEvent.click(screen.getByText("Save"));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
     expect(onSave).toHaveBeenCalledWith("B");
   });
 
@@ -91,9 +101,9 @@ describe("InlineEditableCell", () => {
     render(<InlineEditableCell kind="text" value="hello" onSave={onSave} ariaLabel="edit-label" />);
     fireEvent.click(screen.getByText("hello"));
     fireEvent.change(screen.getByDisplayValue("hello"), { target: { value: "world" } });
-    fireEvent.click(screen.getByText("Save"));
-    // Wait one tick for the rejection to settle.
-    await new Promise(r => setTimeout(r, 0));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Save"));
+    });
     expect(screen.getByDisplayValue("world")).toBeInTheDocument();
   });
 });

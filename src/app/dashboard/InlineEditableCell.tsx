@@ -35,12 +35,18 @@ export function InlineEditableCell({
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement | null>(null);
+  // Track the last parent value we synced from so we only re-sync on external
+  // value changes (e.g. server refetch), not when editing flips to false after
+  // a save (which would overwrite the optimistic committed state).
+  const prevValueRef = useRef<string>(toStr(value));
 
   // Re-sync committed (and draft when closed) if the parent's value changes
   // (e.g., after a server refetch). When editing is open, leave draft alone.
   useEffect(() => {
+    const s = toStr(value);
+    if (s === prevValueRef.current) return;
+    prevValueRef.current = s;
     if (!editing) {
-      const s = toStr(value);
       setCommitted(s);
       setDraft(s);
     }
@@ -134,8 +140,8 @@ export function InlineEditableCell({
         />
       )}
       <div className="flex gap-1">
-        <button onClick={() => void commit()} disabled={saving} className="text-xs text-teal-600 dark:text-teal-400 font-medium disabled:opacity-50">Save</button>
-        <button onClick={cancel} className="text-xs text-neutral-500">Cancel</button>
+        <button type="button" onClick={() => void commit()} disabled={saving} className="text-xs text-teal-600 dark:text-teal-400 font-medium disabled:opacity-50">Save</button>
+        <button type="button" onClick={cancel} className="text-xs text-neutral-500">Cancel</button>
       </div>
     </div>
   );
