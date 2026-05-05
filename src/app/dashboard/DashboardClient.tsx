@@ -148,37 +148,44 @@ function DashboardContent() {
     try {
       const asset = assets.find(a => a.id === assetId);
       if (!asset) return;
-      // Send only the exchange fields — the server merges on top of its own DB copy,
-      // eliminating the stale-state overwrite risk that a full-document PUT carries.
-      const res = await fetch(`/api/assets/${assetId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+
+      // First save: exchange + userOverrides via the central OCC-aware helper.
+      // saveAssetField runs fetchAssets internally on success, but its result
+      // doesn't expose the refreshed `updatedAt` synchronously — we re-fetch
+      // /api/profile inline (same pattern as the ticker cascade) to get the
+      // fresh OCC token before issuing the price-refresh PUT.
+      await saveAssetField(
+        assetId,
+        {
           exchangeSuffix: suffix,
           exchangeName: name,
           userOverrides: { ...asset.userOverrides, exchange: true },
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to save exchange");
+        },
+        asset.updatedAt,
+      );
 
-      // Immediately re-fetch the price using the new exchange suffix so the
-      // stored liveTickerPrice reflects the correct listing (e.g., HYLD.TO, not HYLD).
+      // Lookup with the new exchange suffix to re-price under the correct listing.
       const lookupRes = await fetch(
         `/api/ticker-lookup?symbol=${encodeURIComponent(asset.ticker)}&assetId=${encodeURIComponent(assetId)}`
       );
-      if (lookupRes.ok) {
-        const lookupData = await lookupRes.json();
-        if (!lookupData.currencyMismatch && lookupData.currentPrice) {
-          await fetch(`/api/assets/${assetId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ liveTickerPrice: lookupData.currentPrice }),
-          });
-        }
-      }
+      if (!lookupRes.ok) return;
+      const lookupData = await lookupRes.json();
+      if (lookupData.currencyMismatch || !lookupData.currentPrice) return;
 
-      fetchAssets();
+      // Refresh to capture the post-first-save `updatedAt` for the second PUT.
+      const fresh = await fetch("/api/profile").then(r => r.json());
+      const refreshed = (fresh.assets as Asset[] | undefined)?.find(a => a.id === assetId);
+      if (!refreshed) return;
+
+      await saveAssetField(
+        assetId,
+        { liveTickerPrice: lookupData.currentPrice },
+        refreshed.updatedAt,
+      );
     } catch (err) {
+      // saveAssetField throws "conflict" on 409 (banner + refetch already shown
+      // by the helper) and "Failed to save asset" on other failures.
+      if (err instanceof Error && err.message === "conflict") return;
       const msg = err instanceof Error ? err.message : "Failed to save exchange";
       setMessage({ text: msg, type: "error" });
     }
