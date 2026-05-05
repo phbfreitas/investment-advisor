@@ -4,9 +4,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recha
 import type { AllBreakdowns } from "./lib/computeBreakdowns";
 import type { DimensionBreakdown } from "./lib/types";
 import { paletteByIndex, COLORS } from "./lib/colors";
-
-const fmtCurrency = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+import { formatRowPercent, formatCurrencyAmount } from "@/lib/decimalFormat";
+const fmtCurrency = (n: number) => formatCurrencyAmount(n, "CAD");
 
 interface DonutProps {
   dim: DimensionBreakdown;
@@ -72,7 +71,7 @@ function Donut({ dim }: DonutProps) {
               formatter={(value, name, props) => {
                 const numVal = typeof value === "number" ? value : Number(value ?? 0);
                 const p = (props as { payload?: { percent?: number } }).payload?.percent ?? 0;
-                return [`${fmtCurrency(numVal)} · ${p.toFixed(1)}%`, String(name)];
+                return [`${fmtCurrency(numVal)} · ${formatRowPercent(p / 100)}`, String(name)];
               }}
               contentStyle={{ borderRadius: 6, fontSize: 12 }}
             />
@@ -91,7 +90,7 @@ function Donut({ dim }: DonutProps) {
       </div>
       {largest && (
         <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
-          Largest: {largest.label} · {largest.percent.toFixed(1)}% · {fmtCurrency(largest.value)}
+          Largest: {largest.label} · {formatRowPercent(largest.percent / 100)} · {fmtCurrency(largest.value)}
         </p>
       )}
       {/* Hidden table for screen readers */}
@@ -100,7 +99,7 @@ function Donut({ dim }: DonutProps) {
         <thead><tr><th>Label</th><th>Value</th><th>Percent</th></tr></thead>
         <tbody>
           {dim.slices.map(s => (
-            <tr key={s.label}><td>{s.label}</td><td>{s.value}</td><td>{s.percent.toFixed(2)}%</td></tr>
+            <tr key={s.label}><td>{s.label}</td><td>{s.value}</td><td>{formatRowPercent(s.percent / 100)}</td></tr>
           ))}
         </tbody>
       </table>
