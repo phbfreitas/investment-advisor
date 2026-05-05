@@ -451,27 +451,25 @@ function DashboardContent() {
   // Sends ONLY the changed field(s) plus expectedUpdatedAt so concurrent
   // edits across cells don't trample each other (the route merges over the
   // existing DB row). On 409, refresh the table and surface the banner.
-  const saveAssetField = useCallback(
-    async (assetId: string, patch: Partial<Asset>, expectedUpdatedAt: string | undefined) => {
-      const body = expectedUpdatedAt ? { ...patch, expectedUpdatedAt } : patch;
-      const res = await fetch(`/api/assets/${assetId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status === 409) {
-        setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
-        await fetchAssets();
-        throw new Error("conflict");
-      }
-      if (!res.ok) throw new Error("Failed to save asset");
+  const saveAssetField = async (
+    assetId: string,
+    patch: Partial<Asset>,
+    expectedUpdatedAt: string | undefined,
+  ) => {
+    const body = expectedUpdatedAt ? { ...patch, expectedUpdatedAt } : patch;
+    const res = await fetch(`/api/assets/${assetId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 409) {
+      setMessage({ text: "This asset was changed in another tab/device. Refreshing now.", type: "error" });
       await fetchAssets();
-    },
-    // fetchAssets and setMessage close over stable refs; matches the existing
-    // pattern used by other handlers in this file (no useCallback dep churn).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+      throw new Error("conflict");
+    }
+    if (!res.ok) throw new Error("Failed to save asset");
+    await fetchAssets();
+  };
 
   const saveEdit = async () => {
     setIsSaving(true);
@@ -1217,10 +1215,9 @@ function DashboardContent() {
                                   if (!newTicker) return;
                                   await saveAssetField(asset.id, { ticker: newTicker }, asset.updatedAt);
                                   // After persisting, run the lookup to cascade classification.
-                                  // applyLookupRespectingLocks needs the pre-edit ticker so its
-                                  // tickerChanged branch fires. fetchAssets ran in saveAssetField
-                                  // above, so pull the freshly-persisted asset to get the new
-                                  // expectedUpdatedAt before issuing the cascade PUT.
+                                  // fetchAssets ran in saveAssetField above, so pull the
+                                  // freshly-persisted asset to get the new expectedUpdatedAt
+                                  // before issuing the cascade PUT.
                                   try {
                                     const lookupRes = await fetch(
                                       `/api/ticker-lookup?symbol=${encodeURIComponent(newTicker)}&assetId=${encodeURIComponent(asset.id)}`
@@ -1241,6 +1238,10 @@ function DashboardContent() {
                                       setEditForm({ ...asset, ticker: newTicker });
                                       return;
                                     }
+                                    // Pass the OLD ticker (asset.ticker is pre-save here because the parent state hasn't refetched yet).
+                                    // applyLookupRespectingLocks compares prev.ticker vs lookup.symbol to decide whether the ticker
+                                    // genuinely changed; if we passed newTicker as prev, the comparison would be a no-op and the
+                                    // classification cascade would not fire.
                                     const cascade = applyLookupRespectingLocks(
                                       { ...asset, ticker: asset.ticker },
                                       { ...lookup, symbol: newTicker },
